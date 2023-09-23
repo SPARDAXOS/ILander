@@ -1,40 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
-public class Initialization : MonoBehaviour
+namespace Initialization
 {
-    
-
-
-    private GameState gameState = null;
-
-
-
-    void Start()
-    {
-        
-    }
-    void Update()
-    {
-        
-    }
-
-
-
-
-    private void Awake()
-    {
-        //INSTANCIATE game object prefab
-        //Call init on gamestate script
-
-        //Initializes all systems
-    }
-
-
-    [RuntimeInitializeOnLoadMethod]
-    private static void Init()
+    public class Intializer
     {
 
+        [RuntimeInitializeOnLoadMethod]
+        private static void InitGame()
+        {
+            var go = new GameObject("GameInstance");
+            var comp = go.AddComponent<GameInstance>();
+            comp.Initialize();
+            comp.Initialize();
+
+        }
     }
+
 }
