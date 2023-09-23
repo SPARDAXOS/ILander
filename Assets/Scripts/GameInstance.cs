@@ -147,6 +147,20 @@ public class GameInstance : MonoBehaviour
         //I think its a better solution than to rely on labeling assets like crazy and making sure they all carry the label i want
         //The bundle method makes sure that if something is wrong then its in the specific bundle. Removing labels makes it more safer for errors such as
         //not marking something with the right label and such
+
+        //Plans
+        //Make some sort of key/value pair in a dictionary so i can associate asset handles with assets by keys
+        //Either i get the key + AssetReference pair from the SO then i build my dictionary with key + Handle here
+        //Or i have 2 lists at GameAssets where i subscribe the key/handle pair or something.
+        //First option seems better.
+        //My method of loading basically allows for grouping assets without relying too heavily on label and instead grouping using SOs.
+        //Cars SO contains only car refs and such...
+
+
+        //Final Notes:
+        //Get AssetEntry from GameAssets
+        //Load Asset and use its key to somehow keep in a Dictionary here along with its handle!
+        //How to associate both is the problem left
     }
 
 

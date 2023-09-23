@@ -13,7 +13,15 @@ MonoBehaviour:
   m_Name: GameAssets
   m_EditorClassIdentifier: 
   assets:
-  - m_AssetGUID: 1d6161b12ebcd6b4c9a2f60a102c5423
-    m_SubObjectName: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
+  - name: Player
+    reference:
+      m_AssetGUID: 1d6161b12ebcd6b4c9a2f60a102c5423
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: 
+    reference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
