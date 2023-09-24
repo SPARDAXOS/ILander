@@ -8,9 +8,10 @@ using UnityEngine;
 public class PlayerData : ScriptableObject
 {
     [Header("Thruster")]
-    public float thrusterLimit = 1.0f;
-    [Range(0.001f, 1.0f)] public float thrusterAccelerationRate = 1.0f;
-    [Range(0.001f, 1.0f)] public float thrusterDecelerationRate = 1.0f;
+    public float thrusterStrengthLimit = 1.0f;
+    [Range(0.001f, 5.0f)] public float thrusterAccelerationRate = 1.0f;
+    [Range(0.001f, 5.0f)] public float thrusterDecelerationRate = 1.0f;
+    [Range(0.001f, 5.0f)] public float thrusterBreaksRate = 1.0f;
 
     [Space(10.0f)]
     [Header("Health")]

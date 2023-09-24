@@ -137,6 +137,8 @@ public class GameInstance : MonoBehaviour
         Destroy(gameObject);
     }
     private void OnDestroy() {
+        if (loadedAssets.Count == 0)
+            return;
         foreach(var entry in loadedAssets)
             Addressables.Release(entry.Value);
     }

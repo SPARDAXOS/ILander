@@ -61,7 +61,7 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Rotation Input
       m_Flags: 4
-    - m_Name: negative
+    - m_Name: positive
       m_Id: 458e423c-0193-4a60-bd83-7215d671475d
       m_Path: <Keyboard>/a
       m_Interactions: 
@@ -69,7 +69,7 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Rotation Input
       m_Flags: 8
-    - m_Name: positive
+    - m_Name: negative
       m_Id: b50e58a4-4356-4ace-9c08-88af52b186de
       m_Path: <Keyboard>/d
       m_Interactions: 

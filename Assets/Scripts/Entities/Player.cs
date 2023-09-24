@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
@@ -9,7 +10,7 @@ public class Player : MonoBehaviour
     [SerializeField] private PlayerData playerData;
 
 
-    private float currentThrusterStrength = 0.0f;
+    public float currentThrusterStrength = 0.0f;
 
     public void Initialize() {
         EnableInput();
@@ -17,23 +18,35 @@ public class Player : MonoBehaviour
     public void Tick() {
 
         CheckInput();
+        UpdateMovement();
     }
 
     private void CheckInput()
     {
+        //Break into 2 funcs - rot and move
         if (controlScheme.boosterInput.IsPressed()) {
             float inputValue = controlScheme.boosterInput.ReadValue<float>();
-
-            //Temp
-            currentThrusterStrength = 7.0f;
-
-            Vector3 current = transform.position;
-            float Speed = currentThrusterStrength;
             if (inputValue < 0.0f)
-                Speed *= -1;
+                BreakThruster();
+            else if (inputValue > 0.0f)
+                AccelerateThruster();
+            
 
-            transform.position = current + (transform.up * Speed * Time.deltaTime);
+
+
+            //    //Temp
+            //    currentThrusterStrength = 7.0f;
+
+            //Vector3 current = transform.position;
+            //float Speed = currentThrusterStrength;
+            //if (inputValue < 0.0f)
+            //    Speed *= -1;
+
+            //transform.position = current + (transform.up * Speed * Time.deltaTime);
         }
+        else if (currentThrusterStrength > 0.0f)
+            DeccelerateThruster();
+
         if (controlScheme.rotationInput.IsPressed()) {
             float inputValue = controlScheme.rotationInput.ReadValue<float>();
             float Speed = playerData.turnRate;
@@ -48,12 +61,35 @@ public class Player : MonoBehaviour
         //NOTE: Carefull cause Tick is called in update and not FIXEDUPDATE!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
     private void UpdateMovement() {
-
-
-        //transform.position = current + (transform.up * currentThrusterStrength * Time.deltaTime); 
+        Vector3 current = transform.position;
+        transform.position = current + (transform.up * currentThrusterStrength * Time.deltaTime); 
         //Unless i go with velocity instead. Assignment wants that i think!
     }
 
+
+
+    private void AccelerateThruster() {
+        currentThrusterStrength += playerData.thrusterAccelerationRate * Time.deltaTime;
+        if (currentThrusterStrength >= playerData.thrusterStrengthLimit) {
+            currentThrusterStrength = playerData.thrusterStrengthLimit;
+            //Stuff
+        }
+    }
+    private void DeccelerateThruster() {
+        currentThrusterStrength -= playerData.thrusterDecelerationRate * Time.deltaTime;
+        if (currentThrusterStrength <= 0.0f) {
+            currentThrusterStrength = 0.0f;
+            //Stuff
+        }
+    }
+    private void BreakThruster() {
+        Debug.Log("Breaks!");
+        currentThrusterStrength -= playerData.thrusterBreaksRate * Time.deltaTime;
+        if (currentThrusterStrength <= 0.0f) {
+            currentThrusterStrength = 0.0f;
+            //Stuff
+        }
+    }
 
     private void EnableInput() {
         controlScheme.boosterInput.Enable();

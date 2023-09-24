@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 330eaeb70666cdb4e96b4f618dce7f10, type: 3}
   m_Name: PlayerData
   m_EditorClassIdentifier: 
-  thrusterLimit: 1
-  thrusterAccelerationRate: 1
-  thrusterDecelerationRate: 1
+  thrusterStrengthLimit: 1
+  thrusterAccelerationRate: 1.4
+  thrusterDecelerationRate: 0.7
+  thrusterBreaksRate: 1.5
   healthCap: 1
+  turnRate: 1
