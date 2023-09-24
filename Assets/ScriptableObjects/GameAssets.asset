@@ -19,9 +19,9 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-  - name: 
+  - name: MainCamera
     reference:
-      m_AssetGUID: 
+      m_AssetGUID: d206b0a283a7e8e459caa1daf1c0e314
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0

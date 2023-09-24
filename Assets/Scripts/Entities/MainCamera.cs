@@ -8,7 +8,7 @@ public class MainCamera : MonoBehaviour
     private GameObject followTarget;
 
 
-    public void OnStart() {
+    public void Initialize() {
 
     }
     public void Tick() {

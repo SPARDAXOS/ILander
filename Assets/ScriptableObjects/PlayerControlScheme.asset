@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2793c4b4e43085e42973739fc0202136, type: 3}
+  m_Name: PlayerControlScheme
+  m_EditorClassIdentifier: 
+  boosterInput:
+    m_Name: Booster Input
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: df3e04ee-3b1b-47af-81b1-4f8ea51f2ea3
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 1D Axis
+      m_Id: a5f69fd7-b3f4-4bee-a29b-f087d99167d2
+      m_Path: 1DAxis
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Booster Input
+      m_Flags: 4
+    - m_Name: negative
+      m_Id: 4ec96341-9e3f-41ca-9972-14f270d6701d
+      m_Path: <Keyboard>/s
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Booster Input
+      m_Flags: 8
+    - m_Name: positive
+      m_Id: 7e3ba950-4e85-4cfd-b27f-d727316dd602
+      m_Path: <Keyboard>/w
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Booster Input
+      m_Flags: 8
+    m_Flags: 0
+  rotationInput:
+    m_Name: Rotation Input
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: a7663765-af9d-48b6-ab03-00cbc83c8c9d
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 1D Axis
+      m_Id: a11f24aa-d117-4c56-8710-3aebdfd1b3c5
+      m_Path: 1DAxis
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Rotation Input
+      m_Flags: 4
+    - m_Name: negative
+      m_Id: 458e423c-0193-4a60-bd83-7215d671475d
+      m_Path: <Keyboard>/a
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Rotation Input
+      m_Flags: 8
+    - m_Name: positive
+      m_Id: b50e58a4-4356-4ace-9c08-88af52b186de
+      m_Path: <Keyboard>/d
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Rotation Input
+      m_Flags: 8
+    m_Flags: 0

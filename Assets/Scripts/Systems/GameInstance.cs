@@ -11,15 +11,25 @@ using Newtonsoft.Json.Bson;
 
 public class GameInstance : MonoBehaviour
 {
+
+
+    //NOTE: Break this into ApplicationStatus and GameStatus
+
+    public enum ApplicationStatus {
+        NONE = 0, 
+        INITIALIZING,
+        RUNNING
+    }
     public enum GameStatus
     {
-        NONE,
+        NONE = 0,
         INITIALIZING,
         RUNNING,
         PAUSED,
         MAIN_MENU
     }
-    public GameStatus currentStatus = GameStatus.NONE;
+    public ApplicationStatus currentApplicationStatus = ApplicationStatus.NONE;
+    public GameStatus currentGameStatus = GameStatus.NONE;
 
 
     //Temp public
@@ -47,13 +57,15 @@ public class GameInstance : MonoBehaviour
     private Player playerScript;
     private MainCamera mainCameraScript;
 
-    void Start()
-    {
-        //OnStart
-    }
+
     void Update()
     {
-        switch (currentStatus)
+        //if(!gameInitialized)
+            //UpdateApplicationStatus
+            //else
+            //UpdateGameState / GameStatus?
+
+        switch (currentGameStatus)
         {
             case GameStatus.INITIALIZING:
                 UpdateInitializingStatus();
@@ -77,7 +89,7 @@ public class GameInstance : MonoBehaviour
     private void UpdateInitializingStatus()
     {
         if (gameInitialized) {
-            currentStatus = GameStatus.RUNNING;
+            currentGameStatus = GameStatus.RUNNING;
             return;                                         
         }
         if (!gameAssetsBundle) {
@@ -147,7 +159,7 @@ public class GameInstance : MonoBehaviour
             return;
         }
         Debug.Log("Started Initializing Game!");
-        currentStatus = GameStatus.INITIALIZING;
+        currentGameStatus = GameStatus.INITIALIZING;
         initializationInProgress = true;
         LoadGameAssetsBundle();
     }
@@ -202,14 +214,15 @@ public class GameInstance : MonoBehaviour
 
         player = Instantiate(loadedAssets["Player"].Result);
         playerScript = player.GetComponent<Player>();
+        playerScript.Initialize();
 
         mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
         mainCameraScript = mainCamera.GetComponent<MainCamera>();
-
+        mainCameraScript.Initialize();
 
         //HERE! need to setup GameStartState! then run the game!
         gameInitialized = true;
-        currentStatus = GameStatus.RUNNING;
+        currentGameStatus = GameStatus.RUNNING;
         Debug.Log("Finished Creating Entities!");
     }
     private void SetupEntities()

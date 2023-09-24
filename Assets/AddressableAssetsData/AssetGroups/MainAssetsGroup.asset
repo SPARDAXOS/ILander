@@ -28,6 +28,10 @@ MonoBehaviour:
     m_SerializedLabels:
     - GameAssetsBundle
     - default
+  - m_GUID: d206b0a283a7e8e459caa1daf1c0e314
+    m_Address: Assets/Prefabs/MainCamera.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:
