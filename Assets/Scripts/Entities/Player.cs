@@ -11,6 +11,7 @@ public class Player : MonoBehaviour
 
 
     public float currentThrusterStrength = 0.0f;
+    private Vector3 thrusterDirection = Vector2.zero;
 
     public void Initialize() {
         EnableInput();
@@ -30,8 +31,8 @@ public class Player : MonoBehaviour
                 BreakThruster();
             else if (inputValue > 0.0f)
                 AccelerateThruster();
-            
 
+            thrusterDirection = transform.up;
 
 
             //    //Temp
@@ -62,7 +63,8 @@ public class Player : MonoBehaviour
     }
     private void UpdateMovement() {
         Vector3 current = transform.position;
-        transform.position = current + (transform.up * currentThrusterStrength * Time.deltaTime); 
+        //Add to current "velocity" to make it adjust instead of snap!
+        transform.position = current + (thrusterDirection * currentThrusterStrength * Time.deltaTime); 
         //Unless i go with velocity instead. Assignment wants that i think!
     }
 
