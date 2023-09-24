@@ -8,6 +8,7 @@ namespace Initialization
     public class Intializer
     {
 
+
         [RuntimeInitializeOnLoadMethod]
         private static void InitGame()
         {

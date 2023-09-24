@@ -15,7 +15,7 @@ public struct AssetEntry
 
 
 [CreateAssetMenu(fileName = "GameAssets", menuName = "Data/GameAssets", order = 2)]
-public class GameAssets : ScriptableObject
+public class GameAssetsBundle : ScriptableObject
 {
     public AssetEntry[] assets;
 
