@@ -14,7 +14,7 @@ public class CustomizationMenu : MonoBehaviour
     //Func to reset the data in here to default
 
     //Make these two into SOs
-    [SerializeField] private PlayerSkins playerSkins;
+    [SerializeField] private PlayerSkinsBundle playerSkins;
     [SerializeField] private float colorEditStep = 0.1f;
 
     public Color player1TargetColor = Color.white;
@@ -23,15 +23,15 @@ public class CustomizationMenu : MonoBehaviour
     private Sprite player1TargetSprite = null;
     private Sprite player2TargetSprite = null;
 
-    private TextMeshProUGUI player1SpriteSwitch = null;
-    private TextMeshProUGUI player1RedSwitch = null;
-    private TextMeshProUGUI player1GreenSwitch = null;
-    private TextMeshProUGUI player1BlueSwitch = null;
+    private TextMeshProUGUI player1SpriteSwitch   = null;
+    private TextMeshProUGUI player1RedSwitch      = null;
+    private TextMeshProUGUI player1GreenSwitch    = null;
+    private TextMeshProUGUI player1BlueSwitch     = null;
 
-    private TextMeshProUGUI player2SpriteSwitch = null;
-    private TextMeshProUGUI player2RedSwitch = null;
-    private TextMeshProUGUI player2GreenSwitch = null;
-    private TextMeshProUGUI player2BlueSwitch = null;
+    private TextMeshProUGUI player2SpriteSwitch   = null;
+    private TextMeshProUGUI player2RedSwitch      = null;
+    private TextMeshProUGUI player2GreenSwitch    = null;
+    private TextMeshProUGUI player2BlueSwitch     = null;
 
 
     private int player1SpriteIndex = 0;
@@ -40,7 +40,8 @@ public class CustomizationMenu : MonoBehaviour
     private int player1ColorIndex = 0;
     private int player2ColorIndex = 0;
 
-
+    private Image player1PortraitSprite      = null;
+    private Image player2PortraitSprite      = null;
     private Image player1CustomizationSprite = null;
     private Image player2CustomizationSprite = null;
 
@@ -93,6 +94,11 @@ public class CustomizationMenu : MonoBehaviour
         GameInstance.Validate(player1GreenSwitch, "Failed to get reference to player1GreenSwitch - CustomizationMenu");
         GameInstance.Validate(player1BlueSwitch, "Failed to get reference to player1BlueSwitch - CustomizationMenu");
 
+        Transform PortaitSprite1 = Player1Customizer.Find("PortraitSprite");
+        GameInstance.Validate(PortaitSprite1, "Failed to get reference to PortaitSprite1 - CustomizationMenu");
+        player1PortraitSprite = PortaitSprite1.GetComponent<Image>();
+        GameInstance.Validate(player1PortraitSprite, "Failed to get reference to player1PortraitSprite - CustomizationMenu");
+
 
         //Player2
         Transform SpriteSwitch2 = Player2Customizer.Find("SpriteSwitch");
@@ -112,6 +118,11 @@ public class CustomizationMenu : MonoBehaviour
         GameInstance.Validate(player2RedSwitch, "Failed to get reference to player2RedSwitch - CustomizationMenu");
         GameInstance.Validate(player2GreenSwitch, "Failed to get reference to player2GreenSwitch - CustomizationMenu");
         GameInstance.Validate(player2BlueSwitch, "Failed to get reference to player2BlueSwitch - CustomizationMenu");
+
+        Transform PortaitSprite2 = Player2Customizer.Find("PortraitSprite");
+        GameInstance.Validate(PortaitSprite2, "Failed to get reference to PortaitSprite2 - CustomizationMenu");
+        player2PortraitSprite = PortaitSprite2.GetComponent<Image>();
+        GameInstance.Validate(player2PortraitSprite, "Failed to get reference to player2PortraitSprite - CustomizationMenu");
     }
     public void SetupStartState() {
         player1TargetColor = Color.white;
@@ -126,7 +137,8 @@ public class CustomizationMenu : MonoBehaviour
 
 
     private void UpdatePlayer1Skin() {
-        player1CustomizationSprite.sprite = playerSkins.skins[player1SpriteIndex].sprite;
+        player1CustomizationSprite.sprite = playerSkins.skins[player1SpriteIndex].shipSprite;
+        player1PortraitSprite.sprite = playerSkins.skins[player1SpriteIndex].portraitSprite;
         player1SpriteSwitch.text = playerSkins.skins[player1SpriteIndex].name;
 
         player1CustomizationSprite.color = player1TargetColor;
@@ -135,7 +147,8 @@ public class CustomizationMenu : MonoBehaviour
         player1BlueSwitch.text = "B: " + player1TargetColor.b.ToString("F1");
     }
     private void UpdatePlayer2Skin() {
-        player2CustomizationSprite.sprite = playerSkins.skins[player2SpriteIndex].sprite;
+        player2CustomizationSprite.sprite = playerSkins.skins[player2SpriteIndex].shipSprite;
+        player2PortraitSprite.sprite = playerSkins.skins[player2SpriteIndex].portraitSprite;
         player2SpriteSwitch.text = playerSkins.skins[player2SpriteIndex].name;
 
         player2CustomizationSprite.color = player2TargetColor;

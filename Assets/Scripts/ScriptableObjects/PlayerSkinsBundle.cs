@@ -5,14 +5,14 @@ using UnityEngine;
 
 
 [Serializable]
-public struct SkinEntry
-{
+public struct SkinEntry {
     public string name;
-    public Sprite sprite;
+    public Sprite shipSprite;
+    public Sprite portraitSprite;
 }
 
 
 [CreateAssetMenu(fileName = "PlayerSkins", menuName = "Data/PlayerSkins", order = 5)]
-public class PlayerSkins : ScriptableObject {
+public class PlayerSkinsBundle : ScriptableObject {
     public SkinEntry[] skins;
 }
