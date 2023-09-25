@@ -14,6 +14,7 @@ public class Player : MonoBehaviour
     private Vector3 thrusterDirection = Vector2.zero;
 
     public void Initialize() {
+        //Add check to avoid allowing multiple calls to this!
         EnableInput();
     }
     public void Tick() {

@@ -25,3 +25,9 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: MainMenu
+    reference:
+      m_AssetGUID: 927f1bbc59adca44499b260552bfff7a
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
