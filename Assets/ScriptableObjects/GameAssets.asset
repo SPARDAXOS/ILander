@@ -31,3 +31,15 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: CustomizationMenu
+    reference:
+      m_AssetGUID: 6847f701ddd11804c9a46b49ba0ec691
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: SettingsMenu
+    reference:
+      m_AssetGUID: 88bb8115546bf01439497b95aad62640
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0

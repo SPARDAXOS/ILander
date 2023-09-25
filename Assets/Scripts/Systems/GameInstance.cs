@@ -58,11 +58,13 @@ public class GameInstance : MonoBehaviour
     private GameObject player;
     private GameObject mainCamera;
     private GameObject mainMenu;
+    private GameObject settingsMenu;
     private GameObject customizationMenu;
 
     private Player playerScript;
     private MainCamera mainCameraScript;
     private MainMenu mainMenuScript;
+    private SettingsMenu settingsMenuScript;
     private CustomizationMenu customizationMenuScript;
 
     void Update() {
@@ -234,6 +236,11 @@ public class GameInstance : MonoBehaviour
         mainMenuScript = mainMenu.GetComponent<MainMenu>();
         mainMenuScript.Initialize();
 
+        settingsMenu = Instantiate(loadedAssets["SettingsMenu"].Result);
+        settingsMenu.SetActive(false);
+        settingsMenuScript = settingsMenu.GetComponent<SettingsMenu>();
+        settingsMenuScript.Initialize();
+
         customizationMenu = Instantiate(loadedAssets["CustomizationMenu"].Result);
         customizationMenu.SetActive(false);
         customizationMenuScript = customizationMenu.GetComponent<CustomizationMenu>();
@@ -274,9 +281,10 @@ public class GameInstance : MonoBehaviour
         currentGameState = GameState.MAIN_MENU;
     }
     private void SetupSettingsMenuState() {
-        //mainMenu.SetActive(true);
-        //Cursor.visible = true;
-        //currentGameState = GameState.SETTINGS_MENU;
+        HideAllMenus();
+        settingsMenu.SetActive(true);
+        Cursor.visible = true;
+        currentGameState = GameState.SETTINGS_MENU;
     }
     private void SetupCustomizationMenuState() {
         HideAllMenus();
@@ -301,8 +309,23 @@ public class GameInstance : MonoBehaviour
         //Add all menus here!
         mainMenu.SetActive(false);
         customizationMenu.SetActive(false);
+        settingsMenu.SetActive(false);
     }
 
+
+    //NOTE: Maybe move to helper class
+    public static void Clamp(ref float target, float min, float max)
+    {
+        if (target > max)
+            target = max;
+        if (target < min)
+            target = min;
+    }
+    public static void Validate(object target, string errorMessage)
+    {
+        if (target == null)
+            GameInstance.GetInstance().Abort(errorMessage);
+    }
 
 
     private void GameAssetsBundleLoadingCallback(AsyncOperationHandle<GameAssetsBundle> handle)
