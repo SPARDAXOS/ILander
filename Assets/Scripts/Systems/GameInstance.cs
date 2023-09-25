@@ -8,6 +8,8 @@ using System.Resources;
 using static UnityEngine.EventSystems.EventTrigger;
 using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 using Newtonsoft.Json.Bson;
+using Unity.VisualScripting.Antlr3.Runtime;
+using UnityEditor;
 
 public class GameInstance : MonoBehaviour
 {
@@ -15,21 +17,23 @@ public class GameInstance : MonoBehaviour
 
     //NOTE: Break this into ApplicationStatus and GameStatus
 
-    public enum ApplicationStatus {
-        NONE = 0, 
+    public enum ApplicationState
+    {
+        STOPPED = 0,
         INITIALIZING,
         RUNNING
     }
-    public enum GameStatus
+    public enum GameState
     {
         NONE = 0,
-        INITIALIZING,
-        RUNNING,
-        PAUSED,
-        MAIN_MENU
+        MAIN_MENU,
+        SETTINGS_MENU,
+        CUSTOMIZATION_MENU,
+        PAUSE_MENU,
+        PLAYING
     }
-    public ApplicationStatus currentApplicationStatus = ApplicationStatus.NONE;
-    public GameStatus currentGameStatus = GameStatus.NONE;
+    public ApplicationState currentApplicationStatus = ApplicationState.STOPPED;
+    public GameState currentGameState = GameState.NONE;
 
 
     //Temp public
@@ -53,43 +57,30 @@ public class GameInstance : MonoBehaviour
 
     private GameObject player;
     private GameObject mainCamera;
+    private GameObject mainMenu;
+    private GameObject settingsMenu;
+    private GameObject customizationMenu;
 
     private Player playerScript;
     private MainCamera mainCameraScript;
+    private MainMenu mainMenuScript;
+    private SettingsMenu settingsMenuScript;
+    private CustomizationMenu customizationMenuScript;
 
-
-    void Update()
-    {
-        //if(!gameInitialized)
-            //UpdateApplicationStatus
-            //else
-            //UpdateGameState / GameStatus?
-
-        switch (currentGameStatus)
-        {
-            case GameStatus.INITIALIZING:
+    void Update() {
+        switch (currentApplicationStatus) {
+            case ApplicationState.INITIALIZING:
                 UpdateInitializingStatus();
             break;
-            case GameStatus.RUNNING:
-                UpdateRunningStatus();
+            case ApplicationState.RUNNING:
+                RunGame();
             break;
-            case GameStatus.PAUSED:
-                {
-
-                }
-                break;
-            case GameStatus.MAIN_MENU:
-                {
-
-                }
-                break;
         }
     }
-
     private void UpdateInitializingStatus()
     {
         if (gameInitialized) {
-            currentGameStatus = GameStatus.RUNNING;
+            currentApplicationStatus = ApplicationState.RUNNING;
             return;                                         
         }
         if (!gameAssetsBundle) {
@@ -109,18 +100,27 @@ public class GameInstance : MonoBehaviour
             CreateEntities();
             SetupEntities();
             SetupMainMenuState();
+            //HERE! need to setup GameStartState! then run the game!
+            gameInitialized = true;
+            currentApplicationStatus = ApplicationState.RUNNING;
             Debug.Log("Finished Initializing Game!");
         }
     }
-    private void UpdateRunningStatus()
-    {
-        //Note need to setup references and prepare game to be in game state!
+    private void RunGame() {
+        //If any actions need to be taken during any of the game states, they should be added here!
+        switch (currentGameState) {
+            case GameState.PLAYING:
+                UpdatePlayingState();
+                break;
+        }
+    }
 
-        //tick
+
+
+    private void UpdatePlayingState() {
+
         playerScript.Tick();
         mainCameraScript.Tick();
-        //or this is where i break it into states such as mainmenu, pauesed, playing?
-
     }
 
 
@@ -139,13 +139,21 @@ public class GameInstance : MonoBehaviour
     private void OnDestroy() {
         if (loadedAssets.Count == 0)
             return;
-        foreach(var entry in loadedAssets)
+        foreach (var entry in loadedAssets)
             Addressables.Release(entry.Value);
     }
 
     //??? check vid
     public static GameInstance GetInstance() {
         return instance;
+    }
+    public void Abort(string errorMessage) {
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+        Debug.LogError(errorMessage);
+#else
+        Application.Quit();
+#endif
     }
 
 
@@ -161,7 +169,7 @@ public class GameInstance : MonoBehaviour
             return;
         }
         Debug.Log("Started Initializing Game!");
-        currentGameStatus = GameStatus.INITIALIZING;
+        currentApplicationStatus = ApplicationState.INITIALIZING;
         initializationInProgress = true;
         LoadGameAssetsBundle();
     }
@@ -215,6 +223,7 @@ public class GameInstance : MonoBehaviour
         Debug.Log("Started Creating Entities!");
 
         player = Instantiate(loadedAssets["Player"].Result);
+        player.SetActive(false);
         playerScript = player.GetComponent<Player>();
         playerScript.Initialize();
 
@@ -222,26 +231,101 @@ public class GameInstance : MonoBehaviour
         mainCameraScript = mainCamera.GetComponent<MainCamera>();
         mainCameraScript.Initialize();
 
-        //HERE! need to setup GameStartState! then run the game!
-        gameInitialized = true;
-        currentGameStatus = GameStatus.RUNNING;
+        mainMenu = Instantiate(loadedAssets["MainMenu"].Result);
+        mainMenu.SetActive(false);
+        mainMenuScript = mainMenu.GetComponent<MainMenu>();
+        mainMenuScript.Initialize();
+
+        settingsMenu = Instantiate(loadedAssets["SettingsMenu"].Result);
+        settingsMenu.SetActive(false);
+        settingsMenuScript = settingsMenu.GetComponent<SettingsMenu>();
+        settingsMenuScript.Initialize();
+
+        customizationMenu = Instantiate(loadedAssets["CustomizationMenu"].Result);
+        customizationMenu.SetActive(false);
+        customizationMenuScript = customizationMenu.GetComponent<CustomizationMenu>();
+        customizationMenuScript.Initialize();
+
+
+
         Debug.Log("Finished Creating Entities!");
     }
-    private void SetupEntities()
-    {
+    private void SetupEntities() {
         mainCameraScript.SetFollowTarget(player);
     }
 
 
-    private void SetupMainMenuState()
-    {
+    public void SetGameState(GameState state) {
+        switch (state) {
+            case GameState.MAIN_MENU:
+                SetupMainMenuState();
+                break;
+            case GameState.SETTINGS_MENU:
+                SetupSettingsMenuState();
+                break;
+            case GameState.CUSTOMIZATION_MENU:
+                SetupCustomizationMenuState();
+                break;
+            case GameState.PAUSE_MENU:
+                SetupPauseMenuState();
+                break;
+            case GameState.PLAYING:
+                SetupStartState(); //Should set the game in start state as if you just clicked play!
+                break;
+        }
+    }
+    private void SetupMainMenuState() {
+        HideAllMenus();
+        mainMenu.SetActive(true);
+        Cursor.visible = true;
+        currentGameState = GameState.MAIN_MENU;
+    }
+    private void SetupSettingsMenuState() {
+        HideAllMenus();
+        settingsMenu.SetActive(true);
+        Cursor.visible = true;
+        currentGameState = GameState.SETTINGS_MENU;
+    }
+    private void SetupCustomizationMenuState() {
+        HideAllMenus();
+        customizationMenu.SetActive(true);
+        Cursor.visible = true;
+        currentGameState = GameState.CUSTOMIZATION_MENU;
+    }
+    private void SetupPauseMenuState() {
+        //mainMenu.SetActive(true);
+        //Cursor.visible = true;
+        //currentGameState = GameState.PAUSE_MENU;
+    }
+
+    //Probably need to change name to refelect which state it resets
+    private void SetupStartState() {
 
     }
-    private void SetupStartState()
-    {
 
+
+    private void HideAllMenus()
+    {
+        //Add all menus here!
+        mainMenu.SetActive(false);
+        customizationMenu.SetActive(false);
+        settingsMenu.SetActive(false);
     }
 
+
+    //NOTE: Maybe move to helper class
+    public static void Clamp(ref float target, float min, float max)
+    {
+        if (target > max)
+            target = max;
+        if (target < min)
+            target = min;
+    }
+    public static void Validate(object target, string errorMessage)
+    {
+        if (target == null)
+            GameInstance.GetInstance().Abort(errorMessage);
+    }
 
 
     private void GameAssetsBundleLoadingCallback(AsyncOperationHandle<GameAssetsBundle> handle)
