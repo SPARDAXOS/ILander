@@ -13,15 +13,21 @@ MonoBehaviour:
   m_Name: PlayerSkinsBundle
   m_EditorClassIdentifier: 
   skins:
-  - name: Default
-    shipSprite: {fileID: 21300000, guid: daf2ab606d4db0d4f9ecf4c02137d2a8, type: 3}
-    portraitSprite: {fileID: 21300000, guid: e5600378dd761e64d9423790c482bf36, type: 3}
-  - name: IDK
-    shipSprite: {fileID: 21300000, guid: 0ccc508108fa6ed4fa11b4a467d7f609, type: 3}
-    portraitSprite: {fileID: 21300000, guid: 35a3340b835c797478eb139353421953, type: 3}
-  - name: Shrek
-    shipSprite: {fileID: 21300000, guid: b6a96c7c65795c94abf54a62adbf5c38, type: 3}
-    portraitSprite: {fileID: 21300000, guid: 48464cd53bb3c604f999e7d3f15e8d09, type: 3}
-  - name: Pepe
-    shipSprite: {fileID: 21300000, guid: 6a7ac9e8c26b12440bf2b1da2ca97794, type: 3}
-    portraitSprite: {fileID: 21300000, guid: 1f3420e9f7420411a8aac27743b35e29, type: 3}
+  - name: M.V.S
+    shipSprite: {fileID: 21300000, guid: 2078b68c446af4c4c9ce470233e7b77c, type: 3}
+    portraitSprite: {fileID: 21300000, guid: df8f05de046a0614ea5d8394cf6bc640, type: 3}
+  - name: Fury
+    shipSprite: {fileID: 21300000, guid: c74a44550de74e045ab493dd2dd05d7f, type: 3}
+    portraitSprite: {fileID: 21300000, guid: 6eb5e49ef731b304c8deccaccd3ff6e5, type: 3}
+  - name: Ryder
+    shipSprite: {fileID: 21300000, guid: a09e8437fd8611d41a93f3be307c12f1, type: 3}
+    portraitSprite: {fileID: 21300000, guid: 4ac410a0288efce4091a63b8ed90d978, type: 3}
+  - name: Xenax
+    shipSprite: {fileID: 21300000, guid: 625860926c5eec247b313b7e910697da, type: 3}
+    portraitSprite: {fileID: 21300000, guid: dea7e05db86671a438f7bad3b90bfa7f, type: 3}
+  - name: Seraph
+    shipSprite: {fileID: 21300000, guid: 94b215a6cf8b39a409e9ff273e9df3a2, type: 3}
+    portraitSprite: {fileID: 21300000, guid: 934ce3e42baee4d49a1a198195e5fc86, type: 3}
+  - name: XR-46
+    shipSprite: {fileID: 21300000, guid: 305a462c175914349bd03ab09614ab51, type: 3}
+    portraitSprite: {fileID: 21300000, guid: 911785f7df536ca49b536e397057871d, type: 3}

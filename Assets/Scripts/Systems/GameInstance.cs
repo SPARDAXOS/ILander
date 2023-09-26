@@ -38,6 +38,7 @@ public class GameInstance : MonoBehaviour
 
     //Temp public
     private const string gameAssetsBundleKey = "GameAssetsBundle"; //The most pritle part of the loading process.
+    private const SettingsMenu.QualityPreset startingQualityPreset = SettingsMenu.QualityPreset.ULTRA; //Put somewhere else? 
     private static GameInstance instance;
 
 
@@ -66,6 +67,8 @@ public class GameInstance : MonoBehaviour
     private MainMenu mainMenuScript;
     private SettingsMenu settingsMenuScript;
     private CustomizationMenu customizationMenuScript;
+
+    private Camera mainCameraComponent;
 
     void Update() {
         switch (currentApplicationStatus) {
@@ -229,6 +232,7 @@ public class GameInstance : MonoBehaviour
 
         mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
         mainCameraScript = mainCamera.GetComponent<MainCamera>();
+        mainCameraComponent = mainCamera.GetComponent<Camera>();
         mainCameraScript.Initialize();
 
         mainMenu = Instantiate(loadedAssets["MainMenu"].Result);
@@ -251,7 +255,10 @@ public class GameInstance : MonoBehaviour
         Debug.Log("Finished Creating Entities!");
     }
     private void SetupEntities() {
-        mainCameraScript.SetFollowTarget(player);
+        mainCameraScript.SetFollowTarget(player); //Deprecated
+
+        customizationMenuScript.SetRenderCameraTarget(mainCameraComponent);
+        settingsMenuScript.SetQualityPreset(startingQualityPreset);
     }
 
 

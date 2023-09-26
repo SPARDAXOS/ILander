@@ -33,6 +33,8 @@ public class CustomizationMenu : MonoBehaviour
     private TextMeshProUGUI player2GreenSwitch    = null;
     private TextMeshProUGUI player2BlueSwitch     = null;
 
+    private Canvas mainCanvas = null;
+
 
     private int player1SpriteIndex = 0;
     private int player2SpriteIndex = 0;
@@ -61,6 +63,10 @@ public class CustomizationMenu : MonoBehaviour
     }
 
     private void SetupReferences() {
+
+        mainCanvas = GetComponent<Canvas>();
+        GameInstance.Validate(mainCanvas, "Failed to get reference to Canvas component - CustomizationMenu");
+
         //Rename these to make it less confusing!
         Transform Player1Customizer = transform.Find("Player1Customizer").transform;
         Transform Player2Customizer = transform.Find("Player2Customizer").transform;
@@ -132,6 +138,15 @@ public class CustomizationMenu : MonoBehaviour
 
         UpdatePlayer1Skin();
         UpdatePlayer2Skin();
+    }
+
+
+    //IMPORTANT NOTE: Separate the ship sprite actor and rework stuff.
+    //Then maybe set the size of it to the size of the sprite that i set to it.
+    //Of course after making it smaller!
+
+    public void SetRenderCameraTarget(Camera target) {
+        mainCanvas.worldCamera = target;
     }
 
 
