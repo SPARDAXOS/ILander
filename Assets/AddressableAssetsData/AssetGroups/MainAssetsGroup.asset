@@ -44,6 +44,10 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/SettingsMenu.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: b07d9838a8bd5dd4e98c674f04277d23
+    m_Address: Assets/Prefabs/CountdownMenu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:

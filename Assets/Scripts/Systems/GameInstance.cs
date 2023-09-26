@@ -61,12 +61,14 @@ public class GameInstance : MonoBehaviour
     private GameObject mainMenu;
     private GameObject settingsMenu;
     private GameObject customizationMenu;
+    private GameObject countdownMenu;
 
     private Player playerScript;
     private MainCamera mainCameraScript;
     private MainMenu mainMenuScript;
     private SettingsMenu settingsMenuScript;
     private CustomizationMenu customizationMenuScript;
+    private CountdownMenu countdownMenuScript;
 
     private Camera mainCameraComponent;
 
@@ -121,6 +123,10 @@ public class GameInstance : MonoBehaviour
 
 
     private void UpdatePlayingState() {
+
+        //Questionable
+        if (countdownMenuScript.IsAnimationPlaying())
+            countdownMenuScript.Tick();
 
         playerScript.Tick();
         mainCameraScript.Tick();
@@ -250,6 +256,11 @@ public class GameInstance : MonoBehaviour
         customizationMenuScript = customizationMenu.GetComponent<CustomizationMenu>();
         customizationMenuScript.Initialize();
 
+        countdownMenu = Instantiate(loadedAssets["CountdownMenu"].Result);
+        countdownMenu.SetActive(false);
+        countdownMenuScript = countdownMenu.GetComponent<CountdownMenu>();
+        countdownMenuScript.Initialize();
+
 
 
         Debug.Log("Finished Creating Entities!");
@@ -305,38 +316,45 @@ public class GameInstance : MonoBehaviour
         //currentGameState = GameState.PAUSE_MENU;
     }
 
-    //Probably need to change name to refelect which state it resets
+    //Probably need to change name to refelect which state it resets - ADD A SECOND ONE? START STATE AND PLAYSSTATE
     private void SetupStartState() {
+        //TEMP
+        HideAllMenus();
+        countdownMenu.SetActive(true);
+        countdownMenuScript.StartAnimation(Test);
 
+        currentGameState = GameState.PLAYING;
     }
 
-
+    private void Test()
+    {
+        Debug.Log("Invocation worked!");
+        player.SetActive(true);
+    }
     private void HideAllMenus()
     {
         //Add all menus here!
         mainMenu.SetActive(false);
         customizationMenu.SetActive(false);
         settingsMenu.SetActive(false);
+        countdownMenu.SetActive(false); //??
     }
 
 
     //NOTE: Maybe move to helper class
-    public static void Clamp(ref float target, float min, float max)
-    {
+    public static void Clamp(ref float target, float min, float max) {
         if (target > max)
             target = max;
         if (target < min)
             target = min;
     }
-    public static void Validate(object target, string errorMessage)
-    {
+    public static void Validate(object target, string errorMessage) {
         if (target == null)
-            GameInstance.GetInstance().Abort(errorMessage);
+            GetInstance().Abort(errorMessage);
     }
 
 
-    private void GameAssetsBundleLoadingCallback(AsyncOperationHandle<GameAssetsBundle> handle)
-    {
+    private void GameAssetsBundleLoadingCallback(AsyncOperationHandle<GameAssetsBundle> handle) {
         if (handle.Status == AsyncOperationStatus.Succeeded)
         {
             gameAssetsBundle = handle.Result;
