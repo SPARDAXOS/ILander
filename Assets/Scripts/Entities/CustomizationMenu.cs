@@ -44,8 +44,8 @@ public class CustomizationMenu : MonoBehaviour
 
     private Image player1PortraitSprite      = null;
     private Image player2PortraitSprite      = null;
-    private Image player1CustomizationSprite = null;
-    private Image player2CustomizationSprite = null;
+    private Image player1ShipSprite = null;
+    private Image player2ShipSprite = null;
 
 
 
@@ -74,11 +74,17 @@ public class CustomizationMenu : MonoBehaviour
         GameInstance.Validate(Player1Customizer, "Failed to get reference to Player1Customizer - CustomizationMenu");
         GameInstance.Validate(Player2Customizer, "Failed to get reference to Player2Customizer - CustomizationMenu");
 
-        player1CustomizationSprite = Player1Customizer.GetComponent<Image>();
-        player2CustomizationSprite = Player2Customizer.GetComponent<Image>();
+        Transform Player1ShipSpriteTransform = Player1Customizer.Find("ShipSprite").transform;
+        Transform Player2ShipSpriteTransform = Player2Customizer.Find("ShipSprite").transform;
 
-        GameInstance.Validate(player1CustomizationSprite, "Failed to get reference to player1CustomizationSprite - CustomizationMenu");
-        GameInstance.Validate(player2CustomizationSprite, "Failed to get reference to player2CustomizationSprite - CustomizationMenu");
+        GameInstance.Validate(Player1ShipSpriteTransform, "Failed to get reference to ShipSprite1 - CustomizationMenu");
+        GameInstance.Validate(Player2ShipSpriteTransform, "Failed to get reference to ShipSprite2 - CustomizationMenu");
+
+        player1ShipSprite = Player1ShipSpriteTransform.GetComponent<Image>();
+        player2ShipSprite = Player2ShipSpriteTransform.GetComponent<Image>();
+
+        GameInstance.Validate(player1ShipSprite, "Failed to get reference to player1CustomizationSprite - CustomizationMenu");
+        GameInstance.Validate(player2ShipSprite, "Failed to get reference to player2CustomizationSprite - CustomizationMenu");
 
         //Switches
         //Player1
@@ -152,21 +158,21 @@ public class CustomizationMenu : MonoBehaviour
 
 
     private void UpdatePlayer1Skin() {
-        player1CustomizationSprite.sprite = playerSkins.skins[player1SpriteIndex].shipSprite;
+        player1ShipSprite.sprite = playerSkins.skins[player1SpriteIndex].shipSprite;
         player1PortraitSprite.sprite = playerSkins.skins[player1SpriteIndex].portraitSprite;
         player1SpriteSwitch.text = playerSkins.skins[player1SpriteIndex].name;
 
-        player1CustomizationSprite.color = player1TargetColor;
+        player1ShipSprite.color = player1TargetColor;
         player1RedSwitch.text = "R: " + player1TargetColor.r.ToString("F1");
         player1GreenSwitch.text = "G: " + player1TargetColor.g.ToString("F1");
         player1BlueSwitch.text = "B: " + player1TargetColor.b.ToString("F1");
     }
     private void UpdatePlayer2Skin() {
-        player2CustomizationSprite.sprite = playerSkins.skins[player2SpriteIndex].shipSprite;
+        player2ShipSprite.sprite = playerSkins.skins[player2SpriteIndex].shipSprite;
         player2PortraitSprite.sprite = playerSkins.skins[player2SpriteIndex].portraitSprite;
         player2SpriteSwitch.text = playerSkins.skins[player2SpriteIndex].name;
 
-        player2CustomizationSprite.color = player2TargetColor;
+        player2ShipSprite.color = player2TargetColor;
         player2RedSwitch.text = "R: " + player2TargetColor.r.ToString("F1");
         player2GreenSwitch.text = "G: " + player2TargetColor.g.ToString("F1");
         player2BlueSwitch.text = "B: " + player2TargetColor.b.ToString("F1");
@@ -300,11 +306,6 @@ public class CustomizationMenu : MonoBehaviour
 
 
     public void StartButton() {
-        GameInstance.GetInstance().SetGameState(GameInstance.GameState.PLAYING);
+        GameInstance.GetInstance().SetGameState(GameInstance.GameState.LEVEL_SELECT_MENU);
     }
-
-
-
-
-
 }

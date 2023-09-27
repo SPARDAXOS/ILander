@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3aee944a98b1744895039f840fe193a, type: 3}
-  m_Name: GameAssets
+  m_Name: GameAssetsBundle
   m_EditorClassIdentifier: 
   assets:
   - name: Player
@@ -46,6 +46,30 @@ MonoBehaviour:
   - name: CountdownMenu
     reference:
       m_AssetGUID: b07d9838a8bd5dd4e98c674f04277d23
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: GameModeMenu
+    reference:
+      m_AssetGUID: 4f0614d02a23783469d9b1e5628b63fc
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: TransitionMenu
+    reference:
+      m_AssetGUID: 31a40d7113dd9834684986067b8c59e6
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: LevelSelectMenu
+    reference:
+      m_AssetGUID: 571f9546f5745e74bb27b21569833790
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: LoadingScreen
+    reference:
+      m_AssetGUID: dafeb17d35e83644393486888f575bc8
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0

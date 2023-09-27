@@ -39,6 +39,13 @@ public class CountdownMenu : MonoBehaviour
         }
     }
 
+    //Sounds?
+
+    public void PlayCountdownSound(int index) {
+
+        Debug.Log("SOUND - " + index);
+
+    }
 
     public bool IsAnimationPlaying() {
         return animationPlaying;

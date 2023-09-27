@@ -85,6 +85,7 @@ MonoBehaviour:
     m_LabelNames:
     - default
     - GameAssetsBundle
+    - GameLevelsBundle
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: e191a0b5be9771148b43b616a1736be9, type: 2}

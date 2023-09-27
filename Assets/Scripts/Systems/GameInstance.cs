@@ -1,21 +1,18 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine;
-using System.Resources;
-using static UnityEngine.EventSystems.EventTrigger;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
-using Newtonsoft.Json.Bson;
-using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class GameInstance : MonoBehaviour
 {
 
 
     //NOTE: Break this into ApplicationStatus and GameStatus
+    //NOTE: Instead create a initialization steps?`state? not sure
+
 
     public enum ApplicationState
     {
@@ -28,27 +25,51 @@ public class GameInstance : MonoBehaviour
         NONE = 0,
         MAIN_MENU,
         SETTINGS_MENU,
+        GAMEMODE_MENU,
         CUSTOMIZATION_MENU,
+        LEVEL_SELECT_MENU,
+        LOADING_SCREEN,
         PAUSE_MENU,
         PLAYING
     }
+    public enum GameMode
+    {
+        NONE = 0,
+        COOP,
+        LAN
+    }
+    private enum LoadingScreenProcess {
+        NONE = 0,
+        LOADING_LEVEL
+    }
+
     public ApplicationState currentApplicationStatus = ApplicationState.STOPPED;
     public GameState currentGameState = GameState.NONE;
-
+    public GameMode currentGameMode = GameMode.NONE;
+    private LoadingScreenProcess currentLoadingScreenProcess = LoadingScreenProcess.NONE;
 
     //Temp public
     private const string gameAssetsBundleKey = "GameAssetsBundle"; //The most pritle part of the loading process.
-    private const SettingsMenu.QualityPreset startingQualityPreset = SettingsMenu.QualityPreset.ULTRA; //Put somewhere else? 
+    private const string levelsBundleKey = "GameLevelsBundle"; 
+
+    private const SettingsMenu.QualityPreset startingQualityPreset = SettingsMenu.QualityPreset.ULTRA; //Put somewhere else?  Move to QualitySettings SO as defualt preset!
     private static GameInstance instance;
 
 
-
-    public GameAssetsBundle gameAssetsBundle;
+    private LevelsBundle gameLevelsBundle = null;
+    public AssetsBundle gameAssetsBundle = null;
     public Dictionary<string, AsyncOperationHandle<GameObject>> loadedAssets = new Dictionary<string, AsyncOperationHandle<GameObject>>();
+
+    //Terrible names
+    private AsyncOperationHandle<GameObject> currentLoadedLevelHandle;
+    private GameObject currentLoadedLevel = null;
+    private Level currentLoadedLevelScript = null;
 
     //Sus
     private bool initializationInProgress = false;
-    private bool assetsBundleLoadingInProgress = false;
+    //Shortyen these names
+    private bool gameAssetsBundleLoadingInProgress = false;
+    private bool gameLevelsBundleLoadingInProgress = false;
     private bool assetsLoadingInProgress = false;
 
     private bool assetsLoaded = false;
@@ -60,14 +81,23 @@ public class GameInstance : MonoBehaviour
     private GameObject mainCamera;
     private GameObject mainMenu;
     private GameObject settingsMenu;
+    private GameObject gameModeMenu;
     private GameObject customizationMenu;
+    private GameObject LevelSelectMenu;
+    private GameObject loadingScreen;
+    private GameObject transitionMenu;
     private GameObject countdownMenu;
+    private GameObject eventSystem;
 
     private Player playerScript;
     private MainCamera mainCameraScript;
     private MainMenu mainMenuScript;
     private SettingsMenu settingsMenuScript;
+    private GameModeMenu gameModeMenuScript;
     private CustomizationMenu customizationMenuScript;
+    private LevelSelectMenu LevelSelectMenuScript;
+    private LoadingScreen loadingScreenScript;
+    private TransitionMenu transitionMenuScript;
     private CountdownMenu countdownMenuScript;
 
     private Camera mainCameraComponent;
@@ -88,13 +118,31 @@ public class GameInstance : MonoBehaviour
             currentApplicationStatus = ApplicationState.RUNNING;
             return;                                         
         }
+
+        //Initialization steps:
+        //Load AssetsBundle
+        //Load LevelsBundle
+        //Load Assets
+        //Create Entities
+        //Setup Entities
+        //Setup Main Menu State
+
         if (!gameAssetsBundle) {
-            if (assetsBundleLoadingInProgress)
+            if (gameAssetsBundleLoadingInProgress)
                 Debug.Log("Waiting on GameAssetsBundle to load!");
             else
                 Debug.LogError("Unable to load assets. \n GameAssetsBundle is missing!");
             return;
         }
+        if (!gameLevelsBundle) {
+            if (gameLevelsBundleLoadingInProgress)
+                Debug.Log("Waiting on GameLevelsBundle to load!");
+            else
+                Debug.LogError("Unable to load assets. \n GameLevelsBundle is missing!");
+            return;
+        }
+
+
         //NOTE: Too many unnecessary checks all over the place!. Is this obsession with safety worth it?
         if (!assetsLoaded && !assetsLoadingInProgress)
             LoadGameAssets();
@@ -114,9 +162,13 @@ public class GameInstance : MonoBehaviour
     private void RunGame() {
         //If any actions need to be taken during any of the game states, they should be added here!
         switch (currentGameState) {
+            case GameState.LOADING_SCREEN:
+                UpdateLoadingState();
+                break;
             case GameState.PLAYING:
                 UpdatePlayingState();
                 break;
+
         }
     }
 
@@ -130,6 +182,14 @@ public class GameInstance : MonoBehaviour
 
         playerScript.Tick();
         mainCameraScript.Tick();
+    }
+    private void UpdateLoadingState() {
+        float value = 0.0f;
+
+        if (currentLoadingScreenProcess == LoadingScreenProcess.LOADING_LEVEL) //Its only to figure out which value for the bar to get!
+            value = currentLoadedLevelHandle.PercentComplete;
+
+        loadingScreenScript.SetLoadingBarValue(value);
     }
 
 
@@ -169,7 +229,7 @@ public class GameInstance : MonoBehaviour
 
     public void Initialize()
     {
-        if (gameAssetsBundle) {
+        if (gameAssetsBundle && gameLevelsBundle) { //Assets too? maybe just use the init bool instead?
             Debug.Log("Game is already initalized!");
             return;
         }
@@ -181,6 +241,7 @@ public class GameInstance : MonoBehaviour
         currentApplicationStatus = ApplicationState.INITIALIZING;
         initializationInProgress = true;
         LoadGameAssetsBundle();
+        LoadLevelsBundle();
     }
 
 
@@ -188,7 +249,7 @@ public class GameInstance : MonoBehaviour
     private void LoadGameAssetsBundle()
     {
         if (gameAssetsBundle) {
-            Debug.Log("Game assets bundle is already loaded!");
+            Debug.Log("GameAssetsBundle is already loaded!");
             return;
         }
         Debug.Log("Started Loading GameAssetsBundle!");
@@ -196,8 +257,22 @@ public class GameInstance : MonoBehaviour
         {
             labelString = gameAssetsBundleKey
         };
-        Addressables.LoadAssetAsync<GameAssetsBundle>(GameAssetsLabel).Completed += GameAssetsBundleLoadingCallback;
-        assetsBundleLoadingInProgress = true;
+        Addressables.LoadAssetAsync<AssetsBundle>(GameAssetsLabel).Completed += GameAssetsBundleLoadingCallback;
+        gameAssetsBundleLoadingInProgress = true;
+    }
+    private void LoadLevelsBundle(){
+        if (gameLevelsBundle)
+        {
+            Debug.Log("GameLevelsBundle is already loaded!");
+            return;
+        }
+        Debug.Log("Started Loading GameLevelsBundle!");
+        AssetLabelReference LevelsBundleLabel = new AssetLabelReference
+        {
+            labelString = levelsBundleKey
+        };
+        Addressables.LoadAssetAsync<LevelsBundle>(LevelsBundleLabel).Completed += GameLevelsBundleLoadingCallback;
+        gameLevelsBundleLoadingInProgress = true;
     }
     private void LoadGameAssets()
     {
@@ -227,9 +302,12 @@ public class GameInstance : MonoBehaviour
             assetsLoaded = true;
         }
     }
-    private void CreateEntities()
-    {
+    private void CreateEntities() {
         Debug.Log("Started Creating Entities!");
+
+        eventSystem = new GameObject("EventSystem");
+        eventSystem.AddComponent<EventSystem>();
+        eventSystem.AddComponent<InputSystemUIInputModule>();
 
         player = Instantiate(loadedAssets["Player"].Result);
         player.SetActive(false);
@@ -251,10 +329,29 @@ public class GameInstance : MonoBehaviour
         settingsMenuScript = settingsMenu.GetComponent<SettingsMenu>();
         settingsMenuScript.Initialize();
 
+        gameModeMenu = Instantiate(loadedAssets["GameModeMenu"].Result);
+        gameModeMenu.SetActive(false);
+        gameModeMenuScript = gameModeMenu.GetComponent<GameModeMenu>(); //Is getting this script even has any value? i wont call anything from it. It has button code only!
+
         customizationMenu = Instantiate(loadedAssets["CustomizationMenu"].Result);
         customizationMenu.SetActive(false);
         customizationMenuScript = customizationMenu.GetComponent<CustomizationMenu>();
         customizationMenuScript.Initialize();
+
+        LevelSelectMenu = Instantiate(loadedAssets["LevelSelectMenu"].Result);
+        LevelSelectMenu.SetActive(false);
+        LevelSelectMenuScript = LevelSelectMenu.GetComponent<LevelSelectMenu>();
+        LevelSelectMenuScript.Initialize();
+
+        loadingScreen = Instantiate(loadedAssets["LoadingScreen"].Result);
+        loadingScreen.SetActive(false);
+        loadingScreenScript = loadingScreen.GetComponent<LoadingScreen>();
+        loadingScreenScript.Initialize();
+
+        transitionMenu = Instantiate(loadedAssets["TransitionMenu"].Result);
+        transitionMenu.SetActive(false);
+        transitionMenuScript = transitionMenu.GetComponent<TransitionMenu>();
+        transitionMenuScript.Initialize();
 
         countdownMenu = Instantiate(loadedAssets["CountdownMenu"].Result);
         countdownMenu.SetActive(false);
@@ -269,26 +366,36 @@ public class GameInstance : MonoBehaviour
         mainCameraScript.SetFollowTarget(player); //Deprecated
 
         customizationMenuScript.SetRenderCameraTarget(mainCameraComponent);
-        settingsMenuScript.SetQualityPreset(startingQualityPreset);
+        settingsMenuScript.SetQualityPreset(startingQualityPreset); //Deprecated once i rework quality presets
+        LevelSelectMenuScript.SetLevelsBundle(gameLevelsBundle);
     }
 
-
+    //FIX INIFINITE RELOADING OF ASSETS IN CASE OF ERROR! initialization loop
     public void SetGameState(GameState state) {
         switch (state) {
             case GameState.MAIN_MENU:
                 SetupMainMenuState();
                 break;
             case GameState.SETTINGS_MENU:
-                SetupSettingsMenuState();
+                transitionMenuScript.StartTransition(SetupSettingsMenuState);
+                break;
+            case GameState.GAMEMODE_MENU:
+                transitionMenuScript.StartTransition(SetupGameModeMenuState);
                 break;
             case GameState.CUSTOMIZATION_MENU:
-                SetupCustomizationMenuState();
+                transitionMenuScript.StartTransition(SetupCustomizationMenuState);
+                break;
+            case GameState.LEVEL_SELECT_MENU:
+                transitionMenuScript.StartTransition(SetupLevelSelectMenuState);
+                break;
+            case GameState.LOADING_SCREEN:
+                Debug.LogWarning("You cant use SetGameState to transition into a loading screen \n StartLoadingScreenProcess is used instead for internal use only!");
                 break;
             case GameState.PAUSE_MENU:
                 SetupPauseMenuState();
                 break;
             case GameState.PLAYING:
-                SetupStartState(); //Should set the game in start state as if you just clicked play!
+                transitionMenuScript.StartTransition(SetupPlayState);//Should set the game in start state as if you just clicked play!
                 break;
         }
     }
@@ -304,41 +411,110 @@ public class GameInstance : MonoBehaviour
         Cursor.visible = true;
         currentGameState = GameState.SETTINGS_MENU;
     }
+    private void SetupGameModeMenuState() {
+        HideAllMenus(); //hmm, with transition,,,
+        gameModeMenu.SetActive(true);
+        Cursor.visible = true;
+        currentGameState = GameState.GAMEMODE_MENU;
+    }
     private void SetupCustomizationMenuState() {
         HideAllMenus();
         customizationMenu.SetActive(true);
         Cursor.visible = true;
         currentGameState = GameState.CUSTOMIZATION_MENU;
     }
+    private void SetupLevelSelectMenuState() {
+        HideAllMenus();
+        LevelSelectMenu.SetActive(true);
+        Cursor.visible = true;
+        currentGameState = GameState.LEVEL_SELECT_MENU;
+    }
+    private void SetupLoadingScreenState() {
+        HideAllMenus();
+        loadingScreen.SetActive(true);
+        Cursor.visible = false;
+        currentGameState = GameState.LOADING_SCREEN;
+    }
     private void SetupPauseMenuState() {
         //mainMenu.SetActive(true);
-        //Cursor.visible = true;
-        //currentGameState = GameState.PAUSE_MENU;
+        Cursor.visible = true;
+        currentGameState = GameState.PAUSE_MENU;
     }
 
     //Probably need to change name to refelect which state it resets - ADD A SECOND ONE? START STATE AND PLAYSSTATE
-    private void SetupStartState() {
-        //TEMP
-        HideAllMenus();
+
+    //Now it seems like they do the same thing...
+    private void SetupLevelStartState() {
+        HideAllMenus(); //To turn off loading screen
+        Cursor.visible = false;
+        //Get data from level and setup start state for players by reseting them and positing them
+        //Reset any match score between them
+        //Disable their input
+        //Start count down at the end
         countdownMenu.SetActive(true);
-        countdownMenuScript.StartAnimation(Test);
+        countdownMenuScript.StartAnimation(StartMatch);
+    }
+    private void SetupPlayState() {
+        //TEMP
+        //Assert if gamemode is none! 
+
 
         currentGameState = GameState.PLAYING;
     }
 
-    private void Test()
-    {
+
+
+    public void SetGameModeSelection(GameMode mode) {
+        currentGameMode = mode;
+    }
+    public void StartLevel(uint level) {
+        if (currentLoadedLevel) {
+            Debug.LogError("Attempted to start a level while another level was loaded!");
+            return;
+        }
+
+        currentLoadedLevelHandle = Addressables.LoadAssetAsync<GameObject>(gameLevelsBundle.levels[level].asset);
+        currentLoadedLevelHandle.Completed += LevelLoadedCallback;
+        StartLoadingScreenProcess(LoadingScreenProcess.LOADING_LEVEL);
+    }
+
+
+    private void UnloadCurrentLevel() {
+        if (currentLoadedLevelHandle.IsValid())
+            Addressables.Release(currentLoadedLevelHandle);
+
+        //Other stuff? change func name maybe to something more final! EndGame?
+    }
+
+    //Unnecessary but in case the loading screen is reused for different types of loading (levels, leaderboards, etc)
+    private void StartLoadingScreenProcess(LoadingScreenProcess process) {
+        if (process == LoadingScreenProcess.NONE)
+            return;
+
+        currentLoadingScreenProcess = process;
+        SetupLoadingScreenState();
+    }
+
+
+
+
+    private void StartMatch() {
+        //Not finished
         Debug.Log("Invocation worked!");
         player.SetActive(true);
+        //TRurn off countdown menu?
     }
-    private void HideAllMenus()
-    {
+    private void HideAllMenus() {
         //Add all menus here!
         mainMenu.SetActive(false);
         customizationMenu.SetActive(false);
+        LevelSelectMenu.SetActive(false);
         settingsMenu.SetActive(false);
-        countdownMenu.SetActive(false); //??
+        gameModeMenu.SetActive(false);
+        countdownMenu.SetActive(false);
+        loadingScreen.SetActive(false);
     }
+
 
 
     //NOTE: Maybe move to helper class
@@ -354,64 +530,67 @@ public class GameInstance : MonoBehaviour
     }
 
 
-    private void GameAssetsBundleLoadingCallback(AsyncOperationHandle<GameAssetsBundle> handle) {
+
+    private void LevelLoadedCallback(AsyncOperationHandle<GameObject> handle)
+    {
         if (handle.Status == AsyncOperationStatus.Succeeded)
         {
+            Debug.Log("Loaded level " + handle.Result.ToString() + " successfully");
+
+            currentLoadedLevel = Instantiate(handle.Result);
+            currentLoadedLevelScript = currentLoadedLevel.GetComponent<Level>();
+
+
+            SetupLevelStartState();
+            SetupPlayState();
+        }
+        else
+        {
+            Debug.LogError("Failed to load level");
+            SetupMainMenuState();
+        }
+
+        currentLoadingScreenProcess = LoadingScreenProcess.NONE;
+    }
+    private void GameAssetsBundleLoadingCallback(AsyncOperationHandle<AssetsBundle> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded) {
             gameAssetsBundle = handle.Result;
             Debug.Log("GameAssetsBundle Loaded Successfully!");
         }
         else {
-            Debug.LogError("Failed to load assets bundle! \n exiting..");
-
-            //NOTE:
-            //If it fails to load and it is intergral then 
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
-        Application.Quit();
+            Abort("Failed to load assets bundle! \n exiting..");
 #endif
         }
 
-        assetsBundleLoadingInProgress = false;
-        /*
-        //NOTES:
-        //This method works.
-        //The only thing to keep track of is the GameAssetsBundle key which i should make into a member to make it more important and make sure it is trackable!
-
-        //Although, whats the point of the GameAssetsBundle? i could just load everything in the thing....
-        //I think its a better solution than to rely on labeling assets like crazy and making sure they all carry the label i want
-        //The bundle method makes sure that if something is wrong then its in the specific bundle. Removing labels makes it more safer for errors such as
-        //not marking something with the right label and such
-
-        //Plans
-        //Make some sort of key/value pair in a dictionary so i can associate asset handles with assets by keys
-        //Either i get the key + AssetReference pair from the SO then i build my dictionary with key + Handle here
-        //Or i have 2 lists at GameAssets where i subscribe the key/handle pair or something.
-        //First option seems better.
-        //My method of loading basically allows for grouping assets without relying too heavily on label and instead grouping using SOs.
-        //Cars SO contains only car refs and such...
-
-
-        //Final Notes:
-        //Get AssetEntry from GameAssets
-        //Load Asset and use its key to somehow keep in a Dictionary here along with its handle!
-        //How to associate both is the problem left
-        */
+        gameAssetsBundleLoadingInProgress = false;
     }
-    private void GameObjectLoadingCallback(AsyncOperationHandle<GameObject> handle)
-    {
+    private void GameLevelsBundleLoadingCallback(AsyncOperationHandle<LevelsBundle> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded) {
+            gameLevelsBundle = handle.Result;
+            Debug.Log("GameLevelsBundle Loaded Successfully!");
+        }
+        else {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Abort("Failed to load levels bundle! \n exiting..");
+#endif
+        }
+
+        gameAssetsBundleLoadingInProgress = false;
+    }
+    private void GameObjectLoadingCallback(AsyncOperationHandle<GameObject> handle) {
         if (handle.Status == AsyncOperationStatus.Succeeded) {
             Debug.Log("Successfully loaded " + handle.Result.ToString());
         }
         else {
-            Debug.LogError("Asset " + handle.ToString() + " failed to load!");
-
-            //NOTE:
-            //If it fails to load and it is intergral then 
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
-        Application.Quit();
+            Abort("Asset " + handle.ToString() + " failed to load!");
 #endif
         }
     }

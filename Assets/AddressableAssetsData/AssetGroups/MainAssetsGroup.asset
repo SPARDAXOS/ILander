@@ -20,14 +20,13 @@ MonoBehaviour:
   - m_GUID: 1d6161b12ebcd6b4c9a2f60a102c5423
     m_Address: Assets/Prefabs/Player.prefab
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - default
+    m_SerializedLabels: []
   - m_GUID: 60efcebd30746a7428e3accffecd674a
-    m_Address: Assets/ScriptableObjects/GameAssets.asset
+    m_Address: Assets/ScriptableObjects/GameAssetsBundle.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - GameAssetsBundle
-    - default
+    - AssetsBundle
   - m_GUID: d206b0a283a7e8e459caa1daf1c0e314
     m_Address: Assets/Prefabs/MainCamera.prefab
     m_ReadOnly: 0
@@ -46,6 +45,36 @@ MonoBehaviour:
     m_SerializedLabels: []
   - m_GUID: b07d9838a8bd5dd4e98c674f04277d23
     m_Address: Assets/Prefabs/CountdownMenu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 4f0614d02a23783469d9b1e5628b63fc
+    m_Address: Assets/Prefabs/GameModeSelectionMenu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 31a40d7113dd9834684986067b8c59e6
+    m_Address: Assets/Prefabs/TransitionMenu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e04652c2a60864249839fe5bfc10ce3b
+    m_Address: Assets/ScriptableObjects/GameLevelsBundle.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - LevelsBundle
+    - GameLevelsBundle
+  - m_GUID: 571f9546f5745e74bb27b21569833790
+    m_Address: Assets/Prefabs/LevelSelectMenu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: dafeb17d35e83644393486888f575bc8
+    m_Address: Assets/Prefabs/LoadingScreen.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: acc8055ff226e224095345ae9fb85083
+    m_Address: Assets/Prefabs/Levels/Level1.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d661d72267abe764c949cd01a74280aa
+    m_Address: Assets/Prefabs/Levels/Level2.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
   m_ReadOnly: 0

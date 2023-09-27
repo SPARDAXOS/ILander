@@ -25,7 +25,7 @@ public class MainMenu : MonoBehaviour
 
 
     public void StartButton() {
-        GameInstance.GetInstance().SetGameState(GameInstance.GameState.CUSTOMIZATION_MENU);
+        GameInstance.GetInstance().SetGameState(GameInstance.GameState.GAMEMODE_MENU);
     }
     public void SettingsButton() {
         GameInstance.GetInstance().SetGameState(GameInstance.GameState.SETTINGS_MENU);
