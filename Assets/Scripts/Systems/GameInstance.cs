@@ -53,9 +53,7 @@ public class GameInstance : MonoBehaviour
     private const string gameAssetsBundleKey = "GameAssetsBundle"; //The most pritle part of the loading process.
     private const string levelsBundleKey = "GameLevelsBundle"; 
 
-    //private const SettingsMenu.QualityPreset startingQualityPreset = SettingsMenu.QualityPreset.ULTRA; //Put somewhere else?  Move to QualitySettings SO as defualt preset!
     private static GameInstance instance;
-
 
     private LevelsBundle gameLevelsBundle = null;
     public AssetsBundle gameAssetsBundle = null;

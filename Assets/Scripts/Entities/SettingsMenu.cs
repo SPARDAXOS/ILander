@@ -15,8 +15,7 @@ public class SettingsMenu : MonoBehaviour {
         MEDIUM = 1,
         HIGH = 2,
         ULTRA = 3,
-        CUSTOM = 4,
-        NONE = 5 //Primarily to avoid GameInstance.startingQualityLevel from being equal to currentQualityPreset  NOT NEEDED!
+        CUSTOM = 4
     }
     public enum AntiAliasingOptions {
         NO_MSAA = 0,
@@ -38,19 +37,16 @@ public class SettingsMenu : MonoBehaviour {
 
 
     [SerializeField] private GameSettings gameSettings;
-
-
-    public QualityPreset currentQualityPreset = QualityPreset.NONE;
-    public QualityPresetData currentQualityPresetData;
-
-    private Color selectedPresetColor = new Color(0.06f, 0.6f, 0.77f, 1.0f); //Code expose this..
-    private Color defaultPresetNormalColor;
-    private Color defaultPresetSelectedColor;
-
-    private Resolution[] supportedResolutions = null;
-
+    [SerializeField] private Color selectedPresetColor = new Color(0.06f, 0.6f, 0.77f, 1.0f);
 
     private bool initialized = false;
+
+    private QualityPreset currentQualityPreset = QualityPreset.LOW;
+    private QualityPresetData currentQualityPresetData;
+    private Resolution[] supportedResolutions = null;
+
+    private Color defaultPresetNormalColor;
+    private Color defaultPresetSelectedColor;
 
     private TMP_Dropdown resolutionDropdown           = null;
     private TMP_Dropdown windowModeDropdown           = null;
@@ -60,12 +56,22 @@ public class SettingsMenu : MonoBehaviour {
     private TMP_Dropdown textureQualityDropdown       = null;
     private TMP_Dropdown anisotropicFilteringDropdown = null;
 
-
     private Button lowPresetButton    = null;
     private Button mediumPresetButton = null;
     private Button highPresetButton   = null;
     private Button ultraPresetButton  = null;
     private Button customPresetButton = null;
+
+
+    //TODO: Reverse the order for the TextureQuality dropdown menu to keep it inline with lowest to highest going down!
+    //Keep in mind that some things depend on the TextureQuality options having the same order as the options in QualitySettings! make sure to keep an eye out!
+
+    //TODO: Unrelated to this class but i could reuse the player data SO to give each character their own values! Maybe add something in Customization window to
+    //indicate this?
+
+    //TODO: Setup the code to set player data from customization screen
+    //SetPlayer1Data(data, sprite?), SetPlayer2Data(data, sprite?)
+
 
 
     public void Initialize() {
@@ -75,6 +81,7 @@ public class SettingsMenu : MonoBehaviour {
         SetupReferences();
         SetupResolutions();
         SetupWindowModes();
+        SetupPresetsCallbacks();
         ApplyDefaultPreset();
         initialized = true;
     }
@@ -110,6 +117,7 @@ public class SettingsMenu : MonoBehaviour {
         GameInstance.Validate(ultraPresetButton, "Failed to find component Button in ultraPresetButton - SettingsMenu", true);
         GameInstance.Validate(customPresetButton, "Failed to find component Button in customPresetButton - SettingsMenu", true);
 
+        //If any of the buttons has unique values for these then they will be set to customPresetButton's values upon clearing!
         defaultPresetNormalColor = customPresetButton.colors.normalColor;
         defaultPresetSelectedColor = customPresetButton.colors.selectedColor;
 
@@ -178,10 +186,9 @@ public class SettingsMenu : MonoBehaviour {
 #endif
     }
 
-    //Should it not be public?
-    public void SetQualityPreset(QualityPreset level) {
 
-        if (level == currentQualityPreset || level == QualityPreset.NONE)
+    private void SetQualityPreset(QualityPreset level) {
+        if (level == currentQualityPreset && initialized) //&& initialized to avoid skipping this if default preset == defualt value for currentQualityPreset
             return;
 
         if ((int)level == 0) {
@@ -202,29 +209,15 @@ public class SettingsMenu : MonoBehaviour {
         }
         else if ((int)level == 4) {
             currentQualityPreset = QualityPreset.CUSTOM;
-            currentQualityPresetData = gameSettings.lowPreset;
+            ResetAllPresetButtonsColors();
+            ApplySelectedPresetButtonColor();
+            return;
         }
 
-        ResetAllPresetButtonsColors(); // ?? hav eto keep track of a lot of orders for thses function calls - NEW: Move into ApplySelectedPresetStyle and change ApplySelectedPresetStyle name!
-        ApplySelectedPresetStyle();
+        ResetAllPresetButtonsColors();
+        ApplySelectedPresetButtonColor();
         ApplyCurrentQualityPreset();
         UpdateGUI();
-    }
-
-
-    //IMPORTANT NOTES:
-    //-Presets by unity are busted. if i change anything in them by setting vsync, antialiasing etc. it will become permenant.
-    //-Turn GameSettings into QualityPreset where i define the preset myself.
-
-
-
-    private void CheckPresetChanges() {
-        if (currentQualityPreset != QualityPreset.CUSTOM) {
-            currentQualityPreset = QualityPreset.CUSTOM;
-            //SUS Didnt see this till the end
-            ResetAllPresetButtonsColors();
-            ApplySelectedPresetStyle();
-        }
     }
     private void ResetAllPresetButtonsColors() {
         ColorBlock colorBlock = customPresetButton.colors;
@@ -237,228 +230,61 @@ public class SettingsMenu : MonoBehaviour {
         highPresetButton.colors = colorBlock;
         ultraPresetButton.colors = colorBlock;
     }
-
-
-    public void UpdateVsync() {
-        int value = vsyncDropdown.value;
-        if (value > 4 || value < 0) {
-            Debug.LogError("Value above 4 or less than 0 was sent to UpdateVsync - Allowed values are 0, 1, 2, 3, 4");
-            QualitySettings.vSyncCount = 1;
-            return;
-        }
-
-        CheckPresetChanges();
-        QualitySettings.vSyncCount = value;
-    }
-    public void UpdateFPSLimit() {
-        int value = fpsLimitDropdown.value;
-        if (value > 3 || value < 0) {
-            Debug.LogError("Value above 3 or less than 0 was sent to UpdateFPSLimit - Allowed values are 0, 1, 2, 3");
-            Application.targetFrameRate = 30;
-            return;
-        }
-
-        if (value == 0)
-            value = -1; //Default in Unity to use platforms default target frame rate.
-        else if (value == 1)
-            value = 30;
-        else if (value == 2)
-            value = 60;
-        else if (value == 3)
-            value = 144;
-
-        Application.targetFrameRate = value;
-    }
-    public void UpdateAntiAliasing() {
-        int value = antiAliasingDropdown.value;
-        //To func?
-        if (value > 3 || value < 0) {
-            Debug.LogError("Value above 3 or less than 0 was sent to UpdateAntiAliasing - Allowed values are 0, 1, 2, 3");
-            QualitySettings.antiAliasing = 0;
-            return;
-        }
-
-        if (value == 0)
-            value = 0; //No MSAA
-        else if (value == 1)
-            value = 2;
-        else if (value == 2)
-            value = 4;
-        else if (value == 3)
-            value = 8;
-
-        CheckPresetChanges();
-        QualitySettings.antiAliasing = value;
-    }
-    public void UpdateTextureQuality() {
-        //0 - fullres, 1 - Half res, 2 - Quarter res, 3 - eigth res
-        int value = textureQualityDropdown.value;
-        if (value > 3 || value < 0) {
-            Debug.LogError("Value above 3 or less than 0 was sent to UpdateTextureQuality - Allowed values are 0, 1, 2, 3");
-            QualitySettings.masterTextureLimit = 3;
-            return;
-        }
-        CheckPresetChanges();
-        QualitySettings.masterTextureLimit = value;
-    }
-    public void UpdateAnisotropicFiltering() {
-        //ForceEnable, Enable, Disable
-        int value = anisotropicFilteringDropdown.value;
-        if (value > 2 || value < 0) {
-            Debug.LogError("Value above 2 or less than 0 was sent to UpdateAnisotropicFiltering - Allowed values are 0, 1, 2");
-            QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
-            return;
-        }
-
-        var result = AnisotropicFiltering.Disable;
-        if (value == 1)
-            result = AnisotropicFiltering.Enable;
-        else if (value == 2)
-            result = AnisotropicFiltering.ForceEnable;
-
-        CheckPresetChanges();
-        QualitySettings.anisotropicFiltering = result;
-    }
-    public void UpdateQualityLevel(int level) {
-        //Custom(4), Ultra(3), High(2), Medium(1), Low(0)
-        if (level > 4 || level < 0) {
-            Debug.LogError("Value above 4 or less than 0 was sent to UpdateQualityLevel - Allowed values are 0, 1, 2, 3, 4");
-            QualitySettings.SetQualityLevel(0, true);
-
-            SetQualityPreset(QualityPreset.LOW);
-
-            //currentQualityPreset = QualityPreset.LOW;
-            //ApplySelectedPresetStyle();
-            //ApplyCurrentQualityPreset();
-            return;
-        }
-        SetQualityPreset((QualityPreset)level);
-    }
-
-    public void UpdateResolution() {
-        int value = resolutionDropdown.value;
-        Assert.IsFalse(value > supportedResolutions.Length - 1 || value < 0);
-        var results = supportedResolutions[value];
-        Screen.SetResolution(results.width, results.height, Screen.fullScreen);
-        CheckPresetChanges();
-    }
-    public void UpdateWindowMode() {
-        int value = windowModeDropdown.value;
-        if (value > 3 || value < 0) {
-            Debug.LogError("Value above 3 or less than 0 was sent to SetWindowMode - Allowed values are 0, 1, 2(win only), 3(mac only)");
-            return;
-        }
-
-        var results = FullScreenMode.Windowed;
-        if (value == 1)
-            results = FullScreenMode.FullScreenWindow;
-
-#if UNITY_STANDALONE_WIN
-        if (value == 2)
-            results = FullScreenMode.ExclusiveFullScreen;
-#elif UNITY_STANDALONE_OSX
-        if (value == 2)
-            results = FullScreenMode.MaximizedWindow;
-#endif
-
-        Screen.fullScreenMode = results;
-    }
-
-
-
-    private void ApplySelectedPresetStyle() {
-
-        ColorBlock colorBlock = customPresetButton.colors; //If they dont share same color for other events then this would be weird
-        colorBlock.normalColor = selectedPresetColor;
-        colorBlock.selectedColor = selectedPresetColor;
-
+    private void ApplySelectedPresetButtonColor() {
+        //Slight code repetition but it is necessary to not override any other options for Button.colors other than selectedColor and normalColor. 
+        ColorBlock colorBlock;
         if (currentQualityPreset == QualityPreset.CUSTOM)
+        {
+            colorBlock = customPresetButton.colors;
+            colorBlock.normalColor = selectedPresetColor;
+            colorBlock.selectedColor = selectedPresetColor;
             customPresetButton.colors = colorBlock;
+        }
         else if (currentQualityPreset == QualityPreset.LOW)
+        {
+            colorBlock = lowPresetButton.colors;
+            colorBlock.normalColor = selectedPresetColor;
+            colorBlock.selectedColor = selectedPresetColor;
             lowPresetButton.colors = colorBlock;
+        }
         else if (currentQualityPreset == QualityPreset.MEDIUM)
+        {
+            colorBlock = mediumPresetButton.colors;
+            colorBlock.normalColor = selectedPresetColor;
+            colorBlock.selectedColor = selectedPresetColor;
             mediumPresetButton.colors = colorBlock;
+        }
         else if (currentQualityPreset == QualityPreset.HIGH)
+        {
+            colorBlock = highPresetButton.colors;
+            colorBlock.normalColor = selectedPresetColor;
+            colorBlock.selectedColor = selectedPresetColor;
             highPresetButton.colors = colorBlock;
+        }
         else if (currentQualityPreset == QualityPreset.ULTRA)
+        {
+            colorBlock = ultraPresetButton.colors;
+            colorBlock.normalColor = selectedPresetColor;
+            colorBlock.selectedColor = selectedPresetColor;
             ultraPresetButton.colors = colorBlock;
-    }
-
-    private void RemoveAllCallbacks() {
-        //Any listeners from editor are persistent and unaffected by this.
-        resolutionDropdown.onValueChanged.RemoveAllListeners();
-        resolutionDropdown.onValueChanged.RemoveAllListeners();
-        windowModeDropdown.onValueChanged.RemoveAllListeners();
-        vsyncDropdown.onValueChanged.RemoveAllListeners();
-        fpsLimitDropdown.onValueChanged.RemoveAllListeners();
-        antiAliasingDropdown.onValueChanged.RemoveAllListeners();
-        textureQualityDropdown.onValueChanged.RemoveAllListeners();
-        anisotropicFilteringDropdown.onValueChanged.RemoveAllListeners();
-    }
-    private void SetupAllCallbacks() {
-        resolutionDropdown.onValueChanged.AddListener(delegate { UpdateResolution(); });
-        windowModeDropdown.onValueChanged.AddListener(delegate { UpdateWindowMode(); });
-        vsyncDropdown.onValueChanged.AddListener(delegate { UpdateVsync(); });
-        fpsLimitDropdown.onValueChanged.AddListener(delegate { UpdateFPSLimit(); });
-        antiAliasingDropdown.onValueChanged.AddListener(delegate {  UpdateAntiAliasing(); });
-        textureQualityDropdown.onValueChanged.AddListener(delegate { UpdateTextureQuality(); });
-        anisotropicFilteringDropdown.onValueChanged?.AddListener(delegate { UpdateAnisotropicFiltering(); });
-    }
-
-    //Also confusing name!
-    private void ApplyDefaultPreset() {
-
-        //Steps for reworking these functions to be more reusable.
-        //Set currentQualityPreset
-        //Clear selected color for all preset buttons
-        //Set the color for the selected preset button
-        //Set currentQualityPresetData
-        //Apply the settings from currentQualityPresetData
-        //UpdateGUI
-
-
-
-        //If set to custom then it will switch to low!
-        if (gameSettings.defualtPreset == QualityPreset.LOW || gameSettings.defualtPreset == QualityPreset.CUSTOM) {
-            currentQualityPreset = QualityPreset.LOW;
-            currentQualityPresetData = gameSettings.lowPreset;
         }
-        else if (gameSettings.defualtPreset == QualityPreset.MEDIUM) {
-            currentQualityPreset = QualityPreset.MEDIUM;
-            currentQualityPresetData = gameSettings.mediumPreset;
-        }
-        else if (gameSettings.defualtPreset == QualityPreset.HIGH) {
-            currentQualityPreset = QualityPreset.HIGH;
-            currentQualityPresetData = gameSettings.highPreset;
-        }
-        else if (gameSettings.defualtPreset == QualityPreset.ULTRA) {
-            currentQualityPreset = QualityPreset.ULTRA;
-            currentQualityPresetData = gameSettings.ultraPreset;
-        }
-
-        //Clear preset buttons?
-        ApplySelectedPresetStyle();
-        ApplyCurrentQualityPreset();
-        UpdateGUI();
     }
     private void ApplyCurrentQualityPreset() {
+        if (currentQualityPreset == QualityPreset.CUSTOM)
+            return;
+
         QualitySettings.antiAliasing = (int)currentQualityPresetData.antiAliasing;
         QualitySettings.anisotropicFiltering = (AnisotropicFiltering)currentQualityPresetData.anisotropicFiltering;
         QualitySettings.masterTextureLimit = (int)currentQualityPresetData.textureQuality;
     }
-
-    //Could be used primarily for updating the fields with current data from the platform?
     private void UpdateGUI() {
-
         //To avoid calls to callbacks that would count as manual adjustment of settings. (Sets preset to Custom)
-        RemoveAllCallbacks();
-
-
-        //TODO: Rework this to use the currentPresetSettings!
+        RemoveAllSettingsCallbacks();
 
         //Resolution
         var currentResolution = Screen.currentResolution;
-        for (uint i = 0; i < supportedResolutions.Length; i++) {
+        for (uint i = 0; i < supportedResolutions.Length; i++)
+        {
             var entry = supportedResolutions[i];
             if (entry.width == currentResolution.width && entry.height == currentResolution.height && entry.refreshRate == currentResolution.refreshRate)
                 resolutionDropdown.value = (int)i;
@@ -495,32 +321,173 @@ public class SettingsMenu : MonoBehaviour {
         //Anti Aliasing
         antiAliasingDropdown.value = (int)currentQualityPresetData.antiAliasing;
 
-        //var antiAliasing = QualitySettings.antiAliasing;
-        //if (antiAliasing == 0)
-        //    antiAliasingDropdown.value = (int)currentQualityPresetData.antiAliasing;
-        //else if (antiAliasing == 2)
-        //    antiAliasingDropdown.value = 1;
-        //else if (antiAliasing == 4)
-        //    antiAliasingDropdown.value = 2;
-        //else if (antiAliasing == 8)
-        //    antiAliasingDropdown.value = 3;
-
         //Texture Quality
         textureQualityDropdown.value = QualitySettings.masterTextureLimit; //The options indicies mirror masterTextureLimit allowed values.
 
         //Anisotropic Filtering
         anisotropicFilteringDropdown.value = (int)currentQualityPresetData.anisotropicFiltering;
 
-        //var anisotropicFiltering = QualitySettings.anisotropicFiltering;
-        //if (anisotropicFiltering == AnisotropicFiltering.Disable)
-        //    anisotropicFilteringDropdown.value = 0;
-        //else if (anisotropicFiltering == AnisotropicFiltering.Enable)
-        //    anisotropicFilteringDropdown.value = 1;
-        //else if (anisotropicFiltering == AnisotropicFiltering.ForceEnable)
-        //    anisotropicFilteringDropdown.value = 2;
-        //
-        SetupAllCallbacks();
+        SetupSettingsCallbacks();
     }
+
+
+    private bool ValidateUserInput(int min, uint max, int value, string operationName){
+        if (value < min) {
+            Debug.LogError("Invalid user input! \n Value less than " + min + " was sent to " + operationName);
+            return false;
+        }
+        else if (value > max) {
+            Debug.LogError("Invalid user input! \n Value more than " + max + " was sent to " + operationName);
+            return false;
+        }
+
+        return true;
+    }
+    private void ApplyDefaultPreset() {
+        //If set to custom then it will switch to low!
+        if (gameSettings.defualtPreset == QualityPreset.CUSTOM)
+            SetQualityPreset(QualityPreset.LOW);
+        else
+            SetQualityPreset(gameSettings.defualtPreset);
+    }
+    private void CheckPresetChanges() {
+        if (currentQualityPreset != QualityPreset.CUSTOM) {
+            currentQualityPreset = QualityPreset.CUSTOM;
+            ResetAllPresetButtonsColors();
+            ApplySelectedPresetButtonColor();
+        }
+    }
+
+
+    public void UpdateVsync() {
+        int value = vsyncDropdown.value;
+        if (!ValidateUserInput(0, 4, value, "UpdateVsync"))
+            return;
+
+        CheckPresetChanges();
+        QualitySettings.vSyncCount = value;
+    }
+    public void UpdateFPSLimit() {
+        int value = fpsLimitDropdown.value;
+        if (!ValidateUserInput(0, 3, value, "UpdateFPSLimit"))
+            return;
+
+        if (value == 0)
+            value = -1; //Default in Unity to use platforms default target frame rate.
+        else if (value == 1)
+            value = 30;
+        else if (value == 2)
+            value = 60;
+        else if (value == 3)
+            value = 144;
+
+        Application.targetFrameRate = value;
+    }
+    public void UpdateAntiAliasing() {
+        int value = antiAliasingDropdown.value;
+        if (!ValidateUserInput(0, 3, value, "UpdateAntiAliasing"))
+            return;
+
+        if (value == 0)
+            value = 0; //No MSAA
+        else if (value == 1)
+            value = 2;
+        else if (value == 2)
+            value = 4;
+        else if (value == 3)
+            value = 8;
+
+        CheckPresetChanges();
+        QualitySettings.antiAliasing = value;
+    }
+    public void UpdateTextureQuality() {
+        //0 - fullres, 1 - Half res, 2 - Quarter res, 3 - eigth res
+        int value = textureQualityDropdown.value;
+        if (!ValidateUserInput(0, 3, value, "UpdateTextureQuality"))
+            return;
+
+        CheckPresetChanges();
+        QualitySettings.masterTextureLimit = value;
+    }
+    public void UpdateAnisotropicFiltering() {
+        //ForceEnable, Enable, Disable
+        int value = anisotropicFilteringDropdown.value;
+        if (!ValidateUserInput(0, 2, value, "UpdateAnisotropicFiltering"))
+            return;
+
+        var result = AnisotropicFiltering.Disable;
+        if (value == 1)
+            result = AnisotropicFiltering.Enable;
+        else if (value == 2)
+            result = AnisotropicFiltering.ForceEnable;
+
+        CheckPresetChanges();
+        QualitySettings.anisotropicFiltering = result;
+    }
+    public void UpdateQualityPreset(int level) {
+        //Custom(4), Ultra(3), High(2), Medium(1), Low(0)
+        if (!ValidateUserInput(0, 4, level, "UpdateQualityPreset"))
+            return;
+
+        SetQualityPreset((QualityPreset)level);
+    }
+    public void UpdateResolution() {
+        int value = resolutionDropdown.value;
+        Assert.IsFalse(value > supportedResolutions.Length - 1 || value < 0);
+        var results = supportedResolutions[value];
+        Screen.SetResolution(results.width, results.height, Screen.fullScreen);
+        CheckPresetChanges();
+    }
+    public void UpdateWindowMode() {
+        int value = windowModeDropdown.value;
+        if (!ValidateUserInput(0, 3, value, "SetWindowMode"))
+            return;
+
+        var results = FullScreenMode.Windowed;
+        if (value == 1)
+            results = FullScreenMode.FullScreenWindow;
+
+#if UNITY_STANDALONE_WIN
+        if (value == 2)
+            results = FullScreenMode.ExclusiveFullScreen;
+#elif UNITY_STANDALONE_OSX
+        if (value == 2)
+            results = FullScreenMode.MaximizedWindow;
+#endif
+
+        Screen.fullScreenMode = results;
+    }
+
+
+    private void RemoveAllSettingsCallbacks() {
+        //Any listeners from editor are persistent and unaffected by this.
+        //UpdateQualityPreset is not affected by this since it wouldnt make sense if it was. 
+        resolutionDropdown.onValueChanged.RemoveAllListeners();
+        resolutionDropdown.onValueChanged.RemoveAllListeners();
+        windowModeDropdown.onValueChanged.RemoveAllListeners();
+        vsyncDropdown.onValueChanged.RemoveAllListeners();
+        fpsLimitDropdown.onValueChanged.RemoveAllListeners();
+        antiAliasingDropdown.onValueChanged.RemoveAllListeners();
+        textureQualityDropdown.onValueChanged.RemoveAllListeners();
+        anisotropicFilteringDropdown.onValueChanged.RemoveAllListeners();
+    }
+    private void SetupSettingsCallbacks() {
+        resolutionDropdown.onValueChanged.AddListener(delegate { UpdateResolution(); });
+        windowModeDropdown.onValueChanged.AddListener(delegate { UpdateWindowMode(); });
+        vsyncDropdown.onValueChanged.AddListener(delegate { UpdateVsync(); });
+        fpsLimitDropdown.onValueChanged.AddListener(delegate { UpdateFPSLimit(); });
+        antiAliasingDropdown.onValueChanged.AddListener(delegate {  UpdateAntiAliasing(); });
+        textureQualityDropdown.onValueChanged.AddListener(delegate { UpdateTextureQuality(); });
+        anisotropicFilteringDropdown.onValueChanged?.AddListener(delegate { UpdateAnisotropicFiltering(); });
+    }
+    private void SetupPresetsCallbacks() {
+        lowPresetButton.onClick.AddListener(delegate { UpdateQualityPreset(0); });
+        mediumPresetButton.onClick.AddListener(delegate { UpdateQualityPreset(1); });
+        highPresetButton.onClick.AddListener(delegate { UpdateQualityPreset(2); });
+        ultraPresetButton.onClick.AddListener(delegate { UpdateQualityPreset(3); });
+        customPresetButton.onClick.AddListener(delegate { UpdateQualityPreset(4); });
+    }
+
 
     public void ReturnButton() {
         GameInstance.GetInstance().SetGameState(GameInstance.GameState.MAIN_MENU);

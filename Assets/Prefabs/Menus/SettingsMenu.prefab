@@ -954,7 +954,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -525}
-  m_SizeDelta: {x: 180, y: 30}
+  m_SizeDelta: {x: 230, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &7793828627753464779
 CanvasRenderer:
@@ -1556,7 +1556,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 914591101648621251}
         m_TargetAssemblyTypeName: SettingsMenu, Assembly-CSharp
-        m_MethodName: UpdateQualityLevel
+        m_MethodName: UpdateQualityPreset
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1953,7 +1953,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -900}
-  m_SizeDelta: {x: 180, y: 30}
+  m_SizeDelta: {x: 230, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &703222796617448852
 CanvasRenderer:
@@ -2558,7 +2558,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -675}
-  m_SizeDelta: {x: 180, y: 30}
+  m_SizeDelta: {x: 230, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &6243961741999734973
 CanvasRenderer:
@@ -2995,7 +2995,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 914591101648621251}
         m_TargetAssemblyTypeName: SettingsMenu, Assembly-CSharp
-        m_MethodName: UpdateQualityLevel
+        m_MethodName: UpdateQualityPreset
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3910,7 +3910,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 914591101648621251}
         m_TargetAssemblyTypeName: SettingsMenu, Assembly-CSharp
-        m_MethodName: UpdateQualityLevel
+        m_MethodName: UpdateQualityPreset
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4241,7 +4241,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -600}
-  m_SizeDelta: {x: 180, y: 30}
+  m_SizeDelta: {x: 230, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &7672225274336949853
 CanvasRenderer:
@@ -6159,7 +6159,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -825}
-  m_SizeDelta: {x: 180, y: 30}
+  m_SizeDelta: {x: 230, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &8581024908544502155
 CanvasRenderer:
@@ -8004,7 +8004,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -750}
-  m_SizeDelta: {x: 180, y: 30}
+  m_SizeDelta: {x: 230, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &3230619785330114415
 CanvasRenderer:
@@ -8147,7 +8147,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -450}
-  m_SizeDelta: {x: 180, y: 30}
+  m_SizeDelta: {x: 230, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &9202224958780239950
 CanvasRenderer:
@@ -10014,11 +10014,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameSettings: {fileID: 11400000, guid: 247cb9f8cc068b148beaf4d2fca0747d, type: 2}
-  currentQualityPreset: 5
-  currentQualityPresetData:
-    antiAliasing: 0
-    textureQuality: 0
-    anisotropicFiltering: 0
+  selectedPresetColor: {r: 0.06, g: 0.6, b: 0.77, a: 1}
 --- !u!1 &8198299976987455539
 GameObject:
   m_ObjectHideFlags: 0
@@ -10270,7 +10266,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 914591101648621251}
         m_TargetAssemblyTypeName: SettingsMenu, Assembly-CSharp
-        m_MethodName: UpdateQualityLevel
+        m_MethodName: UpdateQualityPreset
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -11144,7 +11140,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 914591101648621251}
         m_TargetAssemblyTypeName: SettingsMenu, Assembly-CSharp
-        m_MethodName: UpdateQualityLevel
+        m_MethodName: UpdateQualityPreset
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
