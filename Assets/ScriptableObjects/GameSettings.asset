@@ -12,5 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed256105b1eed0e4c8087f31f0393540, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: 
-  width: 1920
-  height: 1080
+  defualtPreset: 0
+  lowPreset:
+    antiAliasing: 0
+    textureQuality: 3
+    anisotropicFiltering: 0
+  mediumPreset:
+    antiAliasing: 2
+    textureQuality: 2
+    anisotropicFiltering: 0
+  highPreset:
+    antiAliasing: 4
+    textureQuality: 1
+    anisotropicFiltering: 1
+  ultraPreset:
+    antiAliasing: 8
+    textureQuality: 0
+    anisotropicFiltering: 2

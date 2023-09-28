@@ -10013,7 +10013,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 897bb9226fe08e344a79768d15c6c2dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameSettings: {fileID: 11400000, guid: 247cb9f8cc068b148beaf4d2fca0747d, type: 2}
   currentQualityPreset: 5
+  currentQualityPresetData:
+    antiAliasing: 0
+    textureQuality: 0
+    anisotropicFiltering: 0
 --- !u!1 &8198299976987455539
 GameObject:
   m_ObjectHideFlags: 0

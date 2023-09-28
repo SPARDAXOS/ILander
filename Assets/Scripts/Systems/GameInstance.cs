@@ -53,7 +53,7 @@ public class GameInstance : MonoBehaviour
     private const string gameAssetsBundleKey = "GameAssetsBundle"; //The most pritle part of the loading process.
     private const string levelsBundleKey = "GameLevelsBundle"; 
 
-    private const SettingsMenu.QualityPreset startingQualityPreset = SettingsMenu.QualityPreset.ULTRA; //Put somewhere else?  Move to QualitySettings SO as defualt preset!
+    //private const SettingsMenu.QualityPreset startingQualityPreset = SettingsMenu.QualityPreset.ULTRA; //Put somewhere else?  Move to QualitySettings SO as defualt preset!
     private static GameInstance instance;
 
 
@@ -371,14 +371,12 @@ public class GameInstance : MonoBehaviour
         countdownMenuScript.Initialize();
 
 
-
         Debug.Log("Finished Creating Entities!");
     }
     private void SetupEntities() {
         mainCameraScript.SetFollowTarget(player1); //Deprecated
 
         customizationMenuScript.SetRenderCameraTarget(mainCameraComponent);
-        settingsMenuScript.SetQualityPreset(startingQualityPreset); //Deprecated once i rework quality presets
         LevelSelectMenuScript.SetLevelsBundle(gameLevelsBundle);
 
         //SetControlSchemes from loaded addressable control shcemes? both players use the same one now.

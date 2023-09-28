@@ -9,28 +9,48 @@ using UnityEngine.Assertions;
 using UnityEngine.UI;
 using static UnityEngine.EventSystems.EventTrigger;
 
-public class SettingsMenu : MonoBehaviour
-{
+public class SettingsMenu : MonoBehaviour {
     public enum QualityPreset {
         LOW = 0,
         MEDIUM = 1,
         HIGH = 2,
         ULTRA = 3,
         CUSTOM = 4,
-        NONE = 5 //Primarily to avoid GameInstance.startingQualityLevel from being equal to currentQualityPreset
+        NONE = 5 //Primarily to avoid GameInstance.startingQualityLevel from being equal to currentQualityPreset  NOT NEEDED!
+    }
+    public enum AntiAliasingOptions {
+        NO_MSAA = 0,
+        X2 = 2,
+        X4 = 4,
+        X8 = 8
+    }
+    public enum TextureQualityOptions {
+        ULTRA = 0,
+        HIGH = 1,
+        MEDIUM = 2,
+        LOW = 3
+    }
+    public enum AnisotropicFilteringOptions {
+        DISABLE = AnisotropicFiltering.Disable,
+        ENABLE = AnisotropicFiltering.Enable,
+        FORCE_ENABLE = AnisotropicFiltering.ForceEnable
     }
 
-    private Color selectedPresetColor = new Color(0.06f, 0.6f, 0.77f, 1.0f);
 
-    private bool initialized = false;
+    [SerializeField] private GameSettings gameSettings;
+
+
     public QualityPreset currentQualityPreset = QualityPreset.NONE;
+    public QualityPresetData currentQualityPresetData;
 
-
+    private Color selectedPresetColor = new Color(0.06f, 0.6f, 0.77f, 1.0f); //Code expose this..
     private Color defaultPresetNormalColor;
     private Color defaultPresetSelectedColor;
 
     private Resolution[] supportedResolutions = null;
 
+
+    private bool initialized = false;
 
     private TMP_Dropdown resolutionDropdown           = null;
     private TMP_Dropdown windowModeDropdown           = null;
@@ -55,14 +75,16 @@ public class SettingsMenu : MonoBehaviour
         SetupReferences();
         SetupResolutions();
         SetupWindowModes();
-        UpdateAllData();
+        ApplyDefaultPreset();
         initialized = true;
     }
     private void SetupReferences() {
 
+        GameInstance.Validate(gameSettings, "No GameSettings asset is set! - SettingsMenu", true);
+
         //Presets
         Transform presetsTransform = transform.Find("Presets");
-        GameInstance.Validate(presetsTransform, "Failed to find reference to Presets - SettingsMenu");
+        GameInstance.Validate(presetsTransform, "Failed to find reference to Presets - SettingsMenu", true);
 
         Transform lowPresetTransform    = presetsTransform.Find("LowButton");
         Transform mediumPresetTransform = presetsTransform.Find("MediumButton");
@@ -70,11 +92,11 @@ public class SettingsMenu : MonoBehaviour
         Transform ultraPresetTransform  = presetsTransform.Find("UltraButton");
         Transform customPresetTransform = presetsTransform.Find("CustomButton");
 
-        GameInstance.Validate(lowPresetTransform, "Failed to find reference to LowButton - SettingsMenu");
-        GameInstance.Validate(mediumPresetTransform, "Failed to find reference to MediumButton - SettingsMenu");
-        GameInstance.Validate(highPresetTransform, "Failed to find reference to HighButton - SettingsMenu");
-        GameInstance.Validate(ultraPresetTransform, "Failed to find reference to UltraButton - SettingsMenu");
-        GameInstance.Validate(customPresetTransform, "Failed to find reference to CustomButton - SettingsMenu");
+        GameInstance.Validate(lowPresetTransform, "Failed to find reference to LowButton - SettingsMenu", true);
+        GameInstance.Validate(mediumPresetTransform, "Failed to find reference to MediumButton - SettingsMenu", true);
+        GameInstance.Validate(highPresetTransform, "Failed to find reference to HighButton - SettingsMenu", true);
+        GameInstance.Validate(ultraPresetTransform, "Failed to find reference to UltraButton - SettingsMenu", true);
+        GameInstance.Validate(customPresetTransform, "Failed to find reference to CustomButton - SettingsMenu", true);
 
         lowPresetButton    = lowPresetTransform.GetComponent<Button>();
         mediumPresetButton = mediumPresetTransform.GetComponent<Button>();
@@ -82,11 +104,11 @@ public class SettingsMenu : MonoBehaviour
         ultraPresetButton  = ultraPresetTransform.GetComponent<Button>();
         customPresetButton = customPresetTransform.GetComponent<Button>();
 
-        GameInstance.Validate(lowPresetButton, "Failed to find component Button in lowPresetTransform - SettingsMenu");
-        GameInstance.Validate(mediumPresetButton, "Failed to find component Button in mediumPresetButton - SettingsMenu");
-        GameInstance.Validate(highPresetButton, "Failed to find component Button in highPresetButton - SettingsMenu");
-        GameInstance.Validate(ultraPresetButton, "Failed to find component Button in ultraPresetButton - SettingsMenu");
-        GameInstance.Validate(customPresetButton, "Failed to find component Button in customPresetButton - SettingsMenu");
+        GameInstance.Validate(lowPresetButton, "Failed to find component Button in lowPresetTransform - SettingsMenu", true);
+        GameInstance.Validate(mediumPresetButton, "Failed to find component Button in mediumPresetButton - SettingsMenu", true);
+        GameInstance.Validate(highPresetButton, "Failed to find component Button in highPresetButton - SettingsMenu", true);
+        GameInstance.Validate(ultraPresetButton, "Failed to find component Button in ultraPresetButton - SettingsMenu", true);
+        GameInstance.Validate(customPresetButton, "Failed to find component Button in customPresetButton - SettingsMenu", true);
 
         defaultPresetNormalColor = customPresetButton.colors.normalColor;
         defaultPresetSelectedColor = customPresetButton.colors.selectedColor;
@@ -94,45 +116,45 @@ public class SettingsMenu : MonoBehaviour
 
         //Resolution
         Transform resolutionDropDownTransform = transform.Find("ResolutionDropdown");
-        GameInstance.Validate(resolutionDropDownTransform, "Failed to find reference to ResolutionDropdown - SettingsMenu");
+        GameInstance.Validate(resolutionDropDownTransform, "Failed to find reference to ResolutionDropdown - SettingsMenu", true);
         resolutionDropdown = resolutionDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(resolutionDropdown, "Failed to find component TMP_Dropdown for resolutionDropdown - SettingsMenu");
+        GameInstance.Validate(resolutionDropdown, "Failed to find component TMP_Dropdown for resolutionDropdown - SettingsMenu", true);
 
         //WindowMode
         Transform windowModeDropDownTransform = transform.Find("WindowModeDropdown");
-        GameInstance.Validate(windowModeDropDownTransform, "Failed to find reference to WindowModeDropdown - SettingsMenu");
+        GameInstance.Validate(windowModeDropDownTransform, "Failed to find reference to WindowModeDropdown - SettingsMenu", true);
         windowModeDropdown = windowModeDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(windowModeDropdown, "Failed to find component TMP_Dropdown for windowModeDropdown - SettingsMenu");
+        GameInstance.Validate(windowModeDropdown, "Failed to find component TMP_Dropdown for windowModeDropdown - SettingsMenu", true);
 
         //Vsync
         Transform vsyncDropDownTransform = transform.Find("VsyncDropdown");
-        GameInstance.Validate(vsyncDropDownTransform, "Failed to find reference to VsyncDropdown - SettingsMenu");
+        GameInstance.Validate(vsyncDropDownTransform, "Failed to find reference to VsyncDropdown - SettingsMenu", true);
         vsyncDropdown = vsyncDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(vsyncDropdown, "Failed to find component TMP_Dropdown for VsyncDropdown - SettingsMenu");
+        GameInstance.Validate(vsyncDropdown, "Failed to find component TMP_Dropdown for VsyncDropdown - SettingsMenu", true);
 
         //FpsLimit
         Transform fpsLimitDropDownTransform = transform.Find("FpsLimitDropdown");
-        GameInstance.Validate(fpsLimitDropDownTransform, "Failed to find reference to FpsLimitDropdown - SettingsMenu");
+        GameInstance.Validate(fpsLimitDropDownTransform, "Failed to find reference to FpsLimitDropdown - SettingsMenu", true);
         fpsLimitDropdown = fpsLimitDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(fpsLimitDropdown, "Failed to find component TMP_Dropdown for fpsLimitDropdown - SettingsMenu");
+        GameInstance.Validate(fpsLimitDropdown, "Failed to find component TMP_Dropdown for fpsLimitDropdown - SettingsMenu", true);
 
         //Anti Aliasing
         Transform antiAliasingDropDownTransform = transform.Find("AntiAliasingDropdown");
-        GameInstance.Validate(antiAliasingDropDownTransform, "Failed to find reference to AntiAliasingDropdown - SettingsMenu");
+        GameInstance.Validate(antiAliasingDropDownTransform, "Failed to find reference to AntiAliasingDropdown - SettingsMenu", true);
         antiAliasingDropdown = antiAliasingDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(antiAliasingDropdown, "Failed to find component TMP_Dropdown for antiAliasingDropdown - SettingsMenu");
+        GameInstance.Validate(antiAliasingDropdown, "Failed to find component TMP_Dropdown for antiAliasingDropdown - SettingsMenu", true);
 
         //Texture Quality
         Transform textureQualityDropDownTransform = transform.Find("TextureQualityDropdown");
-        GameInstance.Validate(textureQualityDropDownTransform, "Failed to find reference to TextureQualityDropdown - SettingsMenu");
+        GameInstance.Validate(textureQualityDropDownTransform, "Failed to find reference to TextureQualityDropdown - SettingsMenu", true);
         textureQualityDropdown = textureQualityDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(textureQualityDropdown, "Failed to find component TMP_Dropdown for textureQualityDropdown - SettingsMenu");
+        GameInstance.Validate(textureQualityDropdown, "Failed to find component TMP_Dropdown for textureQualityDropdown - SettingsMenu", true);
 
         //AnisotropicFiltering
         Transform AFilteringDropDownTransform = transform.Find("AnisotropicFilteringDropdown");
-        GameInstance.Validate(AFilteringDropDownTransform, "Failed to find reference to AnisotropicFilteringDropdown - SettingsMenu");
+        GameInstance.Validate(AFilteringDropDownTransform, "Failed to find reference to AnisotropicFilteringDropdown - SettingsMenu", true);
         anisotropicFilteringDropdown = AFilteringDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(anisotropicFilteringDropdown, "Failed to find component TMP_Dropdown for anisotropicFilteringDropdown - SettingsMenu");
+        GameInstance.Validate(anisotropicFilteringDropdown, "Failed to find component TMP_Dropdown for anisotropicFilteringDropdown - SettingsMenu", true);
 
 
     }
@@ -156,37 +178,37 @@ public class SettingsMenu : MonoBehaviour
 #endif
     }
 
+    //Should it not be public?
     public void SetQualityPreset(QualityPreset level) {
 
         if (level == currentQualityPreset || level == QualityPreset.NONE)
             return;
 
-        ResetAllPresetButtonsColors();
-
         if ((int)level == 0) {
             currentQualityPreset = QualityPreset.LOW;
-            SetPresetSelected(ref lowPresetButton);
+            currentQualityPresetData = gameSettings.lowPreset;
         }
         else if ((int)level == 1) {
             currentQualityPreset = QualityPreset.MEDIUM;
-            SetPresetSelected(ref mediumPresetButton);
+            currentQualityPresetData = gameSettings.mediumPreset;
         }
         else if ((int)level == 2) {
             currentQualityPreset = QualityPreset.HIGH;
-            SetPresetSelected(ref highPresetButton);
+            currentQualityPresetData = gameSettings.highPreset;
         }
         else if ((int)level == 3) {
             currentQualityPreset = QualityPreset.ULTRA;
-            SetPresetSelected(ref ultraPresetButton);
+            currentQualityPresetData = gameSettings.ultraPreset;
         }
         else if ((int)level == 4) {
             currentQualityPreset = QualityPreset.CUSTOM;
-            SetPresetSelected(ref customPresetButton);
-            return;
+            currentQualityPresetData = gameSettings.lowPreset;
         }
 
-        QualitySettings.SetQualityLevel((int)level, true);
-        UpdateAllData();
+        ResetAllPresetButtonsColors(); // ?? hav eto keep track of a lot of orders for thses function calls - NEW: Move into ApplySelectedPresetStyle and change ApplySelectedPresetStyle name!
+        ApplySelectedPresetStyle();
+        ApplyCurrentQualityPreset();
+        UpdateGUI();
     }
 
 
@@ -199,8 +221,9 @@ public class SettingsMenu : MonoBehaviour
     private void CheckPresetChanges() {
         if (currentQualityPreset != QualityPreset.CUSTOM) {
             currentQualityPreset = QualityPreset.CUSTOM;
+            //SUS Didnt see this till the end
             ResetAllPresetButtonsColors();
-            SetPresetSelected(ref customPresetButton);
+            ApplySelectedPresetStyle();
         }
     }
     private void ResetAllPresetButtonsColors() {
@@ -251,7 +274,7 @@ public class SettingsMenu : MonoBehaviour
         //To func?
         if (value > 3 || value < 0) {
             Debug.LogError("Value above 3 or less than 0 was sent to UpdateAntiAliasing - Allowed values are 0, 1, 2, 3");
-            QualitySettings.antiAliasing = 1;
+            QualitySettings.antiAliasing = 0;
             return;
         }
 
@@ -302,8 +325,11 @@ public class SettingsMenu : MonoBehaviour
             Debug.LogError("Value above 4 or less than 0 was sent to UpdateQualityLevel - Allowed values are 0, 1, 2, 3, 4");
             QualitySettings.SetQualityLevel(0, true);
 
-            SetPresetSelected(ref lowPresetButton);
-            currentQualityPreset = QualityPreset.LOW;
+            SetQualityPreset(QualityPreset.LOW);
+
+            //currentQualityPreset = QualityPreset.LOW;
+            //ApplySelectedPresetStyle();
+            //ApplyCurrentQualityPreset();
             return;
         }
         SetQualityPreset((QualityPreset)level);
@@ -340,11 +366,22 @@ public class SettingsMenu : MonoBehaviour
 
 
 
-    private void SetPresetSelected(ref Button presetButton) {
-        ColorBlock colorBlock = presetButton.colors;
+    private void ApplySelectedPresetStyle() {
+
+        ColorBlock colorBlock = customPresetButton.colors; //If they dont share same color for other events then this would be weird
         colorBlock.normalColor = selectedPresetColor;
         colorBlock.selectedColor = selectedPresetColor;
-        presetButton.colors = colorBlock;
+
+        if (currentQualityPreset == QualityPreset.CUSTOM)
+            customPresetButton.colors = colorBlock;
+        else if (currentQualityPreset == QualityPreset.LOW)
+            lowPresetButton.colors = colorBlock;
+        else if (currentQualityPreset == QualityPreset.MEDIUM)
+            mediumPresetButton.colors = colorBlock;
+        else if (currentQualityPreset == QualityPreset.HIGH)
+            highPresetButton.colors = colorBlock;
+        else if (currentQualityPreset == QualityPreset.ULTRA)
+            ultraPresetButton.colors = colorBlock;
     }
 
     private void RemoveAllCallbacks() {
@@ -368,10 +405,56 @@ public class SettingsMenu : MonoBehaviour
         anisotropicFilteringDropdown.onValueChanged?.AddListener(delegate { UpdateAnisotropicFiltering(); });
     }
 
-    private void UpdateAllData() {
+    //Also confusing name!
+    private void ApplyDefaultPreset() {
+
+        //Steps for reworking these functions to be more reusable.
+        //Set currentQualityPreset
+        //Clear selected color for all preset buttons
+        //Set the color for the selected preset button
+        //Set currentQualityPresetData
+        //Apply the settings from currentQualityPresetData
+        //UpdateGUI
+
+
+
+        //If set to custom then it will switch to low!
+        if (gameSettings.defualtPreset == QualityPreset.LOW || gameSettings.defualtPreset == QualityPreset.CUSTOM) {
+            currentQualityPreset = QualityPreset.LOW;
+            currentQualityPresetData = gameSettings.lowPreset;
+        }
+        else if (gameSettings.defualtPreset == QualityPreset.MEDIUM) {
+            currentQualityPreset = QualityPreset.MEDIUM;
+            currentQualityPresetData = gameSettings.mediumPreset;
+        }
+        else if (gameSettings.defualtPreset == QualityPreset.HIGH) {
+            currentQualityPreset = QualityPreset.HIGH;
+            currentQualityPresetData = gameSettings.highPreset;
+        }
+        else if (gameSettings.defualtPreset == QualityPreset.ULTRA) {
+            currentQualityPreset = QualityPreset.ULTRA;
+            currentQualityPresetData = gameSettings.ultraPreset;
+        }
+
+        //Clear preset buttons?
+        ApplySelectedPresetStyle();
+        ApplyCurrentQualityPreset();
+        UpdateGUI();
+    }
+    private void ApplyCurrentQualityPreset() {
+        QualitySettings.antiAliasing = (int)currentQualityPresetData.antiAliasing;
+        QualitySettings.anisotropicFiltering = (AnisotropicFiltering)currentQualityPresetData.anisotropicFiltering;
+        QualitySettings.masterTextureLimit = (int)currentQualityPresetData.textureQuality;
+    }
+
+    //Could be used primarily for updating the fields with current data from the platform?
+    private void UpdateGUI() {
 
         //To avoid calls to callbacks that would count as manual adjustment of settings. (Sets preset to Custom)
         RemoveAllCallbacks();
+
+
+        //TODO: Rework this to use the currentPresetSettings!
 
         //Resolution
         var currentResolution = Screen.currentResolution;
@@ -396,7 +479,7 @@ public class SettingsMenu : MonoBehaviour
 #endif
 
         //Vsync
-        vsyncDropdown.value = QualitySettings.vSyncCount; //The options indicies mirror vSyncCount allowed values.
+        vsyncDropdown.value = QualitySettings.vSyncCount; //The dropdown menu options indicies mirror vSyncCount allowed values.
 
         //FPS Limit
         var fpsLimit = Application.targetFrameRate;
@@ -410,28 +493,32 @@ public class SettingsMenu : MonoBehaviour
             fpsLimitDropdown.value = 3;
 
         //Anti Aliasing
-        var antiAliasing = QualitySettings.antiAliasing;
-        if (antiAliasing == 0)
-            antiAliasingDropdown.value = 0;
-        else if (antiAliasing == 2)
-            antiAliasingDropdown.value = 1;
-        else if (antiAliasing == 4)
-            antiAliasingDropdown.value = 2;
-        else if (antiAliasing == 8)
-            antiAliasingDropdown.value = 3;
+        antiAliasingDropdown.value = (int)currentQualityPresetData.antiAliasing;
+
+        //var antiAliasing = QualitySettings.antiAliasing;
+        //if (antiAliasing == 0)
+        //    antiAliasingDropdown.value = (int)currentQualityPresetData.antiAliasing;
+        //else if (antiAliasing == 2)
+        //    antiAliasingDropdown.value = 1;
+        //else if (antiAliasing == 4)
+        //    antiAliasingDropdown.value = 2;
+        //else if (antiAliasing == 8)
+        //    antiAliasingDropdown.value = 3;
 
         //Texture Quality
         textureQualityDropdown.value = QualitySettings.masterTextureLimit; //The options indicies mirror masterTextureLimit allowed values.
 
         //Anisotropic Filtering
-        var anisotropicFiltering = QualitySettings.anisotropicFiltering;
-        if (anisotropicFiltering == AnisotropicFiltering.Disable)
-            anisotropicFilteringDropdown.value = 0;
-        else if (anisotropicFiltering == AnisotropicFiltering.Enable)
-            anisotropicFilteringDropdown.value = 1;
-        else if (anisotropicFiltering == AnisotropicFiltering.ForceEnable)
-            anisotropicFilteringDropdown.value = 2;
+        anisotropicFilteringDropdown.value = (int)currentQualityPresetData.anisotropicFiltering;
 
+        //var anisotropicFiltering = QualitySettings.anisotropicFiltering;
+        //if (anisotropicFiltering == AnisotropicFiltering.Disable)
+        //    anisotropicFilteringDropdown.value = 0;
+        //else if (anisotropicFiltering == AnisotropicFiltering.Enable)
+        //    anisotropicFilteringDropdown.value = 1;
+        //else if (anisotropicFiltering == AnisotropicFiltering.ForceEnable)
+        //    anisotropicFilteringDropdown.value = 2;
+        //
         SetupAllCallbacks();
     }
 
