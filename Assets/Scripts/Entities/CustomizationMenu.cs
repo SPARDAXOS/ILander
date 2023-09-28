@@ -65,26 +65,26 @@ public class CustomizationMenu : MonoBehaviour
     private void SetupReferences() {
 
         mainCanvas = GetComponent<Canvas>();
-        GameInstance.Validate(mainCanvas, "Failed to get reference to Canvas component - CustomizationMenu");
+        GameInstance.Validate(mainCanvas, "Failed to get reference to Canvas component - CustomizationMenu", true);
 
         //Rename these to make it less confusing!
         Transform Player1Customizer = transform.Find("Player1Customizer").transform;
         Transform Player2Customizer = transform.Find("Player2Customizer").transform;
 
-        GameInstance.Validate(Player1Customizer, "Failed to get reference to Player1Customizer - CustomizationMenu");
-        GameInstance.Validate(Player2Customizer, "Failed to get reference to Player2Customizer - CustomizationMenu");
+        GameInstance.Validate(Player1Customizer, "Failed to get reference to Player1Customizer - CustomizationMenu", true);
+        GameInstance.Validate(Player2Customizer, "Failed to get reference to Player2Customizer - CustomizationMenu", true);
 
         Transform Player1ShipSpriteTransform = Player1Customizer.Find("ShipSprite").transform;
         Transform Player2ShipSpriteTransform = Player2Customizer.Find("ShipSprite").transform;
 
-        GameInstance.Validate(Player1ShipSpriteTransform, "Failed to get reference to ShipSprite1 - CustomizationMenu");
-        GameInstance.Validate(Player2ShipSpriteTransform, "Failed to get reference to ShipSprite2 - CustomizationMenu");
+        GameInstance.Validate(Player1ShipSpriteTransform, "Failed to get reference to ShipSprite1 - CustomizationMenu", true);
+        GameInstance.Validate(Player2ShipSpriteTransform, "Failed to get reference to ShipSprite2 - CustomizationMenu", true);
 
         player1ShipSprite = Player1ShipSpriteTransform.GetComponent<Image>();
         player2ShipSprite = Player2ShipSpriteTransform.GetComponent<Image>();
 
-        GameInstance.Validate(player1ShipSprite, "Failed to get reference to player1CustomizationSprite - CustomizationMenu");
-        GameInstance.Validate(player2ShipSprite, "Failed to get reference to player2CustomizationSprite - CustomizationMenu");
+        GameInstance.Validate(player1ShipSprite, "Failed to get reference to player1CustomizationSprite - CustomizationMenu", true);
+        GameInstance.Validate(player2ShipSprite, "Failed to get reference to player2CustomizationSprite - CustomizationMenu", true);
 
         //Switches
         //Player1
@@ -92,24 +92,24 @@ public class CustomizationMenu : MonoBehaviour
         Transform RedSwitch1    = Player1Customizer.Find("RedSwitch");
         Transform GreenSwitch1  = Player1Customizer.Find("GreenSwitch");
         Transform BlueSwitch1   = Player1Customizer.Find("BlueSwitch");
-        GameInstance.Validate(SpriteSwitch1, "Failed to get reference to SpriteSwitch1 - CustomizationMenu");
-        GameInstance.Validate(RedSwitch1, "Failed to get reference to RedSwitch1 - CustomizationMenu");
-        GameInstance.Validate(GreenSwitch1, "Failed to get reference to GreenSwitch1 - CustomizationMenu");
-        GameInstance.Validate(BlueSwitch1, "Failed to get reference to BlueSwitch1 - CustomizationMenu");
+        GameInstance.Validate(SpriteSwitch1, "Failed to get reference to SpriteSwitch1 - CustomizationMenu", true);
+        GameInstance.Validate(RedSwitch1, "Failed to get reference to RedSwitch1 - CustomizationMenu", true);
+        GameInstance.Validate(GreenSwitch1, "Failed to get reference to GreenSwitch1 - CustomizationMenu", true);
+        GameInstance.Validate(BlueSwitch1, "Failed to get reference to BlueSwitch1 - CustomizationMenu", true);
 
         player1SpriteSwitch = SpriteSwitch1.GetComponent<TextMeshProUGUI>();
         player1RedSwitch    = RedSwitch1.GetComponent<TextMeshProUGUI>();
         player1GreenSwitch  = GreenSwitch1.GetComponent<TextMeshProUGUI>();
         player1BlueSwitch   = BlueSwitch1.GetComponent<TextMeshProUGUI>();
-        GameInstance.Validate(player1SpriteSwitch, "Failed to get reference to player1SpriteSwitch - CustomizationMenu");
-        GameInstance.Validate(player1RedSwitch, "Failed to get reference to player1RedSwitch - CustomizationMenu");
-        GameInstance.Validate(player1GreenSwitch, "Failed to get reference to player1GreenSwitch - CustomizationMenu");
-        GameInstance.Validate(player1BlueSwitch, "Failed to get reference to player1BlueSwitch - CustomizationMenu");
+        GameInstance.Validate(player1SpriteSwitch, "Failed to get reference to player1SpriteSwitch - CustomizationMenu", true);
+        GameInstance.Validate(player1RedSwitch, "Failed to get reference to player1RedSwitch - CustomizationMenu", true);
+        GameInstance.Validate(player1GreenSwitch, "Failed to get reference to player1GreenSwitch - CustomizationMenu", true);
+        GameInstance.Validate(player1BlueSwitch, "Failed to get reference to player1BlueSwitch - CustomizationMenu", true);
 
         Transform PortaitSprite1 = Player1Customizer.Find("PortraitSprite");
-        GameInstance.Validate(PortaitSprite1, "Failed to get reference to PortaitSprite1 - CustomizationMenu");
+        GameInstance.Validate(PortaitSprite1, "Failed to get reference to PortaitSprite1 - CustomizationMenu", true);
         player1PortraitSprite = PortaitSprite1.GetComponent<Image>();
-        GameInstance.Validate(player1PortraitSprite, "Failed to get reference to player1PortraitSprite - CustomizationMenu");
+        GameInstance.Validate(player1PortraitSprite, "Failed to get reference to player1PortraitSprite - CustomizationMenu", true);
 
 
         //Player2
@@ -117,24 +117,24 @@ public class CustomizationMenu : MonoBehaviour
         Transform RedSwitch2 = Player2Customizer.Find("RedSwitch");
         Transform GreenSwitch2 = Player2Customizer.Find("GreenSwitch");
         Transform BlueSwitch2 = Player2Customizer.Find("BlueSwitch");
-        GameInstance.Validate(SpriteSwitch2, "Failed to get reference to SpriteSwitch2 - CustomizationMenu");
-        GameInstance.Validate(RedSwitch2, "Failed to get reference to RedSwitch2 - CustomizationMenu");
-        GameInstance.Validate(GreenSwitch2, "Failed to get reference to GreenSwitch2 - CustomizationMenu");
-        GameInstance.Validate(BlueSwitch2, "Failed to get reference to BlueSwitch2 - CustomizationMenu");
+        GameInstance.Validate(SpriteSwitch2, "Failed to get reference to SpriteSwitch2 - CustomizationMenu", true);
+        GameInstance.Validate(RedSwitch2, "Failed to get reference to RedSwitch2 - CustomizationMenu", true);
+        GameInstance.Validate(GreenSwitch2, "Failed to get reference to GreenSwitch2 - CustomizationMenu", true);
+        GameInstance.Validate(BlueSwitch2, "Failed to get reference to BlueSwitch2 - CustomizationMenu", true);
 
         player2SpriteSwitch = SpriteSwitch2.GetComponent<TextMeshProUGUI>();
         player2RedSwitch = RedSwitch2.GetComponent<TextMeshProUGUI>();
         player2GreenSwitch = GreenSwitch2.GetComponent<TextMeshProUGUI>();
         player2BlueSwitch = BlueSwitch2.GetComponent<TextMeshProUGUI>();
-        GameInstance.Validate(player2SpriteSwitch, "Failed to get reference to player2SpriteSwitch - CustomizationMenu");
-        GameInstance.Validate(player2RedSwitch, "Failed to get reference to player2RedSwitch - CustomizationMenu");
-        GameInstance.Validate(player2GreenSwitch, "Failed to get reference to player2GreenSwitch - CustomizationMenu");
-        GameInstance.Validate(player2BlueSwitch, "Failed to get reference to player2BlueSwitch - CustomizationMenu");
+        GameInstance.Validate(player2SpriteSwitch, "Failed to get reference to player2SpriteSwitch - CustomizationMenu", true);
+        GameInstance.Validate(player2RedSwitch, "Failed to get reference to player2RedSwitch - CustomizationMenu", true);
+        GameInstance.Validate(player2GreenSwitch, "Failed to get reference to player2GreenSwitch - CustomizationMenu", true);
+        GameInstance.Validate(player2BlueSwitch, "Failed to get reference to player2BlueSwitch - CustomizationMenu", true);
 
         Transform PortaitSprite2 = Player2Customizer.Find("PortraitSprite");
-        GameInstance.Validate(PortaitSprite2, "Failed to get reference to PortaitSprite2 - CustomizationMenu");
+        GameInstance.Validate(PortaitSprite2, "Failed to get reference to PortaitSprite2 - CustomizationMenu", true);
         player2PortraitSprite = PortaitSprite2.GetComponent<Image>();
-        GameInstance.Validate(player2PortraitSprite, "Failed to get reference to player2PortraitSprite - CustomizationMenu");
+        GameInstance.Validate(player2PortraitSprite, "Failed to get reference to player2PortraitSprite - CustomizationMenu", true);
     }
     public void SetupStartState() {
         player1TargetColor = Color.white;

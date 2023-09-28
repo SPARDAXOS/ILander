@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -77,7 +78,8 @@ public class GameInstance : MonoBehaviour
 
 
 
-    private GameObject player;
+    private GameObject player1;
+    private GameObject player2;
     private GameObject mainCamera;
     private GameObject mainMenu;
     private GameObject settingsMenu;
@@ -89,7 +91,8 @@ public class GameInstance : MonoBehaviour
     private GameObject countdownMenu;
     private GameObject eventSystem;
 
-    private Player playerScript;
+    private Player player1Script;
+    private Player player2Script;
     private MainCamera mainCameraScript;
     private MainMenu mainMenuScript;
     private SettingsMenu settingsMenuScript;
@@ -180,7 +183,8 @@ public class GameInstance : MonoBehaviour
         if (countdownMenuScript.IsAnimationPlaying())
             countdownMenuScript.Tick();
 
-        playerScript.Tick();
+        player1Script.Tick();
+        player2Script.Tick();
         mainCameraScript.Tick();
     }
     private void UpdateLoadingState() {
@@ -210,6 +214,8 @@ public class GameInstance : MonoBehaviour
             return;
         foreach (var entry in loadedAssets)
             Addressables.Release(entry.Value);
+
+        //Unload loaded level!
     }
 
     //??? check vid
@@ -305,14 +311,20 @@ public class GameInstance : MonoBehaviour
     private void CreateEntities() {
         Debug.Log("Started Creating Entities!");
 
+        //Get this from prefab instead to keep it consistent and allow the user to edit it!
         eventSystem = new GameObject("EventSystem");
         eventSystem.AddComponent<EventSystem>();
         eventSystem.AddComponent<InputSystemUIInputModule>();
 
-        player = Instantiate(loadedAssets["Player"].Result);
-        player.SetActive(false);
-        playerScript = player.GetComponent<Player>();
-        playerScript.Initialize();
+        player1 = Instantiate(loadedAssets["Player"].Result);
+        player1.SetActive(false);
+        player1Script = player1.GetComponent<Player>();
+        player1Script.Initialize();
+
+        player2 = Instantiate(loadedAssets["Player"].Result);
+        player2.SetActive(false);
+        player2Script = player2.GetComponent<Player>();
+        player2Script.Initialize();
 
         mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
         mainCameraScript = mainCamera.GetComponent<MainCamera>();
@@ -363,11 +375,14 @@ public class GameInstance : MonoBehaviour
         Debug.Log("Finished Creating Entities!");
     }
     private void SetupEntities() {
-        mainCameraScript.SetFollowTarget(player); //Deprecated
+        mainCameraScript.SetFollowTarget(player1); //Deprecated
 
         customizationMenuScript.SetRenderCameraTarget(mainCameraComponent);
         settingsMenuScript.SetQualityPreset(startingQualityPreset); //Deprecated once i rework quality presets
         LevelSelectMenuScript.SetLevelsBundle(gameLevelsBundle);
+
+        //SetControlSchemes from loaded addressable control shcemes? both players use the same one now.
+
     }
 
     //FIX INIFINITE RELOADING OF ASSETS IN CASE OF ERROR! initialization loop
@@ -482,7 +497,7 @@ public class GameInstance : MonoBehaviour
     private void UnloadCurrentLevel() {
         if (currentLoadedLevelHandle.IsValid())
             Addressables.Release(currentLoadedLevelHandle);
-
+        //Delete Instansiated go
         //Other stuff? change func name maybe to something more final! EndGame?
     }
 
@@ -501,7 +516,10 @@ public class GameInstance : MonoBehaviour
     private void StartMatch() {
         //Not finished
         Debug.Log("Invocation worked!");
-        player.SetActive(true);
+        player1.SetActive(true);
+        player1.transform.position = currentLoadedLevelScript.GetPlayer1SpawnPoint();
+        player2.SetActive(true);
+        player2.transform.position = currentLoadedLevelScript.GetPlayer2SpawnPoint();
         //TRurn off countdown menu?
     }
     private void HideAllMenus() {
@@ -524,9 +542,13 @@ public class GameInstance : MonoBehaviour
         if (target < min)
             target = min;
     }
-    public static void Validate(object target, string errorMessage) {
-        if (target == null)
-            GetInstance().Abort(errorMessage);
+    public static bool Validate(object target, string errorMessage, bool abortOnFail = false) {
+        if (target == null) {
+            if (abortOnFail)
+                GetInstance().Abort(errorMessage);
+            return false;
+        }
+        return true;
     }
 
 
@@ -539,7 +561,7 @@ public class GameInstance : MonoBehaviour
 
             currentLoadedLevel = Instantiate(handle.Result);
             currentLoadedLevelScript = currentLoadedLevel.GetComponent<Level>();
-
+            currentLoadedLevelScript.Initialize();
 
             SetupLevelStartState();
             SetupPlayState();

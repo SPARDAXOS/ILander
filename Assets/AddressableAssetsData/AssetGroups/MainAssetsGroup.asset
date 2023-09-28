@@ -77,6 +77,14 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/Levels/Level2.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: c1a4cad49bba6a04e9dd05e9f5751ad6
+    m_Address: Assets/Prefabs/NetworkManager.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 247cb9f8cc068b148beaf4d2fca0747d
+    m_Address: Assets/ScriptableObjects/GameSettings.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:
