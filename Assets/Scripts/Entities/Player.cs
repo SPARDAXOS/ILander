@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using ILanderUtility;
+using Unity.Netcode;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
     public enum PlayerType
     {
@@ -30,6 +31,7 @@ public class Player : MonoBehaviour
 
 
     private SpriteRenderer spriteRendererComp;
+    private NetworkObject networkObjectComp;
 
 
     public void Initialize() {
@@ -50,12 +52,24 @@ public class Player : MonoBehaviour
         UpdateMovement();
     }
 
+
+    private void OnConnectedToServer()
+    {
+        Debug.Log("I Connected to a server!");
+    }
+
+
+
+
+
     private void SetupReferences() {
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
         Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", true);
 
-
+        networkObjectComp = GetComponent<NetworkObject>();
+        Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", true);
+        
     }
 
 

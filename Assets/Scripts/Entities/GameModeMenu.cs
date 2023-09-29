@@ -13,6 +13,6 @@ public class GameModeMenu : MonoBehaviour
     public void LanModeButton() {
         var instance = GameInstance.GetInstance();
         instance.SetGameModeSelection(GameInstance.GameMode.LAN);
-        instance.SetGameState(GameInstance.GameState.CUSTOMIZATION_MENU);
+        instance.SetGameState(GameInstance.GameState.CONNECTION_MENU);
     }
 }

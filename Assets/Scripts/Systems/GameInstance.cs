@@ -1,12 +1,9 @@
-using System;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class GameInstance : MonoBehaviour
 {
@@ -28,6 +25,7 @@ public class GameInstance : MonoBehaviour
         MAIN_MENU,
         SETTINGS_MENU,
         GAMEMODE_MENU,
+        CONNECTION_MENU,
         CUSTOMIZATION_MENU,
         LEVEL_SELECT_MENU,
         LOADING_SCREEN,
@@ -51,7 +49,7 @@ public class GameInstance : MonoBehaviour
     private LoadingScreenProcess currentLoadingScreenProcess = LoadingScreenProcess.NONE;
 
     //The most pritle part of the loading process.
-    private const string gameAssetsBundleKey       = "MainAssetsBundle"; 
+    private const string assetsBundleKey       = "MainAssetsBundle"; 
     private const string levelsBundleKey           = "MainLevelsBundle";
     private const string gameSettingsLabel         = "MainGameSettings";
     private const string playerCharactersBundleKey = "MainPlayerCharactersBundle";
@@ -100,12 +98,14 @@ public class GameInstance : MonoBehaviour
     private GameObject mainMenu;
     private GameObject settingsMenu;
     private GameObject gameModeMenu;
+    private GameObject connectionMenu;
     private GameObject customizationMenu;
     private GameObject LevelSelectMenu;
     private GameObject loadingScreen;
     private GameObject transitionMenu;
     private GameObject countdownMenu;
     private GameObject eventSystem;
+    private GameObject networkManager;
 
     private Player player1Script;
     private Player player2Script;
@@ -113,15 +113,21 @@ public class GameInstance : MonoBehaviour
     private MainMenu mainMenuScript;
     private SettingsMenu settingsMenuScript;
     private GameModeMenu gameModeMenuScript;
+    private ConnectionMenu connectionMenuScript;
     private CustomizationMenu customizationMenuScript;
     private LevelSelectMenu LevelSelectMenuScript;
     private LoadingScreen loadingScreenScript;
     private TransitionMenu transitionMenuScript;
     private CountdownMenu countdownMenuScript;
+    private NetworkManager networkManagerScript;
 
     private Camera mainCameraComponent;
 
     void Update() {
+        if (networkManagerScript)
+        {
+            Debug.Log(networkManagerScript.IsConnectedClient);
+        }
         switch (currentApplicationStatus) {
             case ApplicationState.INITIALIZING:
                 UpdateInitializingStatus();
@@ -198,6 +204,8 @@ public class GameInstance : MonoBehaviour
     }
     private void RunGame() {
         //If any actions need to be taken during any of the game states, they should be added here!
+
+        //Wait wot. This is called every single frame even if im in the menu? no its just confusing!
         switch (currentGameState) {
             case GameState.LOADING_SCREEN:
                 UpdateLoadingState();
@@ -294,7 +302,7 @@ public class GameInstance : MonoBehaviour
 
     private void LoadGameSettings() {
         if (gameSettings) {
-            Debug.Log("GameAssetsBundle is already loaded!");
+            Debug.Log("GameSetting is already loaded!");
             return;
         }
         Debug.Log("Started Loading GameSettings!");
@@ -318,14 +326,13 @@ public class GameInstance : MonoBehaviour
         Addressables.LoadAssetAsync<PlayerCharactersBundle>(playerCharactersBundleLabel).Completed += PlayerCharactersBundleLoadingCallback;
         playerCharactersBundleLoadingInProgress = true;
     }
-
     private void LoadLevelsBundle(){
         if (levelsBundle)
         {
-            Debug.Log("GameLevelsBundle is already loaded!");
+            Debug.Log("LevelsBundle is already loaded!");
             return;
         }
-        Debug.Log("Started Loading GameLevelsBundle!");
+        Debug.Log("Started Loading LevelsBundle!");
         AssetLabelReference LevelsBundleLabel = new AssetLabelReference
         {
             labelString = levelsBundleKey
@@ -335,18 +342,17 @@ public class GameInstance : MonoBehaviour
     }
     private void LoadGameAssetsBundle() {
         if (assetsBundle) {
-            Debug.Log("GameAssetsBundle is already loaded!");
+            Debug.Log("AssetsBundle is already loaded!");
             return;
         }
-        Debug.Log("Started Loading GameAssetsBundle!");
-        AssetLabelReference GameAssetsLabel = new AssetLabelReference {
-            labelString = gameAssetsBundleKey
+        Debug.Log("Started Loading AssetsBundle!");
+        AssetLabelReference AssetsLabel = new AssetLabelReference {
+            labelString = assetsBundleKey
         };
-        Addressables.LoadAssetAsync<AssetsBundle>(GameAssetsLabel).Completed += GameAssetsBundleLoadingCallback;
+        Addressables.LoadAssetAsync<AssetsBundle>(AssetsLabel).Completed += GameAssetsBundleLoadingCallback;
         assetsBundleLoadingInProgress = true;
     }
-    private void LoadGameAssets()
-    {
+    private void LoadGameAssets() {
         Debug.Log("Started Loading Assets!");
         foreach (var entry in assetsBundle.assets) {
             if (entry.name.Length == 0) //Skip empty entries in the bundle.
@@ -373,13 +379,17 @@ public class GameInstance : MonoBehaviour
             assetsLoaded = true;
         }
     }
+
+
     private void CreateEntities() {
         Debug.Log("Started Creating Entities!");
 
-        //Get this from prefab instead to keep it consistent and allow the user to edit it!
-        eventSystem = new GameObject("EventSystem");
-        eventSystem.AddComponent<EventSystem>();
-        eventSystem.AddComponent<InputSystemUIInputModule>();
+
+        eventSystem = Instantiate(loadedAssets["EventSystem"].Result);
+
+        networkManager = Instantiate(loadedAssets["NetworkManager"].Result);
+        networkManagerScript = networkManager.GetComponent<NetworkManager>();
+        networkManager.SetActive(false);
 
         player1 = Instantiate(loadedAssets["Player"].Result);
         player1.name = "Player1";
@@ -413,6 +423,11 @@ public class GameInstance : MonoBehaviour
         gameModeMenu = Instantiate(loadedAssets["GameModeMenu"].Result);
         gameModeMenu.SetActive(false);
         gameModeMenuScript = gameModeMenu.GetComponent<GameModeMenu>(); //Is getting this script even has any value? i wont call anything from it. It has button code only!
+
+        connectionMenu = Instantiate(loadedAssets["ConnectionMenu"].Result);
+        connectionMenu.SetActive(false);
+        connectionMenuScript = connectionMenu.GetComponent<ConnectionMenu>();
+        connectionMenuScript.Initialize();
 
         customizationMenu = Instantiate(loadedAssets["CustomizationMenu"].Result);
         customizationMenu.SetActive(false);
@@ -464,6 +479,9 @@ public class GameInstance : MonoBehaviour
             case GameState.GAMEMODE_MENU:
                 transitionMenuScript.StartTransition(SetupGameModeMenuState);
                 break;
+            case GameState.CONNECTION_MENU:
+                transitionMenuScript.StartTransition(SetupConnectionMenuState);
+                break;
             case GameState.CUSTOMIZATION_MENU:
                 transitionMenuScript.StartTransition(SetupCustomizationMenuState);
                 break;
@@ -483,43 +501,50 @@ public class GameInstance : MonoBehaviour
     }
     private void SetupMainMenuState() {
         HideAllMenus();
+        EnableMouseCursor();
         mainMenu.SetActive(true);
-        Cursor.visible = true;
         currentGameState = GameState.MAIN_MENU;
     }
     private void SetupSettingsMenuState() {
         HideAllMenus();
+        EnableMouseCursor();
         settingsMenu.SetActive(true);
-        Cursor.visible = true;
         currentGameState = GameState.SETTINGS_MENU;
     }
     private void SetupGameModeMenuState() {
         HideAllMenus(); //hmm, with transition,,,
+        EnableMouseCursor();
         gameModeMenu.SetActive(true);
-        Cursor.visible = true;
         currentGameState = GameState.GAMEMODE_MENU;
+    }
+    private void SetupConnectionMenuState() {
+        HideAllMenus();
+        EnableMouseCursor();
+        connectionMenu.SetActive(true);
+        currentGameState = GameState.CONNECTION_MENU;
     }
     private void SetupCustomizationMenuState() {
         HideAllMenus();
+        EnableMouseCursor();
         customizationMenu.SetActive(true);
-        Cursor.visible = true;
         currentGameState = GameState.CUSTOMIZATION_MENU;
     }
     private void SetupLevelSelectMenuState() {
         HideAllMenus();
+        EnableMouseCursor();
         LevelSelectMenu.SetActive(true);
-        Cursor.visible = true;
         currentGameState = GameState.LEVEL_SELECT_MENU;
     }
     private void SetupLoadingScreenState() {
         HideAllMenus();
+        DisableMouseCursor();
         loadingScreen.SetActive(true);
-        Cursor.visible = false;
         currentGameState = GameState.LOADING_SCREEN;
     }
     private void SetupPauseMenuState() {
+        //Hide HUDs
+        EnableMouseCursor();
         //mainMenu.SetActive(true);
-        Cursor.visible = true;
         currentGameState = GameState.PAUSE_MENU;
     }
 
@@ -528,7 +553,7 @@ public class GameInstance : MonoBehaviour
     //Now it seems like they do the same thing...
     private void SetupLevelStartState() {
         HideAllMenus(); //To turn off loading screen
-        Cursor.visible = false;
+        DisableMouseCursor();
         //Get data from level and setup start state for players by reseting them and positing them
         //Reset any match score between them
         //Disable their input
@@ -536,6 +561,35 @@ public class GameInstance : MonoBehaviour
         countdownMenu.SetActive(true);
         countdownMenuScript.StartAnimation(StartMatch);
     }
+
+
+
+
+    public void StartAsHost() {
+
+        networkManagerScript.StartHost();
+        Debug.Log("Started as Host!");
+    }
+    public void StartAsClient() {
+
+        networkManagerScript.StartClient();
+        Debug.Log("Started as Client!");
+    }
+
+
+
+    private void EnableMouseCursor() {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+    private void DisableMouseCursor() {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+
+    //Make funcs for cursor!!!!!
+
     private void SetupPlayState() {
         //TEMP
         //Assert if gamemode is none! 
@@ -564,10 +618,12 @@ public class GameInstance : MonoBehaviour
         if (mode == GameMode.COOP) {
             player1Script.DisableNetworking();
             player2Script.DisableNetworking();
+            networkManager.SetActive(false);
         }
         else if (mode == GameMode.LAN) {
             player1Script.EnableNetworking();
             player2Script.EnableNetworking();
+            networkManager.SetActive(true);
         }
 
         //SetMode? for players (That func would manage EnableNetworking/DisableNetworking then!) and menus!
@@ -661,8 +717,6 @@ public class GameInstance : MonoBehaviour
 
         currentLoadingScreenProcess = LoadingScreenProcess.NONE;
     }
-
-
     private void GameSettingsLoadingCallback(AsyncOperationHandle<GameSettings> handle) {
         if (handle.Status == AsyncOperationStatus.Succeeded) {
             gameSettings = handle.Result;

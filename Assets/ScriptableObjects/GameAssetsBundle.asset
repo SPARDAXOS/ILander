@@ -73,3 +73,21 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: EventSystem
+    reference:
+      m_AssetGUID: d1ec171a05aed054eaa1aa1a66e5d45a
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: NetworkManager
+    reference:
+      m_AssetGUID: c1a4cad49bba6a04e9dd05e9f5751ad6
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: ConnectionMenu
+    reference:
+      m_AssetGUID: b22d529f2adb99a458b4dc4f96547087
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
