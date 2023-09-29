@@ -6,6 +6,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class GameInstance : MonoBehaviour
 {
@@ -49,14 +50,27 @@ public class GameInstance : MonoBehaviour
     public GameMode currentGameMode = GameMode.NONE;
     private LoadingScreenProcess currentLoadingScreenProcess = LoadingScreenProcess.NONE;
 
-    //Temp public
-    private const string gameAssetsBundleKey = "GameAssetsBundle"; //The most pritle part of the loading process.
-    private const string levelsBundleKey = "GameLevelsBundle"; 
+    //The most pritle part of the loading process.
+    private const string gameAssetsBundleKey       = "MainAssetsBundle"; 
+    private const string levelsBundleKey           = "MainLevelsBundle";
+    private const string gameSettingsLabel         = "MainGameSettings";
+    private const string playerCharactersBundleKey = "MainPlayerCharactersBundle";
 
     private static GameInstance instance;
 
-    private LevelsBundle gameLevelsBundle = null;
-    public AssetsBundle gameAssetsBundle = null;
+    //Temp PUBLICS!
+
+
+    //Dont like names,  game, characters
+    private LevelsBundle levelsBundle = null;
+    public AssetsBundle assetsBundle = null;
+    public GameSettings gameSettings = null;
+    public PlayerCharactersBundle playerCharactersBundle = null;
+
+
+
+
+
     public Dictionary<string, AsyncOperationHandle<GameObject>> loadedAssets = new Dictionary<string, AsyncOperationHandle<GameObject>>();
 
     //Terrible names
@@ -64,11 +78,15 @@ public class GameInstance : MonoBehaviour
     private GameObject currentLoadedLevel = null;
     private Level currentLoadedLevelScript = null;
 
+
     //Sus
     private bool initializationInProgress = false;
     //Shortyen these names
-    private bool gameAssetsBundleLoadingInProgress = false;
-    private bool gameLevelsBundleLoadingInProgress = false;
+    private bool assetsBundleLoadingInProgress = false;
+    private bool levelsBundleLoadingInProgress = false;
+    private bool gameSettingsLoadingInProgress = false;
+    private bool playerCharactersBundleLoadingInProgress = false;
+
     private bool assetsLoadingInProgress = false;
 
     private bool assetsLoaded = false;
@@ -121,29 +139,47 @@ public class GameInstance : MonoBehaviour
         }
 
         //Initialization steps:
-        //Load AssetsBundle
+        //Load Settings
+        //Load PlayerCharacters
         //Load LevelsBundle
+        //Load AssetsBundle
         //Load Assets
         //Create Entities
         //Setup Entities
         //Setup Main Menu State
 
-        if (!gameAssetsBundle) {
-            if (gameAssetsBundleLoadingInProgress)
+        //Step 1 of this func is to check whether all necessary bundles have been loaded. Could be broken into two functions!
+        if (!assetsBundle) {
+            if (assetsBundleLoadingInProgress)
                 Debug.Log("Waiting on GameAssetsBundle to load!");
             else
                 Debug.LogError("Unable to load assets. \n GameAssetsBundle is missing!");
             return;
         }
-        if (!gameLevelsBundle) {
-            if (gameLevelsBundleLoadingInProgress)
+        if (!levelsBundle) {
+            if (levelsBundleLoadingInProgress)
                 Debug.Log("Waiting on GameLevelsBundle to load!");
             else
                 Debug.LogError("Unable to load assets. \n GameLevelsBundle is missing!");
             return;
         }
+        if (!gameSettings) {
+            if (gameSettingsLoadingInProgress)
+                Debug.Log("Waiting on GameSettings to load!");
+            else
+                Debug.LogError("Unable to load assets. \n GameSettings is missing!");
+            return;
+        }
+        if (!playerCharactersBundle) {
+            if (playerCharactersBundleLoadingInProgress)
+                Debug.Log("Waiting on PlayerCharactersBundle to load!");
+            else
+                Debug.LogError("Unable to load assets. \n PlayerCharactersBundle is missing!");
+            return;
+        }
 
 
+        //Step 2 of this func is to load assets, check their loading status then create entities.
         //NOTE: Too many unnecessary checks all over the place!. Is this obsession with safety worth it?
         if (!assetsLoaded && !assetsLoadingInProgress)
             LoadGameAssets();
@@ -214,6 +250,8 @@ public class GameInstance : MonoBehaviour
             Addressables.Release(entry.Value);
 
         //Unload loaded level!
+        //Unload Settings file!
+        //Unload characters file!
     }
 
     //??? check vid
@@ -231,9 +269,9 @@ public class GameInstance : MonoBehaviour
 
 
 
-    public void Initialize()
-    {
-        if (gameAssetsBundle && gameLevelsBundle) { //Assets too? maybe just use the init bool instead?
+    public void Initialize() {
+        //ADD OTHERS!
+        if (assetsBundle && levelsBundle) { //Assets too? maybe just use the init bool instead?
             Debug.Log("Game is already initalized!");
             return;
         }
@@ -241,31 +279,48 @@ public class GameInstance : MonoBehaviour
             Debug.Log("Initalization already in progress!");
             return;
         }
+
         Debug.Log("Started Initializing Game!");
         currentApplicationStatus = ApplicationState.INITIALIZING;
         initializationInProgress = true;
-        LoadGameAssetsBundle();
+
+        LoadGameSettings();
+        LoadPlayerCharactersBundle();
         LoadLevelsBundle();
+        LoadGameAssetsBundle();
     }
 
 
 
-    private void LoadGameAssetsBundle()
-    {
-        if (gameAssetsBundle) {
+    private void LoadGameSettings() {
+        if (gameSettings) {
             Debug.Log("GameAssetsBundle is already loaded!");
             return;
         }
-        Debug.Log("Started Loading GameAssetsBundle!");
-        AssetLabelReference GameAssetsLabel = new AssetLabelReference
+        Debug.Log("Started Loading GameSettings!");
+        AssetLabelReference GameSettingsLabel = new AssetLabelReference
         {
-            labelString = gameAssetsBundleKey
+            labelString = gameSettingsLabel
         };
-        Addressables.LoadAssetAsync<AssetsBundle>(GameAssetsLabel).Completed += GameAssetsBundleLoadingCallback;
-        gameAssetsBundleLoadingInProgress = true;
+        Addressables.LoadAssetAsync<GameSettings>(GameSettingsLabel).Completed += GameSettingsLoadingCallback;
+        gameSettingsLoadingInProgress = true;
     }
+    private void LoadPlayerCharactersBundle() {
+        if (playerCharactersBundle) {
+            Debug.Log("PlayerCharactersBundle is already loaded!");
+            return;
+        }
+        Debug.Log("Started Loading PlayerCharactersBundle!");
+        AssetLabelReference playerCharactersBundleLabel = new AssetLabelReference
+        {
+            labelString = playerCharactersBundleKey
+        };
+        Addressables.LoadAssetAsync<PlayerCharactersBundle>(playerCharactersBundleLabel).Completed += PlayerCharactersBundleLoadingCallback;
+        playerCharactersBundleLoadingInProgress = true;
+    }
+
     private void LoadLevelsBundle(){
-        if (gameLevelsBundle)
+        if (levelsBundle)
         {
             Debug.Log("GameLevelsBundle is already loaded!");
             return;
@@ -276,12 +331,24 @@ public class GameInstance : MonoBehaviour
             labelString = levelsBundleKey
         };
         Addressables.LoadAssetAsync<LevelsBundle>(LevelsBundleLabel).Completed += GameLevelsBundleLoadingCallback;
-        gameLevelsBundleLoadingInProgress = true;
+        levelsBundleLoadingInProgress = true;
+    }
+    private void LoadGameAssetsBundle() {
+        if (assetsBundle) {
+            Debug.Log("GameAssetsBundle is already loaded!");
+            return;
+        }
+        Debug.Log("Started Loading GameAssetsBundle!");
+        AssetLabelReference GameAssetsLabel = new AssetLabelReference {
+            labelString = gameAssetsBundleKey
+        };
+        Addressables.LoadAssetAsync<AssetsBundle>(GameAssetsLabel).Completed += GameAssetsBundleLoadingCallback;
+        assetsBundleLoadingInProgress = true;
     }
     private void LoadGameAssets()
     {
         Debug.Log("Started Loading Assets!");
-        foreach (var entry in gameAssetsBundle.assets) {
+        foreach (var entry in assetsBundle.assets) {
             if (entry.name.Length == 0) //Skip empty entries in the bundle.
                 continue;
 
@@ -315,14 +382,18 @@ public class GameInstance : MonoBehaviour
         eventSystem.AddComponent<InputSystemUIInputModule>();
 
         player1 = Instantiate(loadedAssets["Player"].Result);
+        player1.name = "Player1";
         player1.SetActive(false);
         player1Script = player1.GetComponent<Player>();
         player1Script.Initialize();
+        player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
 
         player2 = Instantiate(loadedAssets["Player"].Result);
+        player2.name = "Player2";
         player2.SetActive(false);
         player2Script = player2.GetComponent<Player>();
         player2Script.Initialize();
+        player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
 
         mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
         mainCameraScript = mainCamera.GetComponent<MainCamera>();
@@ -375,7 +446,7 @@ public class GameInstance : MonoBehaviour
         mainCameraScript.SetFollowTarget(player1); //Deprecated
 
         customizationMenuScript.SetRenderCameraTarget(mainCameraComponent);
-        LevelSelectMenuScript.SetLevelsBundle(gameLevelsBundle);
+        LevelSelectMenuScript.SetLevelsBundle(levelsBundle);
 
         //SetControlSchemes from loaded addressable control shcemes? both players use the same one now.
 
@@ -385,7 +456,7 @@ public class GameInstance : MonoBehaviour
     public void SetGameState(GameState state) {
         switch (state) {
             case GameState.MAIN_MENU:
-                SetupMainMenuState();
+                transitionMenuScript.StartTransition(SetupMainMenuState); //This scares me!  I never call this with using SetGameState. I call SetupMainMenuState directly!
                 break;
             case GameState.SETTINGS_MENU:
                 transitionMenuScript.StartTransition(SetupSettingsMenuState);
@@ -475,8 +546,33 @@ public class GameInstance : MonoBehaviour
 
 
 
+    public void ConfirmCharacterSelection(Player.PlayerType type, PlayerCharacterData data) {
+        if (type == Player.PlayerType.NONE)
+            return;
+
+        if (type == Player.PlayerType.PLAYER_1)
+            player1Script.SetPlayerData(data);
+        else if (type == Player.PlayerType.PLAYER_2)
+            player2Script.SetPlayerData(data);
+    }
     public void SetGameModeSelection(GameMode mode) {
+        if (mode == GameMode.NONE) //?? this means i can never return to none.
+            return;
+
         currentGameMode = mode;
+
+        if (mode == GameMode.COOP) {
+            player1Script.DisableNetworking();
+            player2Script.DisableNetworking();
+        }
+        else if (mode == GameMode.LAN) {
+            player1Script.EnableNetworking();
+            player2Script.EnableNetworking();
+        }
+
+        //SetMode? for players (That func would manage EnableNetworking/DisableNetworking then!) and menus!
+
+        //Do online or disable online stuff and set changes to menus!
     }
     public void StartLevel(uint level) {
         if (currentLoadedLevel) {
@@ -484,7 +580,7 @@ public class GameInstance : MonoBehaviour
             return;
         }
 
-        currentLoadedLevelHandle = Addressables.LoadAssetAsync<GameObject>(gameLevelsBundle.levels[level].asset);
+        currentLoadedLevelHandle = Addressables.LoadAssetAsync<GameObject>(levelsBundle.levels[level].asset);
         currentLoadedLevelHandle.Completed += LevelLoadedCallback;
         StartLoadingScreenProcess(LoadingScreenProcess.LOADING_LEVEL);
     }
@@ -514,8 +610,10 @@ public class GameInstance : MonoBehaviour
         Debug.Log("Invocation worked!");
         player1.SetActive(true);
         player1.transform.position = currentLoadedLevelScript.GetPlayer1SpawnPoint();
+        player1Script.EnableInput();
         player2.SetActive(true);
         player2.transform.position = currentLoadedLevelScript.GetPlayer2SpawnPoint();
+        player2Script.EnableInput();
         //TRurn off countdown menu?
     }
     private void HideAllMenus() {
@@ -531,21 +629,14 @@ public class GameInstance : MonoBehaviour
 
 
 
-    //NOTE: Maybe move to helper class
-    public static void Clamp(ref float target, float min, float max) {
-        if (target > max)
-            target = max;
-        if (target < min)
-            target = min;
+
+    public PlayerCharactersBundle GetPlayerCharactersBundle() {
+        return playerCharactersBundle;
     }
-    public static bool Validate(object target, string errorMessage, bool abortOnFail = false) {
-        if (target == null) {
-            if (abortOnFail)
-                GetInstance().Abort(errorMessage);
-            return false;
-        }
-        return true;
+    public GameSettings GetGameSettings() {
+        return gameSettings;
     }
+
 
 
 
@@ -570,9 +661,41 @@ public class GameInstance : MonoBehaviour
 
         currentLoadingScreenProcess = LoadingScreenProcess.NONE;
     }
+
+
+    private void GameSettingsLoadingCallback(AsyncOperationHandle<GameSettings> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded) {
+            gameSettings = handle.Result;
+            Debug.Log("GameSettings Loaded Successfully!");
+        }
+        else {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Abort("Failed to load GameSettings! \n exiting..");
+#endif
+        }
+
+        gameSettingsLoadingInProgress = false;
+    }
+    private void PlayerCharactersBundleLoadingCallback(AsyncOperationHandle<PlayerCharactersBundle> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded) {
+            playerCharactersBundle = handle.Result;
+            Debug.Log("PlayerCharactersBundle Loaded Successfully!");
+        }
+        else {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Abort("Failed to load PlayerCharactersBundle! \n exiting..");
+#endif
+        }
+
+        playerCharactersBundleLoadingInProgress = false;
+    }
     private void GameAssetsBundleLoadingCallback(AsyncOperationHandle<AssetsBundle> handle) {
         if (handle.Status == AsyncOperationStatus.Succeeded) {
-            gameAssetsBundle = handle.Result;
+            assetsBundle = handle.Result;
             Debug.Log("GameAssetsBundle Loaded Successfully!");
         }
         else {
@@ -583,11 +706,11 @@ public class GameInstance : MonoBehaviour
 #endif
         }
 
-        gameAssetsBundleLoadingInProgress = false;
+        assetsBundleLoadingInProgress = false;
     }
     private void GameLevelsBundleLoadingCallback(AsyncOperationHandle<LevelsBundle> handle) {
         if (handle.Status == AsyncOperationStatus.Succeeded) {
-            gameLevelsBundle = handle.Result;
+            levelsBundle = handle.Result;
             Debug.Log("GameLevelsBundle Loaded Successfully!");
         }
         else {
@@ -598,7 +721,7 @@ public class GameInstance : MonoBehaviour
 #endif
         }
 
-        gameAssetsBundleLoadingInProgress = false;
+        assetsBundleLoadingInProgress = false;
     }
     private void GameObjectLoadingCallback(AsyncOperationHandle<GameObject> handle) {
         if (handle.Status == AsyncOperationStatus.Succeeded) {

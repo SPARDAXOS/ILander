@@ -4,8 +4,8 @@ using UnityEngine;
 
 
 
-[CreateAssetMenu(fileName = "PlayerData", menuName = "Data/PlayerData", order = 4)]
-public class PlayerData : ScriptableObject
+[CreateAssetMenu(fileName = "PlayerStats", menuName = "Data/PlayerStats", order = 4)]
+public class PlayerStats : ScriptableObject
 {
     [Header("Thruster")]
     public float thrusterStrengthLimit = 1.0f;

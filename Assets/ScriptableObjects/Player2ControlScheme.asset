@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2793c4b4e43085e42973739fc0202136, type: 3}
-  m_Name: PlayerControlScheme
+  m_Name: Player2ControlScheme
   m_EditorClassIdentifier: 
   boosterInput:
     m_Name: Booster Input
@@ -30,7 +30,7 @@ MonoBehaviour:
       m_Flags: 4
     - m_Name: negative
       m_Id: 4ec96341-9e3f-41ca-9972-14f270d6701d
-      m_Path: <Keyboard>/s
+      m_Path: <Keyboard>/downArrow
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -38,7 +38,7 @@ MonoBehaviour:
       m_Flags: 8
     - m_Name: positive
       m_Id: 7e3ba950-4e85-4cfd-b27f-d727316dd602
-      m_Path: <Keyboard>/w
+      m_Path: <Keyboard>/upArrow
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -63,7 +63,7 @@ MonoBehaviour:
       m_Flags: 4
     - m_Name: positive
       m_Id: 458e423c-0193-4a60-bd83-7215d671475d
-      m_Path: <Keyboard>/a
+      m_Path: <Keyboard>/leftArrow
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -71,7 +71,7 @@ MonoBehaviour:
       m_Flags: 8
     - m_Name: negative
       m_Id: b50e58a4-4356-4ace-9c08-88af52b186de
-      m_Path: <Keyboard>/d
+      m_Path: <Keyboard>/rightArrow
       m_Interactions: 
       m_Processors: 
       m_Groups: 

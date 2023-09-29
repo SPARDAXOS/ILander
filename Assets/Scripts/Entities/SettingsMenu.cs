@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 using static UnityEngine.EventSystems.EventTrigger;
+using ILanderUtility;
 
 public class SettingsMenu : MonoBehaviour {
     public enum QualityPreset {
@@ -36,7 +37,7 @@ public class SettingsMenu : MonoBehaviour {
     }
 
 
-    [SerializeField] private GameSettings gameSettings;
+
     [SerializeField] private Color selectedPresetColor = new Color(0.06f, 0.6f, 0.77f, 1.0f);
 
     private bool initialized = false;
@@ -47,6 +48,8 @@ public class SettingsMenu : MonoBehaviour {
 
     private Color defaultPresetNormalColor;
     private Color defaultPresetSelectedColor;
+
+    private GameSettings gameSettings;
 
     private TMP_Dropdown resolutionDropdown           = null;
     private TMP_Dropdown windowModeDropdown           = null;
@@ -87,11 +90,12 @@ public class SettingsMenu : MonoBehaviour {
     }
     private void SetupReferences() {
 
-        GameInstance.Validate(gameSettings, "No GameSettings asset is set! - SettingsMenu", true);
+        gameSettings = GameInstance.GetInstance().GetGameSettings();
+        Utility.Validate(gameSettings, "Failed to retrieve GameSettings from GameInstance - SettingsMenu", true);
 
         //Presets
         Transform presetsTransform = transform.Find("Presets");
-        GameInstance.Validate(presetsTransform, "Failed to find reference to Presets - SettingsMenu", true);
+        Utility.Validate(presetsTransform, "Failed to find reference to Presets - SettingsMenu", true);
 
         Transform lowPresetTransform    = presetsTransform.Find("LowButton");
         Transform mediumPresetTransform = presetsTransform.Find("MediumButton");
@@ -99,11 +103,11 @@ public class SettingsMenu : MonoBehaviour {
         Transform ultraPresetTransform  = presetsTransform.Find("UltraButton");
         Transform customPresetTransform = presetsTransform.Find("CustomButton");
 
-        GameInstance.Validate(lowPresetTransform, "Failed to find reference to LowButton - SettingsMenu", true);
-        GameInstance.Validate(mediumPresetTransform, "Failed to find reference to MediumButton - SettingsMenu", true);
-        GameInstance.Validate(highPresetTransform, "Failed to find reference to HighButton - SettingsMenu", true);
-        GameInstance.Validate(ultraPresetTransform, "Failed to find reference to UltraButton - SettingsMenu", true);
-        GameInstance.Validate(customPresetTransform, "Failed to find reference to CustomButton - SettingsMenu", true);
+        Utility.Validate(lowPresetTransform, "Failed to find reference to LowButton - SettingsMenu", true);
+        Utility.Validate(mediumPresetTransform, "Failed to find reference to MediumButton - SettingsMenu", true);
+        Utility.Validate(highPresetTransform, "Failed to find reference to HighButton - SettingsMenu", true);
+        Utility.Validate(ultraPresetTransform, "Failed to find reference to UltraButton - SettingsMenu", true);
+        Utility.Validate(customPresetTransform, "Failed to find reference to CustomButton - SettingsMenu", true);
 
         lowPresetButton    = lowPresetTransform.GetComponent<Button>();
         mediumPresetButton = mediumPresetTransform.GetComponent<Button>();
@@ -111,11 +115,11 @@ public class SettingsMenu : MonoBehaviour {
         ultraPresetButton  = ultraPresetTransform.GetComponent<Button>();
         customPresetButton = customPresetTransform.GetComponent<Button>();
 
-        GameInstance.Validate(lowPresetButton, "Failed to find component Button in lowPresetTransform - SettingsMenu", true);
-        GameInstance.Validate(mediumPresetButton, "Failed to find component Button in mediumPresetButton - SettingsMenu", true);
-        GameInstance.Validate(highPresetButton, "Failed to find component Button in highPresetButton - SettingsMenu", true);
-        GameInstance.Validate(ultraPresetButton, "Failed to find component Button in ultraPresetButton - SettingsMenu", true);
-        GameInstance.Validate(customPresetButton, "Failed to find component Button in customPresetButton - SettingsMenu", true);
+        Utility.Validate(lowPresetButton, "Failed to find component Button in lowPresetTransform - SettingsMenu", true);
+        Utility.Validate(mediumPresetButton, "Failed to find component Button in mediumPresetButton - SettingsMenu", true);
+        Utility.Validate(highPresetButton, "Failed to find component Button in highPresetButton - SettingsMenu", true);
+        Utility.Validate(ultraPresetButton, "Failed to find component Button in ultraPresetButton - SettingsMenu", true);
+        Utility.Validate(customPresetButton, "Failed to find component Button in customPresetButton - SettingsMenu", true);
 
         //If any of the buttons has unique values for these then they will be set to customPresetButton's values upon clearing!
         defaultPresetNormalColor = customPresetButton.colors.normalColor;
@@ -124,45 +128,45 @@ public class SettingsMenu : MonoBehaviour {
 
         //Resolution
         Transform resolutionDropDownTransform = transform.Find("ResolutionDropdown");
-        GameInstance.Validate(resolutionDropDownTransform, "Failed to find reference to ResolutionDropdown - SettingsMenu", true);
+        Utility.Validate(resolutionDropDownTransform, "Failed to find reference to ResolutionDropdown - SettingsMenu", true);
         resolutionDropdown = resolutionDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(resolutionDropdown, "Failed to find component TMP_Dropdown for resolutionDropdown - SettingsMenu", true);
+        Utility.Validate(resolutionDropdown, "Failed to find component TMP_Dropdown for resolutionDropdown - SettingsMenu", true);
 
         //WindowMode
         Transform windowModeDropDownTransform = transform.Find("WindowModeDropdown");
-        GameInstance.Validate(windowModeDropDownTransform, "Failed to find reference to WindowModeDropdown - SettingsMenu", true);
+        Utility.Validate(windowModeDropDownTransform, "Failed to find reference to WindowModeDropdown - SettingsMenu", true);
         windowModeDropdown = windowModeDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(windowModeDropdown, "Failed to find component TMP_Dropdown for windowModeDropdown - SettingsMenu", true);
+        Utility.Validate(windowModeDropdown, "Failed to find component TMP_Dropdown for windowModeDropdown - SettingsMenu", true);
 
         //Vsync
         Transform vsyncDropDownTransform = transform.Find("VsyncDropdown");
-        GameInstance.Validate(vsyncDropDownTransform, "Failed to find reference to VsyncDropdown - SettingsMenu", true);
+        Utility.Validate(vsyncDropDownTransform, "Failed to find reference to VsyncDropdown - SettingsMenu", true);
         vsyncDropdown = vsyncDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(vsyncDropdown, "Failed to find component TMP_Dropdown for VsyncDropdown - SettingsMenu", true);
+        Utility.Validate(vsyncDropdown, "Failed to find component TMP_Dropdown for VsyncDropdown - SettingsMenu", true);
 
         //FpsLimit
         Transform fpsLimitDropDownTransform = transform.Find("FpsLimitDropdown");
-        GameInstance.Validate(fpsLimitDropDownTransform, "Failed to find reference to FpsLimitDropdown - SettingsMenu", true);
+        Utility.Validate(fpsLimitDropDownTransform, "Failed to find reference to FpsLimitDropdown - SettingsMenu", true);
         fpsLimitDropdown = fpsLimitDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(fpsLimitDropdown, "Failed to find component TMP_Dropdown for fpsLimitDropdown - SettingsMenu", true);
+        Utility.Validate(fpsLimitDropdown, "Failed to find component TMP_Dropdown for fpsLimitDropdown - SettingsMenu", true);
 
         //Anti Aliasing
         Transform antiAliasingDropDownTransform = transform.Find("AntiAliasingDropdown");
-        GameInstance.Validate(antiAliasingDropDownTransform, "Failed to find reference to AntiAliasingDropdown - SettingsMenu", true);
+        Utility.Validate(antiAliasingDropDownTransform, "Failed to find reference to AntiAliasingDropdown - SettingsMenu", true);
         antiAliasingDropdown = antiAliasingDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(antiAliasingDropdown, "Failed to find component TMP_Dropdown for antiAliasingDropdown - SettingsMenu", true);
+        Utility.Validate(antiAliasingDropdown, "Failed to find component TMP_Dropdown for antiAliasingDropdown - SettingsMenu", true);
 
         //Texture Quality
         Transform textureQualityDropDownTransform = transform.Find("TextureQualityDropdown");
-        GameInstance.Validate(textureQualityDropDownTransform, "Failed to find reference to TextureQualityDropdown - SettingsMenu", true);
+        Utility.Validate(textureQualityDropDownTransform, "Failed to find reference to TextureQualityDropdown - SettingsMenu", true);
         textureQualityDropdown = textureQualityDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(textureQualityDropdown, "Failed to find component TMP_Dropdown for textureQualityDropdown - SettingsMenu", true);
+        Utility.Validate(textureQualityDropdown, "Failed to find component TMP_Dropdown for textureQualityDropdown - SettingsMenu", true);
 
         //AnisotropicFiltering
         Transform AFilteringDropDownTransform = transform.Find("AnisotropicFilteringDropdown");
-        GameInstance.Validate(AFilteringDropDownTransform, "Failed to find reference to AnisotropicFilteringDropdown - SettingsMenu", true);
+        Utility.Validate(AFilteringDropDownTransform, "Failed to find reference to AnisotropicFilteringDropdown - SettingsMenu", true);
         anisotropicFilteringDropdown = AFilteringDropDownTransform.GetComponent<TMP_Dropdown>();
-        GameInstance.Validate(anisotropicFilteringDropdown, "Failed to find component TMP_Dropdown for anisotropicFilteringDropdown - SettingsMenu", true);
+        Utility.Validate(anisotropicFilteringDropdown, "Failed to find component TMP_Dropdown for anisotropicFilteringDropdown - SettingsMenu", true);
 
 
     }

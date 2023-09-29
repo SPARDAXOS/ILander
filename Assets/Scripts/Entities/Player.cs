@@ -1,33 +1,97 @@
+using Initialization;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using ILanderUtility;
 
 public class Player : MonoBehaviour
 {
+    public enum PlayerType
+    {
+        NONE,
+        PLAYER_1,
+        PLAYER_2
+    }
 
-    [SerializeField] private PlayerControlScheme controlScheme;
-    [SerializeField] private PlayerData playerData;
 
+    [SerializeField] private PlayerControlScheme player1ControlScheme;
+    [SerializeField] private PlayerControlScheme player2ControlScheme;
+
+    private bool initialized = false;
+    private PlayerCharacterData playerCharacterData; //Add Check to validate if player has data before doing any updates!
+    private PlayerType currentPlayerType = PlayerType.NONE;
+
+
+    private PlayerControlScheme activeControlScheme;
 
     public float currentThrusterStrength = 0.0f;
     private Vector3 thrusterDirection = Vector2.zero;
 
+
+    private SpriteRenderer spriteRendererComp;
+
+
     public void Initialize() {
-        //Add check to avoid allowing multiple calls to this!
-        EnableInput();
+        if (initialized)
+            return;
+
+        //Disable networking by defualt?
+        SetupReferences();
+        initialized = true;
+        //EnableInput(); Call this from instance instead at game start!
     }
     public void Tick() {
+        //Problem is that the struct is not nullable. Either make it so or just roll with it!
+        if (currentPlayerType == PlayerType.NONE)
+            return;//mESSGE?
 
         CheckInput();
         UpdateMovement();
     }
 
+    private void SetupReferences() {
+
+        spriteRendererComp = GetComponent<SpriteRenderer>();
+        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", true);
+
+
+    }
+
+
+
+    public void SetPlayerType(PlayerType type) {
+        currentPlayerType = type;
+        if (type == PlayerType.PLAYER_1)
+            activeControlScheme = player1ControlScheme;
+        else if (type == PlayerType.PLAYER_2)
+            activeControlScheme = player2ControlScheme;
+
+        //Other stuff?
+    }
+    //Get skin instead! Change skin to data and data to stats?
+    public void SetPlayerData(PlayerCharacterData data) {
+        playerCharacterData = data;
+
+        spriteRendererComp.sprite = data.shipSprite;
+        //Apply HUD data! probably have 2 hud modes cause if online or not!
+        //Apply data from it!
+    }
+
+
+    public void EnableNetworking() {
+        //At the very least enable and disable the networking component.
+    }
+    public void DisableNetworking() { 
+        
+    }
+
+
     private void CheckInput()
     {
         //Break into 2 funcs - rot and move
-        if (controlScheme.boosterInput.IsPressed()) {
-            float inputValue = controlScheme.boosterInput.ReadValue<float>();
+        if (activeControlScheme.boosterInput.IsPressed()) {
+            float inputValue = activeControlScheme.boosterInput.ReadValue<float>();
             if (inputValue < 0.0f)
                 BreakThruster();
             else if (inputValue > 0.0f)
@@ -49,9 +113,9 @@ public class Player : MonoBehaviour
         else if (currentThrusterStrength > 0.0f)
             DeccelerateThruster();
 
-        if (controlScheme.rotationInput.IsPressed()) {
-            float inputValue = controlScheme.rotationInput.ReadValue<float>();
-            float Speed = playerData.turnRate;
+        if (activeControlScheme.rotationInput.IsPressed()) {
+            float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
+            float Speed = playerCharacterData.statsData.turnRate;
             if (inputValue < 0.0f)
                 Speed *= -1;
 
@@ -72,14 +136,14 @@ public class Player : MonoBehaviour
 
 
     private void AccelerateThruster() {
-        currentThrusterStrength += playerData.thrusterAccelerationRate * Time.deltaTime;
-        if (currentThrusterStrength >= playerData.thrusterStrengthLimit) {
-            currentThrusterStrength = playerData.thrusterStrengthLimit;
+        currentThrusterStrength += playerCharacterData.statsData.thrusterAccelerationRate * Time.deltaTime;
+        if (currentThrusterStrength >= playerCharacterData.statsData.thrusterStrengthLimit) {
+            currentThrusterStrength = playerCharacterData.statsData.thrusterStrengthLimit;
             //Stuff
         }
     }
     private void DeccelerateThruster() {
-        currentThrusterStrength -= playerData.thrusterDecelerationRate * Time.deltaTime;
+        currentThrusterStrength -= playerCharacterData.statsData.thrusterDecelerationRate * Time.deltaTime;
         if (currentThrusterStrength <= 0.0f) {
             currentThrusterStrength = 0.0f;
             //Stuff
@@ -87,19 +151,21 @@ public class Player : MonoBehaviour
     }
     private void BreakThruster() {
         Debug.Log("Breaks!");
-        currentThrusterStrength -= playerData.thrusterBreaksRate * Time.deltaTime;
+        currentThrusterStrength -= playerCharacterData.statsData.thrusterBreaksRate * Time.deltaTime;
         if (currentThrusterStrength <= 0.0f) {
             currentThrusterStrength = 0.0f;
             //Stuff
         }
     }
 
-    private void EnableInput() {
-        controlScheme.boosterInput.Enable();
-        controlScheme.rotationInput.Enable();
+    //SetMode? for coop and lan modes!
+
+    public void EnableInput() {
+        activeControlScheme.boosterInput.Enable();
+        activeControlScheme.rotationInput.Enable();
     }
-    private void DisableInput() {
-        controlScheme.boosterInput.Disable();
-        controlScheme.rotationInput.Disable();
+    public void DisableInput() {
+        activeControlScheme.boosterInput.Disable();
+        activeControlScheme.rotationInput.Disable();
     }
 }

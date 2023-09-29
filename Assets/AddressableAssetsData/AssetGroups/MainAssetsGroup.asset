@@ -25,7 +25,7 @@ MonoBehaviour:
     m_Address: Assets/ScriptableObjects/GameAssetsBundle.asset
     m_ReadOnly: 0
     m_SerializedLabels:
-    - GameAssetsBundle
+    - MainAssetsBundle
     - AssetsBundle
   - m_GUID: d206b0a283a7e8e459caa1daf1c0e314
     m_Address: Assets/Prefabs/MainCamera.prefab
@@ -60,7 +60,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - LevelsBundle
-    - GameLevelsBundle
+    - MainLevelsBundle
   - m_GUID: 571f9546f5745e74bb27b21569833790
     m_Address: Assets/Prefabs/LevelSelectMenu.prefab
     m_ReadOnly: 0
@@ -81,6 +81,16 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/NetworkManager.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 247cb9f8cc068b148beaf4d2fca0747d
+    m_Address: Assets/ScriptableObjects/GameSettings.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainGameSettings
+  - m_GUID: 795706c6f96820e49b0dbf2de26c5377
+    m_Address: Assets/ScriptableObjects/PlayerCharactersBundle.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainPlayerCharactersBundle
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:

@@ -5,6 +5,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+using ILanderUtility;
+
 public class LevelSelectMenu : MonoBehaviour
 {
     private bool initialized = false;
@@ -30,19 +32,19 @@ public class LevelSelectMenu : MonoBehaviour
     private void SetupReferences() {
 
         Transform previewWindowTransform = transform.Find("PreviewWindow");
-        GameInstance.Validate(previewWindowTransform, "Failed to find reference to PreviewWindow - LevelSelectMenu");
+        Utility.Validate(previewWindowTransform, "Failed to find reference to PreviewWindow - LevelSelectMenu");
 
         Transform levelPreviewTransform = previewWindowTransform.Find("LevelPreview");
-        GameInstance.Validate(levelPreviewTransform, "Failed to find reference to LevelPreview - LevelSelectMenu");
+        Utility.Validate(levelPreviewTransform, "Failed to find reference to LevelPreview - LevelSelectMenu");
 
         levelPreview = levelPreviewTransform.GetComponent<Image>();
-        GameInstance.Validate(levelPreview, "Failed to find component Image on LevelPreview - LevelSelectMenu");
+        Utility.Validate(levelPreview, "Failed to find component Image on LevelPreview - LevelSelectMenu");
 
         Transform levelSelectorTransform = previewWindowTransform.Find("LevelSelector");
-        GameInstance.Validate(levelSelectorTransform, "Failed to find reference to LevelSelector - LevelSelectMenu");
+        Utility.Validate(levelSelectorTransform, "Failed to find reference to LevelSelector - LevelSelectMenu");
 
         levelName = levelSelectorTransform.GetComponent<TextMeshProUGUI>();
-        GameInstance.Validate(levelPreview, "Failed to find component Text on LevelSelector - LevelSelectMenu");
+        Utility.Validate(levelPreview, "Failed to find component Text on LevelSelector - LevelSelectMenu");
     }
     private void UpdateLevelPreview() {
         if (!levelsBundle) {

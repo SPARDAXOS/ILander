@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using ILanderUtility;
+
 public class Level : MonoBehaviour
 {
     [SerializeField] private Transform player1SpawnPoint;
@@ -23,11 +25,11 @@ public class Level : MonoBehaviour
 
     private void SetupReferences() {
 
-        if (!GameInstance.Validate(player1SpawnPoint, "No Player1SpawnPoint has been set for level " + gameObject.name, false))
+        if (!Utility.Validate(player1SpawnPoint, "No Player1SpawnPoint has been set for level " + gameObject.name, false))
             spawnPoint1 = Vector3.zero;
         else
             spawnPoint1 = player1SpawnPoint.position;
-        if (!GameInstance.Validate(player2SpawnPoint, "No Player2SpawnPoint has been set for level " + gameObject.name, false))
+        if (!Utility.Validate(player2SpawnPoint, "No Player2SpawnPoint has been set for level " + gameObject.name, false))
             spawnPoint2 = Vector3.zero;
         else
             spawnPoint2 = player2SpawnPoint.position;

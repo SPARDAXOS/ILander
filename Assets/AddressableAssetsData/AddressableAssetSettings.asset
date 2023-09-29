@@ -83,8 +83,10 @@ MonoBehaviour:
     m_ProfileVersion: 1
   m_LabelTable:
     m_LabelNames:
-    - GameAssetsBundle
-    - GameLevelsBundle
+    - MainAssetsBundle
+    - MainLevelsBundle
+    - MainGameSettings
+    - MainPlayerCharactersBundle
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: e191a0b5be9771148b43b616a1736be9, type: 2}

@@ -9,25 +9,31 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a765f3e39e8afa4882b450a809ab72e, type: 3}
-  m_Name: PlayerSkinsBundle
+  m_Script: {fileID: 11500000, guid: bc61bfef920dbbb45952577c04803f68, type: 3}
+  m_Name: PlayerCharactersBundle
   m_EditorClassIdentifier: 
-  skins:
+  playerCharacters:
   - name: M.V.S
     shipSprite: {fileID: 21300000, guid: 2078b68c446af4c4c9ce470233e7b77c, type: 3}
     portraitSprite: {fileID: 21300000, guid: df8f05de046a0614ea5d8394cf6bc640, type: 3}
-  - name: Fury
-    shipSprite: {fileID: 21300000, guid: c74a44550de74e045ab493dd2dd05d7f, type: 3}
-    portraitSprite: {fileID: 21300000, guid: 6eb5e49ef731b304c8deccaccd3ff6e5, type: 3}
+    statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}
   - name: Ryder
     shipSprite: {fileID: 21300000, guid: a09e8437fd8611d41a93f3be307c12f1, type: 3}
     portraitSprite: {fileID: 21300000, guid: 4ac410a0288efce4091a63b8ed90d978, type: 3}
+    statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}
+  - name: Fury
+    shipSprite: {fileID: 21300000, guid: c74a44550de74e045ab493dd2dd05d7f, type: 3}
+    portraitSprite: {fileID: 21300000, guid: 6eb5e49ef731b304c8deccaccd3ff6e5, type: 3}
+    statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}
   - name: Xenax
     shipSprite: {fileID: 21300000, guid: 625860926c5eec247b313b7e910697da, type: 3}
     portraitSprite: {fileID: 21300000, guid: dea7e05db86671a438f7bad3b90bfa7f, type: 3}
+    statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}
   - name: Seraph
     shipSprite: {fileID: 21300000, guid: 94b215a6cf8b39a409e9ff273e9df3a2, type: 3}
     portraitSprite: {fileID: 21300000, guid: 934ce3e42baee4d49a1a198195e5fc86, type: 3}
+    statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}
   - name: XR-46
     shipSprite: {fileID: 21300000, guid: 305a462c175914349bd03ab09614ab51, type: 3}
     portraitSprite: {fileID: 21300000, guid: 911785f7df536ca49b536e397057871d, type: 3}
+    statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}
