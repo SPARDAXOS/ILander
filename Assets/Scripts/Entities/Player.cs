@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using ILanderUtility;
 using Unity.Netcode;
+using Unity.Multiplayer;
 
 public class Player : NetworkBehaviour
 {
@@ -52,13 +53,10 @@ public class Player : NetworkBehaviour
         UpdateMovement();
     }
 
-
     private void OnConnectedToServer()
     {
-        Debug.Log("I Connected to a server!");
+        Debug.Log("WTF Connection!");
     }
-
-
 
 
 

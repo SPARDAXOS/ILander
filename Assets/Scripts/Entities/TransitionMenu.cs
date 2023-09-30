@@ -48,11 +48,9 @@ public class TransitionMenu : MonoBehaviour
 
     public void InvokeCallback() {
         callback.Invoke();
-        Debug.Log("Invoked transition func");
     }
     public void DisableMenu() {
         gameObject.SetActive(false);
         animationPlaying = false;
-        Debug.Log("TransitionMenu Disabled itself!");
     }
 }

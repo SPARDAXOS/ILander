@@ -18,7 +18,7 @@ MonoBehaviour:
   m_GUID: 2102ade0f61b21446b8d140ca62f60bc
   m_SerializeEntries:
   - m_GUID: 1d6161b12ebcd6b4c9a2f60a102c5423
-    m_Address: Assets/Prefabs/Player.prefab
+    m_Address: Assets/Prefabs/Entities/Player.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
   - m_GUID: 60efcebd30746a7428e3accffecd674a
@@ -26,7 +26,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainAssetsBundle
-    - AssetsBundle
   - m_GUID: d206b0a283a7e8e459caa1daf1c0e314
     m_Address: Assets/Prefabs/MainCamera.prefab
     m_ReadOnly: 0
@@ -59,7 +58,6 @@ MonoBehaviour:
     m_Address: Assets/ScriptableObjects/GameLevelsBundle.asset
     m_ReadOnly: 0
     m_SerializedLabels:
-    - LevelsBundle
     - MainLevelsBundle
   - m_GUID: 571f9546f5745e74bb27b21569833790
     m_Address: Assets/Prefabs/LevelSelectMenu.prefab
@@ -97,6 +95,10 @@ MonoBehaviour:
     m_SerializedLabels: []
   - m_GUID: b22d529f2adb99a458b4dc4f96547087
     m_Address: Assets/Prefabs/Menus/ConnectionMenu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0431fef083ca8a44ea1f519766a859b0
+    m_Address: Assets/Prefabs/Entities/Player2.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
   m_ReadOnly: 0

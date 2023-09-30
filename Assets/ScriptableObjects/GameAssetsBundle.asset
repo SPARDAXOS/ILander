@@ -91,3 +91,9 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: Player2
+    reference:
+      m_AssetGUID: 0431fef083ca8a44ea1f519766a859b0
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0

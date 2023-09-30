@@ -1,5 +1,7 @@
+using JetBrains.Annotations;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -42,10 +44,17 @@ public class GameInstance : MonoBehaviour
         NONE = 0,
         LOADING_LEVEL
     }
+    public enum ConnectionState
+    {
+        NONE = 0,
+        CLIENT,
+        HOST
+    }
 
     public ApplicationState currentApplicationStatus = ApplicationState.STOPPED;
     public GameState currentGameState = GameState.NONE;
     public GameMode currentGameMode = GameMode.NONE;
+    public ConnectionState currentConnectionState = ConnectionState.NONE;
     private LoadingScreenProcess currentLoadingScreenProcess = LoadingScreenProcess.NONE;
 
     //The most pritle part of the loading process.
@@ -90,7 +99,7 @@ public class GameInstance : MonoBehaviour
     private bool assetsLoaded = false;
     private bool gameInitialized = false;
 
-
+    private bool FirstHostConnection = false;
 
     private GameObject player1;
     private GameObject player2;
@@ -109,6 +118,8 @@ public class GameInstance : MonoBehaviour
 
     private Player player1Script;
     private Player player2Script;
+    private NetworkObject player1NetworkObject;
+    private NetworkObject player2NetworkObject;
     private MainCamera mainCameraScript;
     private MainMenu mainMenuScript;
     private SettingsMenu settingsMenuScript;
@@ -119,15 +130,11 @@ public class GameInstance : MonoBehaviour
     private LoadingScreen loadingScreenScript;
     private TransitionMenu transitionMenuScript;
     private CountdownMenu countdownMenuScript;
-    private NetworkManager networkManagerScript;
+    private Unity.Netcode.NetworkManager networkManagerScript;
 
     private Camera mainCameraComponent;
 
     void Update() {
-        if (networkManagerScript)
-        {
-            Debug.Log(networkManagerScript.IsConnectedClient);
-        }
         switch (currentApplicationStatus) {
             case ApplicationState.INITIALIZING:
                 UpdateInitializingStatus();
@@ -388,22 +395,11 @@ public class GameInstance : MonoBehaviour
         eventSystem = Instantiate(loadedAssets["EventSystem"].Result);
 
         networkManager = Instantiate(loadedAssets["NetworkManager"].Result);
-        networkManagerScript = networkManager.GetComponent<NetworkManager>();
+        networkManagerScript = networkManager.GetComponent<Unity.Netcode.NetworkManager>();
+        networkManagerScript.OnClientConnectedCallback += ClientConnectedCallback;
         networkManager.SetActive(false);
 
-        player1 = Instantiate(loadedAssets["Player"].Result);
-        player1.name = "Player1";
-        player1.SetActive(false);
-        player1Script = player1.GetComponent<Player>();
-        player1Script.Initialize();
-        player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
-
-        player2 = Instantiate(loadedAssets["Player"].Result);
-        player2.name = "Player2";
-        player2.SetActive(false);
-        player2Script = player2.GetComponent<Player>();
-        player2Script.Initialize();
-        player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
+        CreatePlayers();
 
         mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
         mainCameraScript = mainCamera.GetComponent<MainCamera>();
@@ -457,6 +453,163 @@ public class GameInstance : MonoBehaviour
 
         Debug.Log("Finished Creating Entities!");
     }
+
+
+    [ClientRpc]
+    private void AssociateObjects(ulong id1, ulong id2)
+    {
+        Debug.Log("ID 1 = " + id1);
+        Debug.Log("ID 2 = " + id2);
+    }
+
+    [ClientRpc]
+    private void PongClientRpc()
+    {
+        connectionMenu.SetActive(false);
+        player1.SetActive(true);
+        player2.SetActive(true);
+        Debug.Log("rps worked!");
+    }
+    
+    private void ClientConnectedCallback(ulong obj)
+    {
+        //Notes:
+        //-Any client connected will invoke this callback. Hosting will invoke it too since it creates a server then joins it.
+        //obj is the ID. Keep it? 
+        //Only server can call spawn on objects. Are they just synced to client then?
+
+
+        //Notes:
+        //At this rate, it might be better to just roll with it and use whatever the netcode creates
+        //However, can i possibly get those then?
+        //NetworkObjectReference look this up?
+
+
+        //OBSERVATION: If go with same name are active in scene then spawning will fail.
+        //OBSERVATION: If owner of a go disconnects then the go will get deleted!.
+        //OBSERVATION: Using two different gameobjects instanciated from the same prefab to spawn network objects will cause some mismatching
+        //-Even though each one has clearly differnt ids, they still share the same Network Transform.
+
+        Debug.Log("Connection Established!");
+        Debug.Log("Client ID is " + obj);
+
+        //Missings are from the local in player 2 here if i start as a client and connect
+        //isLocalPlayer
+        //isPlayerObject
+
+
+        //if (currentConnectionState == ConnectionState.CLIENT)
+        //{
+        //    Debug.Log("Client one!");
+        //}
+        //else if (currentConnectionState == ConnectionState.HOST)
+        //{
+        //    Debug.Log("Host one!");
+        //    if (!FirstHostConnection)
+        //    {
+
+        //    }
+        //    else
+        //    {
+
+        //    }
+
+        //    if (networkManagerScript.ConnectedClients.Count == 2)
+        //    {
+        //        connectionMenu.SetActive(false);
+        //        PongClientRpc();
+        //        //StartMatch();
+        //    }
+        //}
+
+
+
+
+
+       
+
+
+
+        if (currentConnectionState == ConnectionState.CLIENT)
+        {
+            //First ever connection ? wot - I connected as a client to a server. or something connected to me.
+
+            Debug.Log("Client one!");
+            player1.SetActive(true);
+            player2.SetActive(true);
+            //player2NetworkObject.SpawnAsPlayerObject(obj);
+            //player2NetworkObject.SpawnAsPlayerObject(obj);
+
+            //player2NetworkObject.SpawnWithOwnership(obj);
+            //player2NetworkObject.SpawnAsPlayerObject(obj);
+        }
+        else if (currentConnectionState == ConnectionState.HOST)
+        {
+
+            //First ever connection will be itself then!
+            Debug.Log("Host one!");
+
+            if (!FirstHostConnection) //Change name and do behaviors for the client one!
+            {
+                player1NetworkObject.SpawnAsPlayerObject(obj);
+                FirstHostConnection = true;
+                Debug.Log("Spawned Host Entity!");
+            }
+            else
+            {
+                player2NetworkObject.SpawnAsPlayerObject(obj);
+
+
+                if (networkManagerScript.ConnectedClients.Count == 2)
+                {
+                    connectionMenu.SetActive(false);
+                    PongClientRpc();
+                }
+
+                //StartMatch();//AssociateObjects(player1NetworkObject.NetworkObjectId, player2NetworkObject.NetworkObjectId);
+                //Send player 1 and 2 ids in an rpc?
+
+                Debug.Log("Spawned Client Entity!");
+            }
+
+        }
+
+        connectionMenu.SetActive(false);
+    }
+
+    public void StartAsHost()
+    {
+        Debug.Log("Started as Host!");
+        currentConnectionState = ConnectionState.HOST;
+        networkManagerScript.StartHost();
+    }
+    public void StartAsClient()
+    {
+        Debug.Log("Started as Client!");
+        currentConnectionState = ConnectionState.CLIENT;
+        networkManagerScript.StartClient();
+    }
+
+    private void CreatePlayers() {
+
+        player1 = Instantiate(loadedAssets["Player"].Result);
+        player1.name = "Player1";
+        player1.SetActive(false);
+        player1NetworkObject = player1.GetComponent<NetworkObject>();
+        player1Script = player1.GetComponent<Player>();
+        player1Script.Initialize();
+        player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
+
+        player2 = Instantiate(loadedAssets["Player2"].Result);
+        player2.name = "Player2";
+        player2.SetActive(false);
+        player2NetworkObject = player2.GetComponent<NetworkObject>();
+        player2Script = player2.GetComponent<Player>();
+        player2Script.Initialize();
+        player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
+    }
+
+
     private void SetupEntities() {
         mainCameraScript.SetFollowTarget(player1); //Deprecated
 
@@ -565,17 +718,6 @@ public class GameInstance : MonoBehaviour
 
 
 
-    public void StartAsHost() {
-
-        networkManagerScript.StartHost();
-        Debug.Log("Started as Host!");
-    }
-    public void StartAsClient() {
-
-        networkManagerScript.StartClient();
-        Debug.Log("Started as Client!");
-    }
-
 
 
     private void EnableMouseCursor() {
@@ -587,8 +729,6 @@ public class GameInstance : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-
-    //Make funcs for cursor!!!!!
 
     private void SetupPlayState() {
         //TEMP
@@ -609,6 +749,11 @@ public class GameInstance : MonoBehaviour
         else if (type == Player.PlayerType.PLAYER_2)
             player2Script.SetPlayerData(data);
     }
+
+
+
+
+
     public void SetGameModeSelection(GameMode mode) {
         if (mode == GameMode.NONE) //?? this means i can never return to none.
             return;
@@ -616,13 +761,13 @@ public class GameInstance : MonoBehaviour
         currentGameMode = mode;
 
         if (mode == GameMode.COOP) {
-            player1Script.DisableNetworking();
-            player2Script.DisableNetworking();
+            //player1Script.DisableNetworking();
+            //player2Script.DisableNetworking();
             networkManager.SetActive(false);
         }
         else if (mode == GameMode.LAN) {
-            player1Script.EnableNetworking();
-            player2Script.EnableNetworking();
+            //player1Script.EnableNetworking();
+            //player2Script.EnableNetworking();
             networkManager.SetActive(true);
         }
 
@@ -630,6 +775,10 @@ public class GameInstance : MonoBehaviour
 
         //Do online or disable online stuff and set changes to menus!
     }
+
+
+
+
     public void StartLevel(uint level) {
         if (currentLoadedLevel) {
             Debug.LogError("Attempted to start a level while another level was loaded!");
