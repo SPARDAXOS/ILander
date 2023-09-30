@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -397,6 +398,7 @@ public class GameInstance : MonoBehaviour
         networkManager = Instantiate(loadedAssets["NetworkManager"].Result);
         networkManagerScript = networkManager.GetComponent<Unity.Netcode.NetworkManager>();
         networkManagerScript.OnClientConnectedCallback += ClientConnectedCallback;
+        networkManagerScript.ConnectionApprovalCallback += ClientApprovalCallback;
         networkManager.SetActive(false);
 
         CreatePlayers();
@@ -470,7 +472,27 @@ public class GameInstance : MonoBehaviour
         //player2.SetActive(true);
         Debug.Log("rps worked!");
     }
-    
+
+    private void ClientApprovalCallback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+    {
+        if (!networkManagerScript.IsHost)
+            return;
+
+        Debug.Log("Received connection request from " + request.ClientNetworkId);
+        var go = Instantiate(loadedAssets["Player"].Result);
+        go.GetComponent<NetworkObject>().SpawnWithOwnership(request.ClientNetworkId);
+
+        //The playerObject tag is optional. https://docs-multiplayer.unity3d.com/netcode/current/basics/networkobject/
+        //The only weirdness is the host player being also owned by the server but i guess that makes sense?
+
+        //Create entity with ID
+
+        response.CreatePlayerObject = false; //Does this stop them from creating a game object?
+        response.Reason = "Maximum players limit reached!";
+
+        //If number of players is less than 2
+        response.Approved = true;
+    }
     private void ClientConnectedCallback(ulong obj)
     {
         //Notes:
