@@ -466,8 +466,8 @@ public class GameInstance : MonoBehaviour
     private void PongClientRpc()
     {
         connectionMenu.SetActive(false);
-        player1.SetActive(true);
-        player2.SetActive(true);
+        //player1.SetActive(true);
+        //player2.SetActive(true);
         Debug.Log("rps worked!");
     }
     
@@ -489,6 +489,7 @@ public class GameInstance : MonoBehaviour
         //OBSERVATION: If owner of a go disconnects then the go will get deleted!.
         //OBSERVATION: Using two different gameobjects instanciated from the same prefab to spawn network objects will cause some mismatching
         //-Even though each one has clearly differnt ids, they still share the same Network Transform.
+        //Nope its still happening. 
 
         Debug.Log("Connection Established!");
         Debug.Log("Client ID is " + obj);
@@ -535,8 +536,8 @@ public class GameInstance : MonoBehaviour
             //First ever connection ? wot - I connected as a client to a server. or something connected to me.
 
             Debug.Log("Client one!");
-            player1.SetActive(true);
-            player2.SetActive(true);
+            //player1.SetActive(true);
+            //player2.SetActive(true);
             //player2NetworkObject.SpawnAsPlayerObject(obj);
             //player2NetworkObject.SpawnAsPlayerObject(obj);
 
@@ -551,19 +552,18 @@ public class GameInstance : MonoBehaviour
 
             if (!FirstHostConnection) //Change name and do behaviors for the client one!
             {
-                player1NetworkObject.SpawnAsPlayerObject(obj);
+                //player1NetworkObject.SpawnAsPlayerObject(obj);
                 FirstHostConnection = true;
                 Debug.Log("Spawned Host Entity!");
             }
             else
             {
-                player2NetworkObject.SpawnAsPlayerObject(obj);
-
+                //player2NetworkObject.SpawnAsPlayerObject(obj);
 
                 if (networkManagerScript.ConnectedClients.Count == 2)
                 {
-                    connectionMenu.SetActive(false);
                     PongClientRpc();
+
                 }
 
                 //StartMatch();//AssociateObjects(player1NetworkObject.NetworkObjectId, player2NetworkObject.NetworkObjectId);
@@ -591,6 +591,7 @@ public class GameInstance : MonoBehaviour
     }
 
     private void CreatePlayers() {
+
 
         player1 = Instantiate(loadedAssets["Player"].Result);
         player1.name = "Player1";
