@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEditor;
@@ -100,10 +101,11 @@ public class GameInstance : MonoBehaviour
     private bool assetsLoaded = false;
     private bool gameInitialized = false;
 
-    private bool FirstHostConnection = false;
+    public uint connectedClients = 0;
+    public long clientID = -1;
 
-    private GameObject player1;
-    private GameObject player2;
+    public GameObject player1;
+    public GameObject player2;
     private GameObject mainCamera;
     private GameObject mainMenu;
     private GameObject settingsMenu;
@@ -116,11 +118,12 @@ public class GameInstance : MonoBehaviour
     private GameObject countdownMenu;
     private GameObject eventSystem;
     private GameObject networkManager;
+    private GameObject rpcManager;
 
-    private Player player1Script;
-    private Player player2Script;
-    private NetworkObject player1NetworkObject;
-    private NetworkObject player2NetworkObject;
+    public Player player1Script;
+    public Player player2Script;
+    public NetworkObject player1NetworkObject;
+    public NetworkObject player2NetworkObject;
     private MainCamera mainCameraScript;
     private MainMenu mainMenuScript;
     private SettingsMenu settingsMenuScript;
@@ -132,6 +135,7 @@ public class GameInstance : MonoBehaviour
     private TransitionMenu transitionMenuScript;
     private CountdownMenu countdownMenuScript;
     private Unity.Netcode.NetworkManager networkManagerScript;
+    private RpcManager rpcManagerScript;
 
     private Camera mainCameraComponent;
 
@@ -399,9 +403,8 @@ public class GameInstance : MonoBehaviour
         networkManagerScript = networkManager.GetComponent<Unity.Netcode.NetworkManager>();
         networkManagerScript.OnClientConnectedCallback += ClientConnectedCallback;
         networkManagerScript.ConnectionApprovalCallback += ClientApprovalCallback;
+        networkManagerScript.OnClientDisconnectCallback += ClientDisconnectedCallback;
         networkManager.SetActive(false);
-
-        CreatePlayers();
 
         mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
         mainCameraScript = mainCamera.GetComponent<MainCamera>();
@@ -457,50 +460,107 @@ public class GameInstance : MonoBehaviour
     }
 
 
-    [ClientRpc]
-    private void AssociateObjects(ulong id1, ulong id2)
-    {
-        Debug.Log("ID 1 = " + id1);
-        Debug.Log("ID 2 = " + id2);
+    private bool AddClient(ulong id) {
+        if (connectedClients == 2) {
+            Debug.LogWarning("Unable to add client \n Maximum clients limit reached!");
+            return false;
+        }
+        Debug.Log("It got through!");
+
+        if (networkManagerScript.ConnectedClients.Count == 0) {
+            player1 = Instantiate(loadedAssets["Player"].Result);
+            player1.name = "Player1";
+            //player1.SetActive(false);
+            player1Script = player1.GetComponent<Player>();
+            player1Script.Initialize();
+            player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
+            player1NetworkObject = player1.GetComponent<NetworkObject>();
+            player1NetworkObject.SpawnWithOwnership(id);
+
+            rpcManager = Instantiate(loadedAssets["RpcManager"].Result);
+            rpcManagerScript = rpcManager.GetComponent<RpcManager>(); //Need this when im not host!
+            rpcManager.GetComponent<NetworkObject>().Spawn();
+        }
+        else if (networkManagerScript.ConnectedClients.Count == 1) {
+            player2 = Instantiate(loadedAssets["Player"].Result);
+            player2.name = "Player2";
+            //player2.SetActive(false); //This breaks it - causes mismatching
+            player2Script = player2.GetComponent<Player>();
+            player2Script.Initialize();
+            player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
+            player2NetworkObject = player2.GetComponent<NetworkObject>();
+            player2NetworkObject.SpawnWithOwnership(id);
+        }
+
+        connectedClients++;
+        return true;
     }
 
-    [ClientRpc]
-    private void PongClientRpc()
-    {
-        connectionMenu.SetActive(false);
-        //player1.SetActive(true);
-        //player2.SetActive(true);
-        Debug.Log("rps worked!");
-    }
+    private void ClientDisconnectedCallback(ulong id) {
 
-    private void ClientApprovalCallback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
-    {
+        Debug.Log("Client " + id + " has disconnected! Returning to main menu");
+
+
+        SetGameState(GameState.MAIN_MENU);
+        currentGameMode = GameMode.NONE;
+        networkManagerScript.Shutdown();
+
+        //Should i do this if i was client?
+        if (currentConnectionState == ConnectionState.HOST)
+        {
+            connectedClients = 0; //Shutting down means all clients are disconnected now
+            rpcManager = null;
+            rpcManagerScript = null;
+            //rpcManager.GetComponent<NetworkObject>().Despawn();
+
+            //Doesnt fix the crash. Connect then dis then try to connect again and it will say that they already exist!
+            //player1NetworkObject.Despawn();
+            //player2NetworkObject.Despawn();
+            //Destroy(player1);
+            //Destroy(player2);
+
+        }
+
+        player1 = null;
+        player2 = null;
+        player1Script = null;
+        player2Script = null;
+        player1NetworkObject = null;
+        player2NetworkObject = null;
+
+        connectionMenuScript.SetConnectionMenuMode(ConnectionMenu.ConnectionMenuMode.NORMAL);
+        currentConnectionState = ConnectionState.NONE;
+        //rpcManager.SetActive(false);
+        networkManager.SetActive(false);
+        clientID = -1; //Hmmmmm
+    }
+    private void ClientApprovalCallback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response) {
         if (!networkManagerScript.IsHost)
             return;
 
-        Debug.Log("Received connection request from " + request.ClientNetworkId);
-        var go = Instantiate(loadedAssets["Player"].Result);
-        go.GetComponent<NetworkObject>().SpawnWithOwnership(request.ClientNetworkId);
+
+        Debug.Log("Received connection request from Client " + request.ClientNetworkId);
+
+        if (AddClient(request.ClientNetworkId)) {
+            response.CreatePlayerObject = false;
+            response.Approved = true;
+        }
+        else {
+            response.Reason = "Maximum players limit reached!";
+            response.Approved = false;
+        }
+
 
         //The playerObject tag is optional. https://docs-multiplayer.unity3d.com/netcode/current/basics/networkobject/
         //The only weirdness is the host player being also owned by the server but i guess that makes sense?
 
-        //Create entity with ID
-
-        response.CreatePlayerObject = false; //Does this stop them from creating a game object?
-        response.Reason = "Maximum players limit reached!";
 
         //If number of players is less than 2
-        response.Approved = true;
+        //Add check to make sure this doesnt keep reseting game to this menu on somone attempting connection
+
     }
-    private void ClientConnectedCallback(ulong obj)
+    private void ClientConnectedCallback(ulong id)
     {
-        //Notes:
-        //-Any client connected will invoke this callback. Hosting will invoke it too since it creates a server then joins it.
-        //obj is the ID. Keep it? 
-        //Only server can call spawn on objects. Are they just synced to client then?
-
-
         //Notes:
         //At this rate, it might be better to just roll with it and use whatever the netcode creates
         //However, can i possibly get those then?
@@ -513,90 +573,49 @@ public class GameInstance : MonoBehaviour
         //-Even though each one has clearly differnt ids, they still share the same Network Transform.
         //Nope its still happening. 
 
-        Debug.Log("Connection Established!");
-        Debug.Log("Client ID is " + obj);
-
-        //Missings are from the local in player 2 here if i start as a client and connect
-        //isLocalPlayer
-        //isPlayerObject
+        //Do you need to know about all other entities? player 1 and 2 if you are client? ye...
 
 
-        //if (currentConnectionState == ConnectionState.CLIENT)
-        //{
-        //    Debug.Log("Client one!");
-        //}
-        //else if (currentConnectionState == ConnectionState.HOST)
-        //{
-        //    Debug.Log("Host one!");
-        //    if (!FirstHostConnection)
-        //    {
-
-        //    }
-        //    else
-        //    {
-
-        //    }
-
-        //    if (networkManagerScript.ConnectedClients.Count == 2)
-        //    {
-        //        connectionMenu.SetActive(false);
-        //        PongClientRpc();
-        //        //StartMatch();
-        //    }
-        //}
+        //Hmmm
+        if (clientID == -1)
+            clientID = (long)id; //Should be fine
 
 
 
+        //GetEntities and cache them
 
 
-       
+        //The rpc manager is ending up here too...
 
+        //Either server relays this info (The host sends its index to the other client for it to look up its object) or i get it through iteration like this!
 
-
-        if (currentConnectionState == ConnectionState.CLIENT)
-        {
-            //First ever connection ? wot - I connected as a client to a server. or something connected to me.
-
-            Debug.Log("Client one!");
-            //player1.SetActive(true);
-            //player2.SetActive(true);
-            //player2NetworkObject.SpawnAsPlayerObject(obj);
-            //player2NetworkObject.SpawnAsPlayerObject(obj);
-
-            //player2NetworkObject.SpawnWithOwnership(obj);
-            //player2NetworkObject.SpawnAsPlayerObject(obj);
-        }
-        else if (currentConnectionState == ConnectionState.HOST)
-        {
-
-            //First ever connection will be itself then!
-            Debug.Log("Host one!");
-
-            if (!FirstHostConnection) //Change name and do behaviors for the client one!
-            {
-                //player1NetworkObject.SpawnAsPlayerObject(obj);
-                FirstHostConnection = true;
-                Debug.Log("Spawned Host Entity!");
+        if (networkManagerScript.IsServer) {
+            if (networkManagerScript.ConnectedClients.Count == 2) {
+                player1Script.UpdateEntityNameClientRpc("Player1");
+                player2Script.UpdateEntityNameClientRpc("Player2");
+                rpcManagerScript.ProccedToCustomizationMenuClientRpc();
+                Debug.Log("All players connected.");
             }
-            else
+        }
+        else if (networkManagerScript.IsClient)
+        {
+            //Make more graceful solutions!
+            foreach (var entry in networkManagerScript.SpawnManager.SpawnedObjects)
             {
-                //player2NetworkObject.SpawnAsPlayerObject(obj);
-
-                if (networkManagerScript.ConnectedClients.Count == 2)
+                //First one found is always host
+                if (entry.Value.GetComponent<Player>())
                 {
-                    PongClientRpc();
-
+                    player1 = entry.Value.gameObject;
+                    player1Script = entry.Value.GetComponent<Player>();
+                    player1NetworkObject = entry.Value;
+                    break;
                 }
-
-                //StartMatch();//AssociateObjects(player1NetworkObject.NetworkObjectId, player2NetworkObject.NetworkObjectId);
-                //Send player 1 and 2 ids in an rpc?
-
-                Debug.Log("Spawned Client Entity!");
             }
-
+            player2NetworkObject = networkManagerScript.SpawnManager.GetClientOwnedObjects(id)[0]; //The only thing it owns is a player -NOT ANYMORE! Get the rpc manager too!
+            player2 = player2NetworkObject.gameObject;
+            player2Script = player2.GetComponent<Player>();
         }
-
-        connectionMenu.SetActive(false);
+        //Otherwise server calls start on this.
     }
 
     public void StartAsHost()
@@ -611,6 +630,9 @@ public class GameInstance : MonoBehaviour
         currentConnectionState = ConnectionState.CLIENT;
         networkManagerScript.StartClient();
     }
+    public long GetClientID() {
+        return clientID;
+    }
 
     private void CreatePlayers() {
 
@@ -618,15 +640,15 @@ public class GameInstance : MonoBehaviour
         player1 = Instantiate(loadedAssets["Player"].Result);
         player1.name = "Player1";
         player1.SetActive(false);
-        player1NetworkObject = player1.GetComponent<NetworkObject>();
+        player1NetworkObject = player1.GetComponent<NetworkObject>(); //NOT needed - remove it and add it in runtime!
         player1Script = player1.GetComponent<Player>();
         player1Script.Initialize();
         player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
 
-        player2 = Instantiate(loadedAssets["Player2"].Result);
+        player2 = Instantiate(loadedAssets["Player"].Result);
         player2.name = "Player2";
         player2.SetActive(false);
-        player2NetworkObject = player2.GetComponent<NetworkObject>();
+        player2NetworkObject = player2.GetComponent<NetworkObject>(); //NOT needed
         player2Script = player2.GetComponent<Player>();
         player2Script.Initialize();
         player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
@@ -739,7 +761,10 @@ public class GameInstance : MonoBehaviour
     }
 
 
-
+    public void UpdatePlayer2Selection(int index)
+    {
+        customizationMenuScript.SetPlayer2CharacterIndex(index);
+    }
 
 
 
@@ -772,7 +797,9 @@ public class GameInstance : MonoBehaviour
         else if (type == Player.PlayerType.PLAYER_2)
             player2Script.SetPlayerData(data);
     }
-
+    public void UpdatePlayer2SelectionIndex(int index) {
+        rpcManagerScript.UpdatePlayer2SelectionServerRpc((ulong)clientID, index);
+    }
 
 
 
@@ -784,14 +811,19 @@ public class GameInstance : MonoBehaviour
         currentGameMode = mode;
 
         if (mode == GameMode.COOP) {
+            CreatePlayers();
             //player1Script.DisableNetworking();
             //player2Script.DisableNetworking();
+
+            //??
             networkManager.SetActive(false);
+            //rpcManager.SetActive(false);
         }
         else if (mode == GameMode.LAN) {
             //player1Script.EnableNetworking();
             //player2Script.EnableNetworking();
             networkManager.SetActive(true);
+            //rpcManager.SetActive(true);
         }
 
         //SetMode? for players (That func would manage EnableNetworking/DisableNetworking then!) and menus!
@@ -853,6 +885,7 @@ public class GameInstance : MonoBehaviour
         gameModeMenu.SetActive(false);
         countdownMenu.SetActive(false);
         loadingScreen.SetActive(false);
+        connectionMenu.SetActive(false);
     }
 
 

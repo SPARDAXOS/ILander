@@ -97,8 +97,8 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/Menus/ConnectionMenu.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
-  - m_GUID: 0431fef083ca8a44ea1f519766a859b0
-    m_Address: Assets/Prefabs/Entities/Player2.prefab
+  - m_GUID: 7ee5e3b39053b254486ac13b5726594f
+    m_Address: Assets/Prefabs/Entities/RpcManager.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
   m_ReadOnly: 0

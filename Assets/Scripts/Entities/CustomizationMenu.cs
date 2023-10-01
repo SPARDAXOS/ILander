@@ -15,10 +15,19 @@ public class CustomizationMenu : MonoBehaviour
     //Func to reset the data in here to default
 
     //Make these two into SOs
+
+    public enum CustomizationMenuMode
+    {
+        NORMAL,
+        ONLINE
+    }
+
+
     [SerializeField] private float colorEditStep = 0.1f;
 
 
     private PlayerCharactersBundle playerCharactersBundle;
+    private CustomizationMenuMode currentCustomizationMenuMode = CustomizationMenuMode.NORMAL;
 
     public Color player1TargetColor = Color.white;
     public Color player2TargetColor = Color.white;
@@ -160,7 +169,17 @@ public class CustomizationMenu : MonoBehaviour
         mainCanvas.worldCamera = target;
     }
 
-
+    //Call this at start or call the other one at start UpdateMenuMode()
+    public void SetCustomizationMenuMode(CustomizationMenuMode mode)
+    {
+        currentCustomizationMenuMode = mode;
+        //UpdateMenuMode()
+    }
+    public void SetPlayer2CharacterIndex(int index)
+    {
+        playerCharacterIndex2 = index;
+        UpdatePlayer2Skin();
+    }
 
     private void UpdatePlayer1Skin() {
         player1ShipSprite.sprite = playerCharactersBundle.playerCharacters[playerCharacterIndex1].shipSprite;
@@ -193,6 +212,7 @@ public class CustomizationMenu : MonoBehaviour
             if (playerCharacterIndex1 < 0)
                 playerCharacterIndex1 = playerCharactersBundle.playerCharacters.Length - 1;
             UpdatePlayer1Skin();
+            GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
         }
         else if (playerIndex == 2) {
             playerCharacterIndex2--;
@@ -209,6 +229,7 @@ public class CustomizationMenu : MonoBehaviour
             if (playerCharacterIndex1 == playerCharactersBundle.playerCharacters.Length)
                 playerCharacterIndex1 = 0;
             UpdatePlayer1Skin();
+            GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
         }
         else if (playerIndex == 2) {
             playerCharacterIndex2++;

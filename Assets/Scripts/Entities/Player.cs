@@ -53,9 +53,11 @@ public class Player : NetworkBehaviour
         UpdateMovement();
     }
 
-    private void OnConnectedToServer()
+
+    [ClientRpc]
+    public void UpdateEntityNameClientRpc(string name)
     {
-        Debug.Log("WTF Connection!");
+        gameObject.name = name;
     }
 
 

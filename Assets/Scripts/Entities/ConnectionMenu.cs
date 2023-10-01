@@ -5,7 +5,7 @@ using ILanderUtility;
 
 public class ConnectionMenu : MonoBehaviour
 {
-    private enum ConnectionMenuMode
+    public enum ConnectionMenuMode
     {
         NONE = 0,
         NORMAL,
@@ -47,7 +47,7 @@ public class ConnectionMenu : MonoBehaviour
     }
 
 
-    private void SetConnectionMenuMode(ConnectionMenuMode mode) {
+    public void SetConnectionMenuMode(ConnectionMenuMode mode) {
         if (mode == currentConnectionMenuMode)
             return;
 
