@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static UnityEngine.InputSystem.Controls.AxisControl;
 using ILanderUtility;
+using Unity.VisualScripting;
 
 public class CustomizationMenu : MonoBehaviour
 {
@@ -43,6 +44,14 @@ public class CustomizationMenu : MonoBehaviour
     private TextMeshProUGUI player2GreenSwitch    = null;
     private TextMeshProUGUI player2BlueSwitch     = null;
 
+    private Button player1ColorPickerButton = null;
+    private Button player1SpectrumButton = null;
+
+    private Button player2ColorPickerButton = null;
+    private Button player2SpectrumButton = null;
+
+    private Texture2D spectrumSprite = null;
+
     private Canvas mainCanvas = null;
 
 
@@ -74,6 +83,8 @@ public class CustomizationMenu : MonoBehaviour
 
     private void SetupReferences() {
 
+        //Break this into smaller functions!
+
         mainCanvas = GetComponent<Canvas>();
         Utility.Validate(mainCanvas, "Failed to get reference to Canvas component - CustomizationMenu", true);
 
@@ -86,15 +97,48 @@ public class CustomizationMenu : MonoBehaviour
 
         Transform Player1ShipSpriteTransform = Player1Customizer.Find("ShipSprite").transform;
         Transform Player2ShipSpriteTransform = Player2Customizer.Find("ShipSprite").transform;
-
         Utility.Validate(Player1ShipSpriteTransform, "Failed to get reference to ShipSprite1 - CustomizationMenu", true);
         Utility.Validate(Player2ShipSpriteTransform, "Failed to get reference to ShipSprite2 - CustomizationMenu", true);
 
+        //Player1 ColorPicker
+        Transform Player1ColorButtonTransform = Player1ShipSpriteTransform.Find("ColorPickerButton");
+        Transform Player1SpectrumButtonTransform = Player1ShipSpriteTransform.Find("SpectrumButton");
+        Utility.Validate(Player1ColorButtonTransform, "Failed to get reference to ColorPickerButton1 - CustomizationMenu", true);
+        Utility.Validate(Player1SpectrumButtonTransform, "Failed to get reference to SpectrumButton1 - CustomizationMenu", true);
+
+        player1ColorPickerButton = Player1ColorButtonTransform.GetComponent<Button>();
+        player1SpectrumButton = Player1SpectrumButtonTransform.GetComponent<Button>();
+        Utility.Validate(player1ColorPickerButton, "Failed to get component Button for player1ColorButton - CustomizationMenu", true);
+        Utility.Validate(player1SpectrumButton, "Failed to get component Button for player1SpectrumButton - CustomizationMenu", true);
+
+        //Player2 ColorPicker
+        Transform Player2ColorButtonTransform = Player2ShipSpriteTransform.Find("ColorPickerButton");
+        Transform Player2SpectrumButtonTransform = Player2ShipSpriteTransform.Find("SpectrumButton");
+        Utility.Validate(Player2ColorButtonTransform, "Failed to get reference to ColorPickerButton2 - CustomizationMenu", true);
+        Utility.Validate(Player2SpectrumButtonTransform, "Failed to get reference to SpectrumButton2 - CustomizationMenu", true);
+
+        player2ColorPickerButton = Player2ColorButtonTransform.GetComponent<Button>();
+        player2SpectrumButton = Player2SpectrumButtonTransform.GetComponent<Button>();
+        Utility.Validate(player2ColorPickerButton, "Failed to get component Button for player2ColorButton - CustomizationMenu", true);
+        Utility.Validate(player2SpectrumButton, "Failed to get component Button for player2SpectrumButton - CustomizationMenu", true);
+
+        //SpectrumTexture
+        Image player1SpectrumButtonImage = Player1SpectrumButtonTransform.GetComponent<Image>();
+        Utility.Validate(player1SpectrumButtonImage, "Failed to get component Image for player1SpectrumButtonImage - CustomizationMenu", true);
+        spectrumSprite = player1SpectrumButtonImage.sprite.texture;
+        Utility.Validate(spectrumSprite, "Failed to get texture for spectrumSprite - CustomizationMenu", true);
+
+        //Color Pickers Initial State
+        player1ColorPickerButton.gameObject.SetActive(true);
+        player2ColorPickerButton.gameObject.SetActive(true);
+        player1SpectrumButton.gameObject.SetActive(false);
+        player2SpectrumButton.gameObject.SetActive(false);
+
+        //Sprites
         player1ShipSprite = Player1ShipSpriteTransform.GetComponent<Image>();
         player2ShipSprite = Player2ShipSpriteTransform.GetComponent<Image>();
-
-        Utility.Validate(player1ShipSprite, "Failed to get reference to player1CustomizationSprite - CustomizationMenu", true);
-        Utility.Validate(player2ShipSprite, "Failed to get reference to player2CustomizationSprite - CustomizationMenu", true);
+        Utility.Validate(player1ShipSprite, "Failed to get component Image for player1ShipSprite - CustomizationMenu", true);
+        Utility.Validate(player2ShipSprite, "Failed to get component image for player2ShipSprite - CustomizationMenu", true);
 
         //Switches
         //Player1
@@ -213,7 +257,8 @@ public class CustomizationMenu : MonoBehaviour
             if (playerCharacterIndex1 < 0)
                 playerCharacterIndex1 = playerCharactersBundle.playerCharacters.Length - 1;
             UpdatePlayer1Skin();
-            GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
+            if (currentMenuMode == CustomizationMenuMode.ONLINE)
+                GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
         }
         else if (playerIndex == 2) {
             playerCharacterIndex2--;
@@ -230,7 +275,8 @@ public class CustomizationMenu : MonoBehaviour
             if (playerCharacterIndex1 == playerCharactersBundle.playerCharacters.Length)
                 playerCharacterIndex1 = 0;
             UpdatePlayer1Skin();
-            GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
+            if (currentMenuMode == CustomizationMenuMode.ONLINE)
+                GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
         }
         else if (playerIndex == 2) {
             playerCharacterIndex2++;
@@ -340,4 +386,60 @@ public class CustomizationMenu : MonoBehaviour
         instance.ConfirmCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2]);
         instance.SetGameState(GameInstance.GameState.LEVEL_SELECT_MENU);
     }
+
+
+    //Do some initial set to unactive for spectrums! and true for colorpcikers
+
+    public void ColorPickerButton(int playerIndex)
+    {
+        if (playerIndex == 1)
+        {
+            player1ColorPickerButton.gameObject.SetActive(false);
+            player1SpectrumButton.gameObject.SetActive(true);
+        }
+        else if (playerIndex == 2)
+        {
+            player2ColorPickerButton.gameObject.SetActive(false);
+            player2SpectrumButton.gameObject.SetActive(true);
+        }
+        else
+            Debug.LogError("Invalid playerIndex sent to ColorPickerButton - CustomizationMenu : index " + playerIndex);
+    }
+    public void SpectrumButton(int playerIndex) {
+        if (playerIndex == 1)
+        {
+            //My plan of doing it
+            //Use cursor on chart
+            //Get my SEE VIDEO NEW ONE!"
+
+
+            //PickColor
+            //RectTransform RECT = player1SpectrumButton.gameObject.GetComponent<RectTransform>();
+            //Vector3 transformRectPosition = player1SpectrumButton.gameObject.GetComponent<RectTransform>().position;
+            //float globalx = Input.mousePosition.x - transformRectPosition.x;
+            //float globaly = Input.mousePosition.y - transformRectPosition.y;
+            //
+            //int localx = (int)(globalx * (spectrumSprite.width / RECT.rect.width));
+            //int localy = (int)(globaly * (spectrumSprite.height / RECT.rect.height));
+
+           //Color pickedColor = spectrumSprite.GetPixel(localx, localy);
+           //player1ShipSprite.color = pickedColor;
+
+            player1ColorPickerButton.gameObject.SetActive(true);
+            player1SpectrumButton.gameObject.SetActive(false);
+            //Debug.Log("Picked color \n" + pickedColor);
+        }
+        else if (playerIndex == 2)
+        {
+            Debug.Log("Picked color 2");
+
+            //PickColor
+
+            player2ColorPickerButton.gameObject.SetActive(true);
+            player2SpectrumButton.gameObject.SetActive(false);
+        }
+        else
+            Debug.LogError("Invalid playerIndex sent to SpectrumButton - CustomizationMenu : index " + playerIndex);
+    }
+
 }

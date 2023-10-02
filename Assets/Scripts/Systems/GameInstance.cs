@@ -806,18 +806,14 @@ public class GameInstance : MonoBehaviour
 
         if (mode == GameMode.COOP) {
             CreatePlayers();
-            //player1Script.DisableNetworking();
-            //player2Script.DisableNetworking();
 
-            //??
             networkManager.SetActive(false);
-            //rpcManager.SetActive(false);
+            customizationMenuScript.SetCustomizationMenuMode(CustomizationMenu.CustomizationMenuMode.NORMAL);
         }
         else if (mode == GameMode.LAN) {
-            //player1Script.EnableNetworking();
-            //player2Script.EnableNetworking();
+
             networkManager.SetActive(true);
-            //rpcManager.SetActive(true);
+            customizationMenuScript.SetCustomizationMenuMode(CustomizationMenu.CustomizationMenuMode.ONLINE);
         }
 
         //SetMode? for players (That func would manage EnableNetworking/DisableNetworking then!) and menus!
