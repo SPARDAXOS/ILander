@@ -27,13 +27,11 @@ public class CustomizationMenu : MonoBehaviour
 
 
     private PlayerCharactersBundle playerCharactersBundle;
-    private CustomizationMenuMode currentCustomizationMenuMode = CustomizationMenuMode.NORMAL;
+    private CustomizationMenuMode currentMenuMode = CustomizationMenuMode.NORMAL;
 
     public Color player1TargetColor = Color.white;
     public Color player2TargetColor = Color.white;
 
-    private Sprite player1TargetSprite = null;
-    private Sprite player2TargetSprite = null;
 
     private TextMeshProUGUI player1SpriteSwitch   = null;
     private TextMeshProUGUI player1RedSwitch      = null;
@@ -51,13 +49,10 @@ public class CustomizationMenu : MonoBehaviour
     private int playerCharacterIndex1 = 0;
     private int playerCharacterIndex2 = 0;
 
-    private int player1ColorIndex = 0;
-    private int player2ColorIndex = 0;
-
     private Image player1PortraitSprite      = null;
     private Image player2PortraitSprite      = null;
-    private Image player1ShipSprite = null;
-    private Image player2ShipSprite = null;
+    private Image player1ShipSprite          = null;
+    private Image player2ShipSprite          = null;
 
 
 
@@ -72,7 +67,8 @@ public class CustomizationMenu : MonoBehaviour
         playerCharactersBundle = GameInstance.GetInstance().GetPlayerCharactersBundle();
 
         SetupReferences();
-        SetupStartState();
+        ApplyStartState();
+        ApplyCurrentMenuMode();
         initialized = true;
     }
 
@@ -150,7 +146,7 @@ public class CustomizationMenu : MonoBehaviour
         player2PortraitSprite = PortaitSprite2.GetComponent<Image>();
         Utility.Validate(player2PortraitSprite, "Failed to get reference to player2PortraitSprite - CustomizationMenu", true);
     }
-    public void SetupStartState() {
+    public void ApplyStartState() {
         player1TargetColor = Color.white;
         player2TargetColor = Color.white;
         playerCharacterIndex1 = 0;
@@ -161,19 +157,24 @@ public class CustomizationMenu : MonoBehaviour
     }
 
 
-    //IMPORTANT NOTE: Separate the ship sprite actor and rework stuff.
-    //Then maybe set the size of it to the size of the sprite that i set to it.
-    //Of course after making it smaller!
+
 
     public void SetRenderCameraTarget(Camera target) {
         mainCanvas.worldCamera = target;
     }
 
-    //Call this at start or call the other one at start UpdateMenuMode()
-    public void SetCustomizationMenuMode(CustomizationMenuMode mode)
-    {
-        currentCustomizationMenuMode = mode;
-        //UpdateMenuMode()
+
+    public void SetCustomizationMenuMode(CustomizationMenuMode mode) {
+        currentMenuMode = mode;
+        ApplyCurrentMenuMode();
+    }
+    private void ApplyCurrentMenuMode() {
+        if (currentMenuMode == CustomizationMenuMode.NORMAL) {
+
+        }
+        else if (currentMenuMode == CustomizationMenuMode.ONLINE) {
+
+        }
     }
     public void SetPlayer2CharacterIndex(int index)
     {
