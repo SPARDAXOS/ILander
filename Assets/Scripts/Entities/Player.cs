@@ -20,7 +20,7 @@ public class Player : NetworkBehaviour
     [SerializeField] private PlayerControlScheme player1ControlScheme;
     [SerializeField] private PlayerControlScheme player2ControlScheme;
 
-    private bool initialized = false;
+    public bool initialized = false;
     private PlayerCharacterData playerCharacterData; //Add Check to validate if player has data before doing any updates!
     private PlayerType currentPlayerType = PlayerType.NONE;
 
@@ -42,6 +42,7 @@ public class Player : NetworkBehaviour
         //Disable networking by defualt?
         SetupReferences();
         initialized = true;
+        Debug.Log("Initialized!");
         //EnableInput(); Call this from instance instead at game start!
     }
     public void Tick() {
@@ -51,13 +52,6 @@ public class Player : NetworkBehaviour
 
         CheckInput();
         UpdateMovement();
-    }
-
-
-    [ClientRpc]
-    public void UpdateEntityNameClientRpc(string name)
-    {
-        gameObject.name = name;
     }
 
 

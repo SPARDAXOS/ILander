@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class GameInstance : MonoBehaviour
 {
@@ -118,7 +119,7 @@ public class GameInstance : MonoBehaviour
     private GameObject countdownMenu;
     private GameObject eventSystem;
     private GameObject networkManager;
-    private GameObject rpcManager;
+    public GameObject rpcManager;
 
     public Player player1Script;
     public Player player2Script;
@@ -135,7 +136,7 @@ public class GameInstance : MonoBehaviour
     private TransitionMenu transitionMenuScript;
     private CountdownMenu countdownMenuScript;
     private Unity.Netcode.NetworkManager networkManagerScript;
-    private RpcManager rpcManagerScript;
+    public RpcManager rpcManagerScript;
 
     private Camera mainCameraComponent;
 
@@ -591,29 +592,22 @@ public class GameInstance : MonoBehaviour
 
         if (networkManagerScript.IsServer) {
             if (networkManagerScript.ConnectedClients.Count == 2) {
-                player1Script.UpdateEntityNameClientRpc("Player1");
-                player2Script.UpdateEntityNameClientRpc("Player2");
+
+                rpcManagerScript.RelayRpcManagerReferenceClientRpc(rpcManager);
+                ClientRpcParams clientRpcParams = new ClientRpcParams();
+                clientRpcParams.Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { player2NetworkObject.OwnerClientId } };
+                rpcManagerScript.RelayPlayerReferenceClientRpc(player1, Player.PlayerType.PLAYER_1, clientRpcParams);
+                rpcManagerScript.RelayPlayerReferenceClientRpc(player2, Player.PlayerType.PLAYER_2, clientRpcParams);
+
+
                 rpcManagerScript.ProccedToCustomizationMenuClientRpc();
                 Debug.Log("All players connected.");
             }
         }
         else if (networkManagerScript.IsClient)
         {
-            //Make more graceful solutions!
-            foreach (var entry in networkManagerScript.SpawnManager.SpawnedObjects)
-            {
-                //First one found is always host
-                if (entry.Value.GetComponent<Player>())
-                {
-                    player1 = entry.Value.gameObject;
-                    player1Script = entry.Value.GetComponent<Player>();
-                    player1NetworkObject = entry.Value;
-                    break;
-                }
-            }
-            player2NetworkObject = networkManagerScript.SpawnManager.GetClientOwnedObjects(id)[0]; //The only thing it owns is a player -NOT ANYMORE! Get the rpc manager too!
-            player2 = player2NetworkObject.gameObject;
-            player2Script = player2.GetComponent<Player>();
+
+
         }
         //Otherwise server calls start on this.
     }
@@ -889,7 +883,34 @@ public class GameInstance : MonoBehaviour
     }
 
 
+    public void SetReceivedRpcManagerRef(NetworkObjectReference reference) {
+        rpcManager = reference;
+        rpcManagerScript = rpcManager.GetComponent<RpcManager>();
+    }
+    public void SetReceivedRpcPlayerRef(NetworkObjectReference reference, Player.PlayerType type) {
+        if (type == Player.PlayerType.NONE) {
+            Debug.LogWarning("Received player reference for type none!");
+            return;
+        }
 
+
+        if (type == Player.PlayerType.PLAYER_1) {
+            player1 = reference;
+            player1.name = "Player1";
+            player1NetworkObject = player1.GetComponent<NetworkObject>();
+            player1Script = player1.GetComponent<Player>();
+            player1Script.Initialize();
+            player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
+        }
+        else if (type == Player.PlayerType.PLAYER_2) {
+            player2 = reference;
+            player2.name = "Player2";
+            player2NetworkObject = player2.GetComponent<NetworkObject>();
+            player2Script = player2.GetComponent<Player>();
+            player2Script.Initialize();
+            player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
+        }
+    }
 
     public PlayerCharactersBundle GetPlayerCharactersBundle() {
         return playerCharactersBundle;
@@ -897,7 +918,10 @@ public class GameInstance : MonoBehaviour
     public GameSettings GetGameSettings() {
         return gameSettings;
     }
-
+    public GameObject GetRpcManager()
+    {
+        return rpcManager;
+    }
 
 
 
