@@ -122,8 +122,8 @@ public class LevelSelectMenu : MonoBehaviour
         var instance = GameInstance.GetInstance();
         instance.StartLevel((uint)currentLevelIndex);
 
-        //if (currentMenuMode == LevelSelectMenuMode.ONLINE)
-        //    //rpc to start level at client as well
+        if (currentMenuMode == LevelSelectMenuMode.ONLINE)
+            GetInstance().GetRpcManagerScript().UpdateSelectedLevelIndexServerRpc((ulong)GetInstance().GetClientID(), currentLevelIndex);
 
 
         //TODO: Reset state or make gameinstance do it!

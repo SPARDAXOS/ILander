@@ -74,6 +74,9 @@ public class RpcManager : NetworkBehaviour
         RelayPlayer2ReadyCheckClientRpc(senderID, ready);
     }
 
+
+
+
     [ClientRpc]
     public void RelayPlayer2ReadyCheckClientRpc(ulong senderID, bool ready) {
         if (senderID == (ulong)GetInstance().GetClientID())
@@ -83,6 +86,11 @@ public class RpcManager : NetworkBehaviour
     }
 
 
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdateSelectedLevelIndexServerRpc(ulong senderID, int index) {
+
+        RelaySelectedLevelIndexClientRpc(index);
+    }
     [ClientRpc]
     public void RelaySelectedLevelIndexClientRpc(int index, ClientRpcParams clientRpcParameters = default) {
 
@@ -92,7 +100,6 @@ public class RpcManager : NetworkBehaviour
     public void RelayLevelSelectorRoleClientRpc(ClientRpcParams clientRpcParameters = default) {
         levelSelectMenu.ActivateStartButton();
     }
-
 
 
 
