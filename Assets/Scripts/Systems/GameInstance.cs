@@ -510,15 +510,6 @@ public class GameInstance : MonoBehaviour
         if (currentConnectionState == ConnectionState.HOST)
         {
             connectedClients = 0; //Shutting down means all clients are disconnected now
-            rpcManager = null;
-            rpcManagerScript = null;
-            //rpcManager.GetComponent<NetworkObject>().Despawn();
-
-            //Doesnt fix the crash. Connect then dis then try to connect again and it will say that they already exist!
-            //player1NetworkObject.Despawn();
-            //player2NetworkObject.Despawn();
-            //Destroy(player1);
-            //Destroy(player2);
 
         }
 
@@ -528,10 +519,11 @@ public class GameInstance : MonoBehaviour
         player2Script = null;
         player1NetworkObject = null;
         player2NetworkObject = null;
+        rpcManager = null;
+        rpcManagerScript = null;
 
         connectionMenuScript.SetConnectionMenuMode(ConnectionMenu.ConnectionMenuMode.NORMAL);
         currentConnectionState = ConnectionState.NONE;
-        //rpcManager.SetActive(false);
         networkManager.SetActive(false);
         clientID = -1; //Hmmmmm
     }
@@ -539,9 +531,7 @@ public class GameInstance : MonoBehaviour
         if (!networkManagerScript.IsHost)
             return;
 
-
         Debug.Log("Received connection request from Client " + request.ClientNetworkId);
-
         if (AddClient(request.ClientNetworkId)) {
             response.CreatePlayerObject = false;
             response.Approved = true;
@@ -550,77 +540,32 @@ public class GameInstance : MonoBehaviour
             response.Reason = "Maximum players limit reached!";
             response.Approved = false;
         }
-
-
-        //The playerObject tag is optional. https://docs-multiplayer.unity3d.com/netcode/current/basics/networkobject/
-        //The only weirdness is the host player being also owned by the server but i guess that makes sense?
-
-
-        //If number of players is less than 2
-        //Add check to make sure this doesnt keep reseting game to this menu on somone attempting connection
-
     }
-    private void ClientConnectedCallback(ulong id)
-    {
-        //Notes:
-        //At this rate, it might be better to just roll with it and use whatever the netcode creates
-        //However, can i possibly get those then?
-        //NetworkObjectReference look this up?
+    private void ClientConnectedCallback(ulong id) {
 
-
-        //OBSERVATION: If go with same name are active in scene then spawning will fail.
-        //OBSERVATION: If owner of a go disconnects then the go will get deleted!.
-        //OBSERVATION: Using two different gameobjects instanciated from the same prefab to spawn network objects will cause some mismatching
-        //-Even though each one has clearly differnt ids, they still share the same Network Transform.
-        //Nope its still happening. 
-
-        //Do you need to know about all other entities? player 1 and 2 if you are client? ye...
-
-
-        //Hmmm
+        Debug.Log("Client Connected!");
         if (clientID == -1)
-            clientID = (long)id; //Should be fine
-
-
-
-        //GetEntities and cache them
-
-
-        //The rpc manager is ending up here too...
-
-        //Either server relays this info (The host sends its index to the other client for it to look up its object) or i get it through iteration like this!
+            clientID = (long)id;
 
         if (networkManagerScript.IsServer) {
             if (networkManagerScript.ConnectedClients.Count == 2) {
-
                 rpcManagerScript.RelayRpcManagerReferenceClientRpc(rpcManager);
                 ClientRpcParams clientRpcParams = new ClientRpcParams();
                 clientRpcParams.Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { player2NetworkObject.OwnerClientId } };
                 rpcManagerScript.RelayPlayerReferenceClientRpc(player1, Player.PlayerType.PLAYER_1, clientRpcParams);
                 rpcManagerScript.RelayPlayerReferenceClientRpc(player2, Player.PlayerType.PLAYER_2, clientRpcParams);
 
-
                 rpcManagerScript.ProccedToCustomizationMenuClientRpc();
                 Debug.Log("All players connected.");
             }
         }
-        else if (networkManagerScript.IsClient)
-        {
-
-
-        }
-        //Otherwise server calls start on this.
     }
 
-    public void StartAsHost()
-    {
-        Debug.Log("Started as Host!");
+    public void StartAsHost() {
         currentConnectionState = ConnectionState.HOST;
         networkManagerScript.StartHost();
     }
-    public void StartAsClient()
-    {
-        Debug.Log("Started as Client!");
+    public void StartAsClient() {
         currentConnectionState = ConnectionState.CLIENT;
         networkManagerScript.StartClient();
     }
@@ -628,8 +573,10 @@ public class GameInstance : MonoBehaviour
         return clientID;
     }
 
-    private void CreatePlayers() {
 
+
+
+    private void CreatePlayers() {
 
         player1 = Instantiate(loadedAssets["Player"].Result);
         player1.name = "Player1";

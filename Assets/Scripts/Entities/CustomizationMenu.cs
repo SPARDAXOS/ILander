@@ -422,12 +422,33 @@ public class CustomizationMenu : MonoBehaviour
             //int localx = (int)(globalx * (spectrumSprite.width / RECT.rect.width));
             //int localy = (int)(globaly * (spectrumSprite.height / RECT.rect.height));
 
-           //Color pickedColor = spectrumSprite.GetPixel(localx, localy);
-           //player1ShipSprite.color = pickedColor;
+            //Color pickedColor = spectrumSprite.GetPixel(localx, localy);
+            //player1ShipSprite.color = pickedColor;
+
+
+            RectTransform rectTransform = player1SpectrumButton.gameObject.GetComponent<RectTransform>();
+            Vector2 outVec;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, Input.mousePosition, Camera.main, out outVec);
+
+
+            float width = rectTransform.rect.width;
+            float height = rectTransform.rect.height;
+            outVec += new Vector2(400 / 2, 100 / 2);
+
+
+            float x = Mathf.Clamp(outVec.x / 400, 0.0f, 1.0f);
+            float y = Mathf.Clamp(outVec.y / 100, 0.0f, 1.0f);
+
+            int texX = Mathf.RoundToInt(x * spectrumSprite.width);
+            int texY = Mathf.RoundToInt(y * spectrumSprite.height);
+            Debug.Log("TexX : " + x + " TexY : " + y);
+
+            Color targetColor = spectrumSprite.GetPixel(texX, texY);
+            player1ShipSprite.color = targetColor;
 
             player1ColorPickerButton.gameObject.SetActive(true);
             player1SpectrumButton.gameObject.SetActive(false);
-            //Debug.Log("Picked color \n" + pickedColor);
+            Debug.Log("Picked color \n" + targetColor);
         }
         else if (playerIndex == 2)
         {
