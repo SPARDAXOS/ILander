@@ -4,11 +4,22 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
+using static GameInstance;
 using ILanderUtility;
 
 public class LevelSelectMenu : MonoBehaviour
 {
+    public enum LevelSelectMenuMode
+    {
+        NORMAL,
+        ONLINE
+    }
+
+
+
+
+    private LevelSelectMenuMode currentMenuMode = LevelSelectMenuMode.NORMAL;
+
     private bool initialized = false;
     private LevelsBundle levelsBundle;
 
@@ -21,12 +32,10 @@ public class LevelSelectMenu : MonoBehaviour
         if (initialized)
             return;
 
+        levelsBundle = GetInstance().GetLevelsBundle();
         SetupReferences();
+        ApplyCurrentMenuMode();
         initialized = true;
-    }
-    public void SetLevelsBundle(LevelsBundle bundle) {
-        levelsBundle = bundle;
-        UpdateLevelPreview();
     }
 
     private void SetupReferences() {
@@ -46,8 +55,33 @@ public class LevelSelectMenu : MonoBehaviour
         levelName = levelSelectorTransform.GetComponent<TextMeshProUGUI>();
         Utility.Validate(levelPreview, "Failed to find component Text on LevelSelector - LevelSelectMenu");
     }
-    private void UpdateLevelPreview() {
-        if (!levelsBundle) {
+
+
+    public void SetLevelSelectMenuMode(LevelSelectMenuMode mode)
+    {
+        currentMenuMode = mode;
+        ApplyCurrentMenuMode();
+    }
+
+
+
+    private void ApplyCurrentMenuMode()
+    {
+        //UpdateLevelPreview(); do this here somewhere!
+        if (currentMenuMode == LevelSelectMenuMode.NORMAL)
+        {
+
+        }
+        else if (currentMenuMode == LevelSelectMenuMode.ONLINE)
+        {
+
+        }
+    }
+
+    private void UpdateLevelPreview()
+    {
+        if (!levelsBundle)
+        {
             Debug.LogError("LevelsBundle has not been set for LevelSelectMenu");
             return;
         }
@@ -55,8 +89,6 @@ public class LevelSelectMenu : MonoBehaviour
         levelPreview.sprite = levelsBundle.levels[currentLevelIndex].preview;
         levelName.text = levelsBundle.levels[currentLevelIndex].name;
     }
-
-
 
     public void SwitchLevelLeft() {
         currentLevelIndex--;

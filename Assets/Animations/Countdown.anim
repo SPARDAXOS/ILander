@@ -1507,32 +1507,4 @@ AnimationClip:
   m_EulerEditorCurves: []
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
-  m_Events:
-  - time: 1
-    functionName: PlayCountdownSound
-    data: 
-    objectReferenceParameter: {fileID: 2785612533469246024, guid: b07d9838a8bd5dd4e98c674f04277d23, type: 3}
-    floatParameter: 0
-    intParameter: 0
-    messageOptions: 0
-  - time: 1.5
-    functionName: PlayCountdownSound
-    data: 
-    objectReferenceParameter: {fileID: 2785612533469246024, guid: b07d9838a8bd5dd4e98c674f04277d23, type: 3}
-    floatParameter: 0
-    intParameter: 1
-    messageOptions: 0
-  - time: 2
-    functionName: PlayCountdownSound
-    data: 
-    objectReferenceParameter: {fileID: 2785612533469246024, guid: b07d9838a8bd5dd4e98c674f04277d23, type: 3}
-    floatParameter: 0
-    intParameter: 2
-    messageOptions: 0
-  - time: 2.5
-    functionName: PlayCountdownSound
-    data: 
-    objectReferenceParameter: {fileID: 2785612533469246024, guid: b07d9838a8bd5dd4e98c674f04277d23, type: 3}
-    floatParameter: 0
-    intParameter: 3
-    messageOptions: 0
+  m_Events: []

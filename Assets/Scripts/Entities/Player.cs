@@ -46,6 +46,11 @@ public class Player : NetworkBehaviour
         //EnableInput(); Call this from instance instead at game start!
     }
     public void Tick() {
+        if (!initialized) {
+            Debug.LogError("Attempted to tick uninitialized entity - " + gameObject.name);
+            return;
+        }
+
         //Problem is that the struct is not nullable. Either make it so or just roll with it!
         if (currentPlayerType == PlayerType.NONE)
             return;//mESSGE?
@@ -87,14 +92,6 @@ public class Player : NetworkBehaviour
     }
 
 
-    public void EnableNetworking() {
-        //At the very least enable and disable the networking component.
-    }
-    public void DisableNetworking() { 
-        
-    }
-
-
     private void CheckInput()
     {
         //Break into 2 funcs - rot and move
@@ -105,7 +102,7 @@ public class Player : NetworkBehaviour
             else if (inputValue > 0.0f)
                 AccelerateThruster();
 
-            thrusterDirection = transform.up;
+            thrusterDirection = Vector3.Normalize(thrusterDirection + transform.up * playerCharacterData.statsData.steeringRate);
 
 
             //    //Temp

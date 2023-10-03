@@ -18,3 +18,4 @@ MonoBehaviour:
   thrusterBreaksRate: 1.5
   healthCap: 1
   turnRate: 1
+  steeringRate: 0.005

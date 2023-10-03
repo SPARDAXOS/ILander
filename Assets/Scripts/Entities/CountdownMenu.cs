@@ -36,6 +36,7 @@ public class CountdownMenu : MonoBehaviour
         if (!animationComponent.isPlaying) {
             callback.Invoke();
             animationPlaying = false;
+            gameObject.SetActive(false);
         }
     }
 
@@ -57,5 +58,6 @@ public class CountdownMenu : MonoBehaviour
         callback = action;
         animationComponent.Play();
         animationPlaying = true;
+        gameObject.SetActive(true);
     }
 }

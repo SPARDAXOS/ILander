@@ -21,5 +21,8 @@ public class PlayerStats : ScriptableObject
     [Header("Movement")]
     public float turnRate = 10.0f;
 
+    [Range(0.0001f, 1.0f)]
+    public float steeringRate = 0.001f;
+
 
 }

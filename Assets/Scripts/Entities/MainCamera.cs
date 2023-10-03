@@ -15,10 +15,6 @@ public class MainCamera : MonoBehaviour
 
     }
 
-    public void SetFollowTarget(GameObject target) {
-        followTarget = target;
-    }
-
     private void UpdatePosition() {
 
     }

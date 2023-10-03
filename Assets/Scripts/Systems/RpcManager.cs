@@ -8,6 +8,25 @@ using static GameInstance;
 
 public class RpcManager : NetworkBehaviour
 {
+    private CustomizationMenu customizationScript = null;
+
+    public bool initialized = false;
+
+    public void Initialize() {
+        if (initialized)
+            return;
+
+
+        SetupReferences();
+        initialized = true;
+    }
+    private void SetupReferences() {
+
+        customizationScript = GetInstance().GetCustomizationMenuScript();
+
+
+    }
+
 
     [ClientRpc]
     public void ProccedToCustomizationMenuClientRpc() {
@@ -58,7 +77,7 @@ public class RpcManager : NetworkBehaviour
         if (senderID == (ulong)GetInstance().GetClientID())
             return;
 
-        GetInstance().UpdatePlayer2Selection(index);
+        customizationScript.SetPlayer2CharacterIndex(index);
     }
 
 

@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.InputSystem.Controls.AxisControl;
 using ILanderUtility;
-using Unity.VisualScripting;
+using static GameInstance;
 
 public class CustomizationMenu : MonoBehaviour
 {
@@ -69,12 +68,13 @@ public class CustomizationMenu : MonoBehaviour
 
     private bool initialized = false;
 
+
+
     public void Initialize() {
         if (initialized)
             return;
 
-        playerCharactersBundle = GameInstance.GetInstance().GetPlayerCharactersBundle();
-
+        playerCharactersBundle = GetInstance().GetPlayerCharactersBundle();
         SetupReferences();
         ApplyStartState();
         ApplyCurrentMenuMode();
@@ -190,6 +190,8 @@ public class CustomizationMenu : MonoBehaviour
         player2PortraitSprite = PortaitSprite2.GetComponent<Image>();
         Utility.Validate(player2PortraitSprite, "Failed to get reference to player2PortraitSprite - CustomizationMenu", true);
     }
+
+
     public void ApplyStartState() {
         player1TargetColor = Color.white;
         player2TargetColor = Color.white;
@@ -220,8 +222,7 @@ public class CustomizationMenu : MonoBehaviour
 
         }
     }
-    public void SetPlayer2CharacterIndex(int index)
-    {
+    public void SetPlayer2CharacterIndex(int index) {
         playerCharacterIndex2 = index;
         UpdatePlayer2Skin();
     }
@@ -257,8 +258,10 @@ public class CustomizationMenu : MonoBehaviour
             if (playerCharacterIndex1 < 0)
                 playerCharacterIndex1 = playerCharactersBundle.playerCharacters.Length - 1;
             UpdatePlayer1Skin();
-            if (currentMenuMode == CustomizationMenuMode.ONLINE)
-                GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
+            if (currentMenuMode == CustomizationMenuMode.ONLINE) {
+                var rpcManger = GetInstance().GetRpcManagerScript();
+                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
+            }
         }
         else if (playerIndex == 2) {
             playerCharacterIndex2--;
@@ -275,8 +278,10 @@ public class CustomizationMenu : MonoBehaviour
             if (playerCharacterIndex1 == playerCharactersBundle.playerCharacters.Length)
                 playerCharacterIndex1 = 0;
             UpdatePlayer1Skin();
-            if (currentMenuMode == CustomizationMenuMode.ONLINE)
-                GameInstance.GetInstance().UpdatePlayer2SelectionIndex(playerCharacterIndex1);
+            if (currentMenuMode == CustomizationMenuMode.ONLINE) {
+                var rpcManger = GetInstance().GetRpcManagerScript();
+                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
+            }
         }
         else if (playerIndex == 2) {
             playerCharacterIndex2++;
@@ -382,8 +387,8 @@ public class CustomizationMenu : MonoBehaviour
         var instance = GameInstance.GetInstance();
         //Its not just sprite index anymore!
 
-        instance.ConfirmCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1]);
-        instance.ConfirmCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2]);
+        instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1]);
+        instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2]);
         instance.SetGameState(GameInstance.GameState.LEVEL_SELECT_MENU);
     }
 
