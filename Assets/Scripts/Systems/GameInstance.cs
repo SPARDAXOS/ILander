@@ -216,6 +216,9 @@ public class GameInstance : MonoBehaviour
             case GameState.LOADING_SCREEN:
                 UpdateLoadingState();
                 break;
+            case GameState.CUSTOMIZATION_MENU:
+                customizationMenuScript.Tick();
+                break;
             case GameState.PLAYING:
                 UpdatePlayingState();
                 break;
@@ -376,7 +379,7 @@ public class GameInstance : MonoBehaviour
         try {
             eventSystem = Instantiate(loadedAssets["EventSystem"].Result);
 
-            networkManager = Instantiate(loadedAssets["NetworkManagder"].Result);
+            networkManager = Instantiate(loadedAssets["NetworkManager"].Result);
             networkManagerScript = networkManager.GetComponent<Unity.Netcode.NetworkManager>();
             networkManagerScript.OnClientConnectedCallback += ClientConnectedCallback;
             networkManagerScript.ConnectionApprovalCallback += ClientApprovalCallback;
@@ -518,8 +521,7 @@ public class GameInstance : MonoBehaviour
         currentConnectionState = ConnectionState.NONE;
         currentGameMode = GameMode.NONE;
 
-        if (currentConnectionState == ConnectionState.HOST)
-            connectedClients = 0;
+        connectedClients = 0;
 
         player1 = null;
         player2 = null;
@@ -537,6 +539,7 @@ public class GameInstance : MonoBehaviour
     private bool AddClient(ulong id) {
         if (connectedClients == 2) {
             Debug.LogWarning("Unable to add client \n Maximum clients limit reached!");
+            //TODO: THIS WAS TRIGGERED! Check the connectedClients reset!
             return false;
         }
 
@@ -741,6 +744,8 @@ public class GameInstance : MonoBehaviour
         EnableMouseCursor();
         levelSelectMenu.SetActive(true);
         currentGameState = GameState.LEVEL_SELECT_MENU;
+        if (currentGameMode == GameMode.LAN && networkManagerScript.IsHost)
+            RandomizeLevelSelectionChoice();
     }
     private void SetupLoadingScreenState() {
         HideAllMenus();
@@ -781,6 +786,19 @@ public class GameInstance : MonoBehaviour
     }
 
 
+
+
+    private void RandomizeLevelSelectionChoice() { 
+        int rand = UnityEngine.Random.Range(0, networkManagerScript.ConnectedClients.Count);
+
+        if (rand == 0)
+            levelSelectMenuScript.ActivateStartButton();
+        else if (rand == 1) {
+            ClientRpcParams clientRpcParams = new ClientRpcParams();
+            clientRpcParams.Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { player2NetworkObject.OwnerClientId } };
+            rpcManagerScript.RelayLevelSelectorRoleClientRpc(clientRpcParams);
+        }
+    }
     private void HideAllMenus() {
         //Add all menus here!
         mainMenu.SetActive(false);
@@ -811,10 +829,14 @@ public class GameInstance : MonoBehaviour
     {
         return rpcManagerScript;
     }
-    public CustomizationMenu GetCustomizationMenuScript()
-    {
+    public CustomizationMenu GetCustomizationMenuScript() {
         return customizationMenuScript;
     }
+    public LevelSelectMenu GetLevelSelectMenuScript() {  
+        return levelSelectMenuScript; 
+    }
+
+
     public PlayerCharactersBundle GetPlayerCharactersBundle() {
         return playerCharactersBundle;
     }

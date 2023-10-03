@@ -8,7 +8,8 @@ using static GameInstance;
 
 public class RpcManager : NetworkBehaviour
 {
-    private CustomizationMenu customizationScript = null;
+    private CustomizationMenu customizationMenuScript = null;
+    private LevelSelectMenu levelSelectMenu = null;
 
     public bool initialized = false;
 
@@ -22,8 +23,8 @@ public class RpcManager : NetworkBehaviour
     }
     private void SetupReferences() {
 
-        customizationScript = GetInstance().GetCustomizationMenuScript();
-
+        customizationMenuScript = GetInstance().GetCustomizationMenuScript();
+        levelSelectMenu = GetInstance().GetLevelSelectMenuScript();
 
     }
 
@@ -34,21 +35,7 @@ public class RpcManager : NetworkBehaviour
     }
 
 
-    //This is the way to ask and receive stuff
-    //[ServerRpc (RequireOwnership = false)]
-    //public void GetRpcManagerReferenceServerRpc(ulong senderID) {
-    //    Debug.Log("Received request for rpc manager from " + senderID);
-    //    ClientRpcParams clientRpcParams = new ClientRpcParams();
-    //    clientRpcParams.Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderID } };
-    //    
-    //    RelayRpcManagerReferenceClientRpc(GetInstance().GetRpcManager(), clientRpcParams);
-    //}
-    //
-    //[ClientRpc]
-    //public void RelayRpcManagerReferenceClientRpc(NetworkObjectReference reference, ClientRpcParams clientRpcParameters = default)
-    //{
-    //    GetInstance().CheckReceivedRpcManagerRef(reference);
-    //}
+    //TODO: Avoid the senderID == self check if possible and use params instead to send 1 less packet each time!
 
 
 
@@ -77,9 +64,34 @@ public class RpcManager : NetworkBehaviour
         if (senderID == (ulong)GetInstance().GetClientID())
             return;
 
-        customizationScript.SetPlayer2CharacterIndex(index);
+        customizationMenuScript.SetPlayer2CharacterIndex(index);
     }
 
+
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdatePlayer2ReadyCheckServerRpc(ulong senderID, bool ready) {
+
+        RelayPlayer2ReadyCheckClientRpc(senderID, ready);
+    }
+
+    [ClientRpc]
+    public void RelayPlayer2ReadyCheckClientRpc(ulong senderID, bool ready) {
+        if (senderID == (ulong)GetInstance().GetClientID())
+            return;
+
+        customizationMenuScript.SetPlayer2ReadyCheck(ready);
+    }
+
+
+    [ClientRpc]
+    public void RelaySelectedLevelIndexClientRpc(int index, ClientRpcParams clientRpcParameters = default) {
+
+    }
+
+    [ClientRpc]
+    public void RelayLevelSelectorRoleClientRpc(ClientRpcParams clientRpcParameters = default) {
+        levelSelectMenu.ActivateStartButton();
+    }
 
 
 

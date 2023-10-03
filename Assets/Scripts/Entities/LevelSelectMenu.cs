@@ -1,11 +1,8 @@
-using Initialization;
-using System.Collections;
-using System.Collections.Generic;
+using ILanderUtility;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static GameInstance;
-using ILanderUtility;
 
 public class LevelSelectMenu : MonoBehaviour
 {
@@ -25,6 +22,10 @@ public class LevelSelectMenu : MonoBehaviour
 
     private int currentLevelIndex = 0;
 
+    private GameObject startButtonGameObject = null;
+    private GameObject hostChoiceGameObject = null;
+    private GameObject levelSelectorGameObject = null;
+
     private Image levelPreview;
     private TextMeshProUGUI levelName;
 
@@ -34,6 +35,7 @@ public class LevelSelectMenu : MonoBehaviour
 
         levelsBundle = GetInstance().GetLevelsBundle();
         SetupReferences();
+        UpdateLevelPreview();
         ApplyCurrentMenuMode();
         initialized = true;
     }
@@ -51,32 +53,44 @@ public class LevelSelectMenu : MonoBehaviour
 
         Transform levelSelectorTransform = previewWindowTransform.Find("LevelSelector");
         Utility.Validate(levelSelectorTransform, "Failed to find reference to LevelSelector - LevelSelectMenu");
+        levelSelectorGameObject = levelSelectorTransform.gameObject;
 
         levelName = levelSelectorTransform.GetComponent<TextMeshProUGUI>();
         Utility.Validate(levelPreview, "Failed to find component Text on LevelSelector - LevelSelectMenu");
+
+        startButtonGameObject = previewWindowTransform.Find("StartButton").gameObject;
+        Utility.Validate(startButtonGameObject, "Failed to find reference to StartButton - LevelSelectMenu");
+
+        hostChoiceGameObject = transform.Find("HostChoice").gameObject;
+        Utility.Validate(hostChoiceGameObject, "Failed to find reference to HostChoice - LevelSelectMenu");
+        
     }
 
 
-    public void SetLevelSelectMenuMode(LevelSelectMenuMode mode)
-    {
+    public void SetLevelSelectMenuMode(LevelSelectMenuMode mode) {
         currentMenuMode = mode;
         ApplyCurrentMenuMode();
     }
 
 
-
-    private void ApplyCurrentMenuMode()
-    {
-        //UpdateLevelPreview(); do this here somewhere!
-        if (currentMenuMode == LevelSelectMenuMode.NORMAL)
-        {
-
+    public void ActivateStartButton() {
+        startButtonGameObject.SetActive(true);
+        hostChoiceGameObject.SetActive(false);
+    }
+    private void ApplyCurrentMenuMode() {
+        if (currentMenuMode == LevelSelectMenuMode.NORMAL) {
+            startButtonGameObject.SetActive(true);
+            levelSelectorGameObject.SetActive(true);
+            hostChoiceGameObject.SetActive(false);
         }
-        else if (currentMenuMode == LevelSelectMenuMode.ONLINE)
-        {
-
+        else if (currentMenuMode == LevelSelectMenuMode.ONLINE) {
+            startButtonGameObject.SetActive(false);
+            levelSelectorGameObject.SetActive(false);
+            hostChoiceGameObject.SetActive(true);
         }
     }
+
+
 
     private void UpdateLevelPreview()
     {
@@ -107,6 +121,12 @@ public class LevelSelectMenu : MonoBehaviour
     public void StartButton() {
         var instance = GameInstance.GetInstance();
         instance.StartLevel((uint)currentLevelIndex);
+
+        //if (currentMenuMode == LevelSelectMenuMode.ONLINE)
+        //    //rpc to start level at client as well
+
+
+        //TODO: Reset state or make gameinstance do it!
     }
 }
 
