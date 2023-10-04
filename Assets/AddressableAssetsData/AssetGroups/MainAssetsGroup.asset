@@ -101,6 +101,10 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/Entities/RpcManager.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 03cc8556ead478945907b98159a793e3
+    m_Address: Assets/Prefabs/Levels/Level3.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:

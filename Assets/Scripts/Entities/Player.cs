@@ -90,6 +90,9 @@ public class Player : NetworkBehaviour
         //Apply HUD data! probably have 2 hud modes cause if online or not!
         //Apply data from it!
     }
+    public void SetPlayerColor(Color color) {
+        spriteRendererComp.color = color;
+    }
 
 
     private void CheckInput()

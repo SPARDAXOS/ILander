@@ -66,6 +66,11 @@ public class LevelSelectMenu : MonoBehaviour
         
     }
 
+    //Isnt set game mode kinda the same?
+    public void SetupStartState() {
+
+    }
+
 
     public void SetLevelSelectMenuMode(LevelSelectMenuMode mode) {
         currentMenuMode = mode;
@@ -75,6 +80,7 @@ public class LevelSelectMenu : MonoBehaviour
 
     public void ActivateStartButton() {
         startButtonGameObject.SetActive(true);
+        levelSelectorGameObject.SetActive(true);
         hostChoiceGameObject.SetActive(false);
     }
     private void ApplyCurrentMenuMode() {
@@ -91,11 +97,19 @@ public class LevelSelectMenu : MonoBehaviour
     }
 
 
+    public void ReceiveLevelSelectionRpc(int index) {
+        var instance = GetInstance();
+        instance.StartLevel((uint)index);
 
-    private void UpdateLevelPreview()
-    {
-        if (!levelsBundle)
-        {
+        //Reset or do it from gameinstance! do it from game instance
+    }
+    public void ReceiveSelectedLevelPreviewRpc(int index) {
+        currentLevelIndex = index;
+        UpdateLevelPreview();
+    }
+
+    private void UpdateLevelPreview() {
+        if (!levelsBundle) {
             Debug.LogError("LevelsBundle has not been set for LevelSelectMenu");
             return;
         }
@@ -109,6 +123,9 @@ public class LevelSelectMenu : MonoBehaviour
         if (currentLevelIndex < 0)
             currentLevelIndex = levelsBundle.levels.Length - 1;
 
+        if (currentMenuMode == LevelSelectMenuMode.ONLINE)
+            GetInstance().GetRpcManagerScript().UpdateSelectedLevelPreviewServerRpc(GetInstance().GetClientID(), currentLevelIndex);
+
         UpdateLevelPreview();
     }
     public void SwitchLevelRight() {
@@ -116,14 +133,17 @@ public class LevelSelectMenu : MonoBehaviour
         if (currentLevelIndex > levelsBundle.levels.Length - 1)
             currentLevelIndex = 0;
 
+        if (currentMenuMode == LevelSelectMenuMode.ONLINE)
+            GetInstance().GetRpcManagerScript().UpdateSelectedLevelPreviewServerRpc(GetInstance().GetClientID(), currentLevelIndex);
+
         UpdateLevelPreview();
     }
     public void StartButton() {
-        var instance = GameInstance.GetInstance();
+        var instance = GetInstance();
         instance.StartLevel((uint)currentLevelIndex);
 
         if (currentMenuMode == LevelSelectMenuMode.ONLINE)
-            GetInstance().GetRpcManagerScript().UpdateSelectedLevelIndexServerRpc((ulong)GetInstance().GetClientID(), currentLevelIndex);
+            instance.GetRpcManagerScript().UpdateSelectedLevelIndexServerRpc(instance.GetClientID(), currentLevelIndex);
 
 
         //TODO: Reset state or make gameinstance do it!

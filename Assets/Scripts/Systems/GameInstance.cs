@@ -572,8 +572,8 @@ public class GameInstance : MonoBehaviour
         connectedClients++;
         return true;
     }
-    public long GetClientID() {
-        return clientID;
+    public ulong GetClientID() {
+        return (ulong)clientID;
     }
 
 
@@ -664,14 +664,18 @@ public class GameInstance : MonoBehaviour
             levelSelectMenuScript.SetLevelSelectMenuMode(LevelSelectMenu.LevelSelectMenuMode.ONLINE);
         }
     }
-    public void SetCharacterSelection(Player.PlayerType type, PlayerCharacterData data) {
+    public void SetCharacterSelection(Player.PlayerType type, PlayerCharacterData data, Color color) {
         if (type == Player.PlayerType.NONE)
             return;
 
-        if (type == Player.PlayerType.PLAYER_1)
+        if (type == Player.PlayerType.PLAYER_1) {
             player1Script.SetPlayerData(data);
-        else if (type == Player.PlayerType.PLAYER_2)
+            player1Script.SetPlayerColor(color);
+        }
+        else if (type == Player.PlayerType.PLAYER_2) {
             player2Script.SetPlayerData(data);
+            player2Script.SetPlayerColor(color);
+        }
     }
 
 

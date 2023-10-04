@@ -9,7 +9,7 @@ using static GameInstance;
 public class RpcManager : NetworkBehaviour
 {
     private CustomizationMenu customizationMenuScript = null;
-    private LevelSelectMenu levelSelectMenu = null;
+    private LevelSelectMenu levelSelectMenuScript = null;
 
     public bool initialized = false;
 
@@ -24,7 +24,7 @@ public class RpcManager : NetworkBehaviour
     private void SetupReferences() {
 
         customizationMenuScript = GetInstance().GetCustomizationMenuScript();
-        levelSelectMenu = GetInstance().GetLevelSelectMenuScript();
+        levelSelectMenuScript = GetInstance().GetLevelSelectMenuScript();
 
     }
 
@@ -33,18 +33,20 @@ public class RpcManager : NetworkBehaviour
     public void ProccedToCustomizationMenuClientRpc() {
         GetInstance().SetGameState(GameState.CUSTOMIZATION_MENU);
     }
+    [ClientRpc]
+    public void RelayLevelSelectorRoleClientRpc(ClientRpcParams clientRpcParameters = default) {
+        levelSelectMenuScript.ActivateStartButton();
+    }
 
 
-    //TODO: Avoid the senderID == self check if possible and use params instead to send 1 less packet each time!
-
-
+    //TODO: Avoid the senderID != self check if possible and use params instead to send 1 less packet each time!
+    //NOTE: Using senderID != self might be good since then i send my rpcs to all clients instead of hardcoded 1 at the cost of 1 extra packet but idk the cost of params
 
     [ClientRpc]
     public void RelayRpcManagerReferenceClientRpc(NetworkObjectReference reference)
     {
         GetInstance().SetReceivedRpcManagerRef(reference);
     }
-
     [ClientRpc]
     public void RelayPlayerReferenceClientRpc(NetworkObjectReference reference, Player.PlayerType player, ClientRpcParams clientRpcParameters = default)
     {
@@ -58,13 +60,26 @@ public class RpcManager : NetworkBehaviour
 
         RelayPlayer2SelectionClientRpc(senderID, index);
     }
-
-    [ClientRpc]
+    [ClientRpc] 
     public void RelayPlayer2SelectionClientRpc(ulong senderID, int index) {
-        if (senderID == (ulong)GetInstance().GetClientID())
+        if (senderID == GetInstance().GetClientID())
             return;
 
-        customizationMenuScript.SetPlayer2CharacterIndex(index);
+        customizationMenuScript.ReceivePlayer2CharacterIndexRpc(index);
+    }
+
+
+
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdatePlayer2ColorSelectionServerRpc(ulong senderID, Color color) {
+        RelayPlayer2ColorSelectionClientRpc(senderID, color);
+    }
+    [ClientRpc]
+    public void RelayPlayer2ColorSelectionClientRpc(ulong senderID, Color color) {
+        if (senderID == GetInstance().GetClientID())
+            return;
+
+        customizationMenuScript.ReceivePlayer2ColorSelectionRpc(color);
     }
 
 
@@ -73,33 +88,40 @@ public class RpcManager : NetworkBehaviour
 
         RelayPlayer2ReadyCheckClientRpc(senderID, ready);
     }
-
-
-
-
     [ClientRpc]
     public void RelayPlayer2ReadyCheckClientRpc(ulong senderID, bool ready) {
+        if (senderID == GetInstance().GetClientID())
+            return;
+
+        customizationMenuScript.ReceivePlayer2ReadyCheckRpc(ready);
+    }
+
+
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdateSelectedLevelPreviewServerRpc(ulong senderID, int index) {
+        RelaySelectedLevelPreviewClientRpc(senderID, index);
+    }
+    [ClientRpc]
+    public void RelaySelectedLevelPreviewClientRpc(ulong senderID, int index) {
         if (senderID == (ulong)GetInstance().GetClientID())
             return;
 
-        customizationMenuScript.SetPlayer2ReadyCheck(ready);
+        levelSelectMenuScript.ReceiveSelectedLevelPreviewRpc(index);
     }
 
 
     [ServerRpc(RequireOwnership = false)]
     public void UpdateSelectedLevelIndexServerRpc(ulong senderID, int index) {
-
-        RelaySelectedLevelIndexClientRpc(index);
+        RelaySelectedLevelIndexClientRpc(senderID, index);
     }
     [ClientRpc]
-    public void RelaySelectedLevelIndexClientRpc(int index, ClientRpcParams clientRpcParameters = default) {
+    public void RelaySelectedLevelIndexClientRpc(ulong senderID, int index) {
+        if (senderID == (ulong)GetInstance().GetClientID())
+            return;
 
+        levelSelectMenuScript.ReceiveLevelSelectionRpc(index);
     }
 
-    [ClientRpc]
-    public void RelayLevelSelectorRoleClientRpc(ClientRpcParams clientRpcParameters = default) {
-        levelSelectMenu.ActivateStartButton();
-    }
 
 
 

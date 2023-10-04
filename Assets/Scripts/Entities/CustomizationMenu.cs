@@ -6,21 +6,11 @@ using static GameInstance;
 
 public class CustomizationMenu : MonoBehaviour
 {
-    //List of available sprites to swap between
-    //Func to call and supply the target color and sprite 
-    //Game Instance takes data from here instead
-    //Func to reset the data in here to default
-
-    //Make these two into SOs
-
     public enum CustomizationMenuMode
     {
         NORMAL,
         ONLINE
     }
-
-
-    [SerializeField] private float colorEditStep = 0.1f;
 
 
     private PlayerCharactersBundle playerCharactersBundle;
@@ -249,8 +239,8 @@ public class CustomizationMenu : MonoBehaviour
         player1ReadyCheck = false;
         player2ReadyCheck = false;
 
-        UpdatePlayer1Skin();
-        UpdatePlayer2Skin();
+        UpdatePlayer1ShipSprite();
+        UpdatePlayer2ShipSprite();
     }
 
 
@@ -283,20 +273,24 @@ public class CustomizationMenu : MonoBehaviour
             player2SpriteSwitchRight.gameObject.SetActive(false);
         }
     }
-    public void SetPlayer2CharacterIndex(int index) {
+    public void ReceivePlayer2CharacterIndexRpc(int index) {
         playerCharacterIndex2 = index;
-        UpdatePlayer2Skin();
+        UpdatePlayer2ShipSprite();
     }
-    public void SetPlayer2ReadyCheck(bool ready) {
+    public void ReceivePlayer2ReadyCheckRpc(bool ready) {
         player2ReadyCheck = ready;
         UpdatePlayer2ReadyCheck();
+    }
+    public void ReceivePlayer2ColorSelectionRpc(Color color) {
+        player2TargetColor = color;
+        UpdatePlayer2ShipSprite();
     }
 
     private void CheckPlayersStatus() {
         if (player1ReadyCheck && player2ReadyCheck) {
             var instance = GetInstance();
-            instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1]);
-            instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2]);
+            instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
+            instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
             instance.SetGameState(GameState.LEVEL_SELECT_MENU);
 
             //TODO: Rework the reseting of stuff to either happen by the GameInstance in SetupCustomizationMenuState or do it more elegantly here
@@ -305,6 +299,15 @@ public class CustomizationMenu : MonoBehaviour
             //TODO: Color also does not carry over when you are picking it. Make an rpc for that.
 
             //TODO: You do not set the color to the player sprite yet. Do that!
+
+            //BUG: There is a bug when you disconnect after you were in game and the level doesnt get unloaded so you cant start again!
+
+            //BUG: Bug with selecting which player is which. Color and sprite mismatch. Although remember that server is authoritative so if it decides you are player
+            //2 then you are going there!
+            //
+            
+            //BUG: Do something in case the transtion animation breaks. Like set all their positions to the defaults the moment an anim ends!.
+
             ApplyStartState();
         }
     }
@@ -326,14 +329,14 @@ public class CustomizationMenu : MonoBehaviour
             player2ReadyCheckGameObject.SetActive(false);
         CheckPlayersStatus();
     }
-    private void UpdatePlayer1Skin() {
+    private void UpdatePlayer1ShipSprite() {
         player1ShipSprite.sprite = playerCharactersBundle.playerCharacters[playerCharacterIndex1].shipSprite;
         player1PortraitSprite.sprite = playerCharactersBundle.playerCharacters[playerCharacterIndex1].portraitSprite;
         player1SpriteSwitch.text = playerCharactersBundle.playerCharacters[playerCharacterIndex1].name;
 
         player1ShipSprite.color = player1TargetColor;
     }
-    private void UpdatePlayer2Skin() {
+    private void UpdatePlayer2ShipSprite() {
         player2ShipSprite.sprite = playerCharactersBundle.playerCharacters[playerCharacterIndex2].shipSprite;
         player2PortraitSprite.sprite = playerCharactersBundle.playerCharacters[playerCharacterIndex2].portraitSprite;
         player2SpriteSwitch.text = playerCharactersBundle.playerCharacters[playerCharacterIndex2].name;
@@ -359,10 +362,14 @@ public class CustomizationMenu : MonoBehaviour
         return spectrumSprite.GetPixel(texX, texY);
     }
     private void UpdateColorPickerTarget() {
-        if (colorPickerTarget == 1)
-            player1ShipSprite.color = CalculatePixelColor(player1SpectrumButtonRectTransform);
-        else if (colorPickerTarget == 2)
-            player2ShipSprite.color = CalculatePixelColor(player2SpectrumButtonRectTransform);
+        if (colorPickerTarget == 1) {
+            player1TargetColor = CalculatePixelColor(player1SpectrumButtonRectTransform);
+            UpdatePlayer1ShipSprite();
+        }
+        else if (colorPickerTarget == 2) {
+            player2TargetColor = CalculatePixelColor(player2SpectrumButtonRectTransform);
+            UpdatePlayer2ShipSprite();
+        }
         else
             Debug.LogError("Invalid colorPickerTarget - CustomizationMenu : index " + colorPickerTarget);
     }
@@ -374,7 +381,7 @@ public class CustomizationMenu : MonoBehaviour
             playerCharacterIndex1--;
             if (playerCharacterIndex1 < 0)
                 playerCharacterIndex1 = playerCharactersBundle.playerCharacters.Length - 1;
-            UpdatePlayer1Skin();
+            UpdatePlayer1ShipSprite();
             if (currentMenuMode == CustomizationMenuMode.ONLINE) {
                 var rpcManger = GetInstance().GetRpcManagerScript();
                 rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
@@ -384,7 +391,7 @@ public class CustomizationMenu : MonoBehaviour
             playerCharacterIndex2--;
             if (playerCharacterIndex2 < 0)
                 playerCharacterIndex2 = playerCharactersBundle.playerCharacters.Length - 1;
-            UpdatePlayer2Skin();
+            UpdatePlayer2ShipSprite();
         }
         else
             Debug.LogError("Invalid playerIndex sent to SwitchSpriteLeft - CustomizationMenu : index " + playerIndex);
@@ -394,7 +401,7 @@ public class CustomizationMenu : MonoBehaviour
             playerCharacterIndex1++;
             if (playerCharacterIndex1 == playerCharactersBundle.playerCharacters.Length)
                 playerCharacterIndex1 = 0;
-            UpdatePlayer1Skin();
+            UpdatePlayer1ShipSprite();
             if (currentMenuMode == CustomizationMenuMode.ONLINE) {
                 var rpcManger = GetInstance().GetRpcManagerScript();
                 rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
@@ -404,7 +411,7 @@ public class CustomizationMenu : MonoBehaviour
             playerCharacterIndex2++;
             if (playerCharacterIndex2 == playerCharactersBundle.playerCharacters.Length)
                 playerCharacterIndex2 = 0;
-            UpdatePlayer2Skin();
+            UpdatePlayer2ShipSprite();
         }
         else
             Debug.LogError("Invalid playerIndex sent to SwitchSpriteRight - CustomizationMenu : index " + playerIndex);
@@ -414,8 +421,8 @@ public class CustomizationMenu : MonoBehaviour
 
     public void StartButton() {
         var instance = GetInstance();
-        instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1]);
-        instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2]);
+        instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
+        instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
         instance.SetGameState(GameState.LEVEL_SELECT_MENU);
     }
     public void ColorPickerButton(int playerIndex) {
@@ -457,6 +464,10 @@ public class CustomizationMenu : MonoBehaviour
         colorPickerTarget = -1;
         spectrumButtonHeld = false;
         spectrumButtonExit = false;
+
+        if (currentMenuMode == CustomizationMenuMode.ONLINE)
+            GetInstance().GetRpcManagerScript().UpdatePlayer2ColorSelectionServerRpc(GetInstance().GetClientID(), player1TargetColor);
+
     }
     public void SpectrumButtonExit() {
         if (spectrumButtonHeld)
