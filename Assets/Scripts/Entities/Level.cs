@@ -12,8 +12,13 @@ public class Level : MonoBehaviour
 
     private bool initialized = false;
 
-    private Vector3 spawnPoint1;
-    private Vector3 spawnPoint2;
+    private Vector3 playerSpawnPoint1;
+    private Vector3 playerSpawnPoint2;
+
+    private Transform[] pickupsSpawnPoints;
+    private bool[] occupiedPickupsSpawnPoints;
+
+
 
     public void Initialize() {
         if (initialized)
@@ -26,25 +31,33 @@ public class Level : MonoBehaviour
     private void SetupReferences() {
 
         if (!Utility.Validate(player1SpawnPoint, "No Player1SpawnPoint has been set for level " + gameObject.name, false))
-            spawnPoint1 = Vector3.zero;
+            playerSpawnPoint1 = Vector3.zero;
         else
-            spawnPoint1 = player1SpawnPoint.position;
+            playerSpawnPoint1 = player1SpawnPoint.position;
         if (!Utility.Validate(player2SpawnPoint, "No Player2SpawnPoint has been set for level " + gameObject.name, false))
-            spawnPoint2 = Vector3.zero;
+            playerSpawnPoint2 = Vector3.zero;
         else
-            spawnPoint2 = player2SpawnPoint.position;
+            playerSpawnPoint2 = player2SpawnPoint.position;
 
 
-
-
+        //Transform PickupsSpawnPointsTransform = transform.Find("PickupSpawnPoints");
+        //pickupsSpawnPoints = new Transform[PickupsSpawnPointsTransform.childCount];
+        //occupiedPickupsSpawnPoints = new bool[PickupsSpawnPointsTransform.childCount];
+        //for (uint i = 0; i < PickupsSpawnPointsTransform.childCount; i++)
+        //    pickupsSpawnPoints[i] = PickupsSpawnPointsTransform.GetChild((int)i).transform;
 
     }
 
     public Vector3 GetPlayer1SpawnPoint() {
-        return spawnPoint1;
+        return playerSpawnPoint1;
     }
     public Vector3 GetPlayer2SpawnPoint() {  
-        return spawnPoint2;
+        return playerSpawnPoint2;
     }
+
+    //Use bool to check whether a pickup has spawned at point
+    //
+
+
 
 }

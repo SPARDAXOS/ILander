@@ -34,3 +34,10 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: Jovan Room
+    preview: {fileID: 21300000, guid: 604ed52e746890e4891739bb79cea073, type: 3}
+    asset:
+      m_AssetGUID: 03cc8556ead478945907b98159a793e3
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
