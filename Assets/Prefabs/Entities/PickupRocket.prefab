@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 7539719627555803416}
   - component: {fileID: 7539719627555803417}
   - component: {fileID: 8412736955502964070}
-  - component: {fileID: 5580827854969948381}
   - component: {fileID: 4184603439622945960}
+  - component: {fileID: 6974209642638180669}
   m_Layer: 0
   m_Name: PickupRocket
   m_TagString: Untagged
@@ -113,18 +113,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.34, y: 0.4}
   m_EdgeRadius: 0
---- !u!114 &5580827854969948381
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7539719627555803422}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13902121ac8357d4f9dd0817124fb3f2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!95 &4184603439622945960
 Animator:
   serializedVersion: 4
@@ -145,3 +133,16 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &6974209642638180669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7539719627555803422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caf2a77c92e137a4db274ac5e665f2e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Potency: 0.3

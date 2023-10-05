@@ -2,14 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HealthPickup : Pickup
+public class FuelPickup : Pickup
 {
 
 
-
-
     public override void Activate(Player user) {
-        user.AddHealth(Potency);
+        user.AddFuel(Potency);
     }
     protected override void OnPickup(Player script) {
 

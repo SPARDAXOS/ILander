@@ -14,8 +14,9 @@ public class PlayerStats : ScriptableObject
     [Range(0.001f, 5.0f)] public float thrusterBreaksRate = 1.0f;
 
     [Space(10.0f)]
-    [Header("Health")]
+    [Header("Health/Fuel")]
     public float healthCap = 1.0f;
+    public float fuelCap = 1.0f;
 
     [Space(10.0f)]
     [Header("Movement")]

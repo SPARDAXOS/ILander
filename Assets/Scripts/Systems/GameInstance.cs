@@ -483,10 +483,13 @@ public class GameInstance : MonoBehaviour
         StartLoadingScreenProcess(LoadingScreenProcess.LOADING_LEVEL);
     }
     private void UnloadCurrentLevel() {
-
+        currentLoadedLevelScript.ReleaseResources();
         Destroy(currentLoadedLevel);
-        if (currentLoadedLevelHandle.IsValid())
+        if (currentLoadedLevelHandle.IsValid()) //???? wot
             Addressables.Release(currentLoadedLevelHandle);
+
+        currentLoadedLevel = null;
+        currentLoadedLevelScript = null;
     }
     private void StartLoadingScreenProcess(LoadingScreenProcess process) {
         if (process == LoadingScreenProcess.NONE)

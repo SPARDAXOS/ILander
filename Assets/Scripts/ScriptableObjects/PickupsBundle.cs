@@ -2,19 +2,22 @@ using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-[Serializable]
-public struct PickupData {
 
-    Sprite HUDIcon;
-    AssetReference asset;
-    float Potency;
+
+//Break this into 2 - Data and the entry for loading
+[Serializable]
+public struct PickupEntryData {
+
+    public string name;
+    public Sprite HUDIcon;
+    public AssetReference asset;
 }
 
 
 [CreateAssetMenu(fileName = "PickupsBundle", menuName = "Data/PickupsBundle", order = 7)]
 public class PickupsBundle : ScriptableObject
 {
-    public PickupData[] pickups;
+    public PickupEntryData[] pickups;
 
 
 

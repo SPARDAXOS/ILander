@@ -32,6 +32,7 @@ public class Player : NetworkBehaviour
 
 
     public float currentHealth = 0.0f;
+    public float currentFuel = 0.0f;
     public Pickup equippedPickup = null;
 
 
@@ -71,6 +72,7 @@ public class Player : NetworkBehaviour
     }
     public void SetupStartState() {
         currentHealth = playerCharacterData.statsData.healthCap;
+        currentFuel = playerCharacterData.statsData.fuelCap;
     }
 
     public void SetHUDReference() {
@@ -170,12 +172,16 @@ public class Player : NetworkBehaviour
             //Stuff
         }
     }
-
+    private void Boost() { 
+        //Use fuel
+        //AddForce in current up direction!
+    }
     
 
 
     public void RegisterPickup(Pickup script) {
         equippedPickup = script;
+        //script.GetData().HUDIcon To HUD!
     }
     private void UseEquippedPickup() {
         if (!equippedPickup)
@@ -183,15 +189,61 @@ public class Player : NetworkBehaviour
 
         equippedPickup.Activate(this);
         equippedPickup = null; //? is this good enough? no resets of any kind?
+
+        //UpdateHUD! SetEquippedPickupIcon(null);
     }
+
+
     public void AddHealth(float amount) {
         if (amount < 0.0f)
             amount *= -1;
 
-        Debug.Log("Health Pickup Used!");
+        currentHealth += amount;
+        if (currentHealth > playerCharacterData.statsData.healthCap)
+            currentHealth = playerCharacterData.statsData.healthCap;
 
-        //Currenthealth
+        Debug.Log("Health Pickup Used!");
+        //Update HUD!
     }
+    public void TakeDamage(float amount) {
+        if (amount < 0.0f)
+            amount *= -1;
+
+        currentHealth -= amount;
+        if (currentHealth <= 0.0f) {
+            currentHealth = 0.0f;
+            Debug.Log("Player " + gameObject.name + " is dead!");
+            //DEAD!
+        }
+
+        //Update HUD!
+        Debug.Log("Damage Taken!");
+    }
+    public void AddFuel(float amount) {
+        if (amount < 0.0f)
+            amount *= -1;
+
+        currentFuel += amount;
+        if (currentFuel > playerCharacterData.statsData.fuelCap)
+            currentFuel = playerCharacterData.statsData.fuelCap;
+
+        Debug.Log("Fuel Pickup Used!");
+        //Update HUD!
+    }
+    public void UseFuel(float amount) {
+        if (amount < 0.0f)
+            amount *= -1;
+
+        currentFuel -= amount;
+        if (currentFuel <= 0.0f) {
+            currentFuel = 0.0f;
+            //Out of fuel?
+        }
+
+        //Update HUD!
+        Debug.Log("Fuel Used! " + amount);
+    }
+
 
 
     public void SetSpriteVisible(bool state) {

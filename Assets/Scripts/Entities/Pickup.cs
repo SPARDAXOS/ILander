@@ -4,24 +4,33 @@ using UnityEngine;
 
 public abstract class Pickup : MonoBehaviour
 {
-    private PickupData data;
-
-    private bool active = false;
+    [SerializeField] protected float Potency = 0.0f;
+    protected PickupEntryData entryData;
+    protected bool active = false;
 
     public void SetActive(bool state) {
         active = state;
+        gameObject.SetActive(state);
     }
     public bool GetActive() {
         return active;
     }
 
 
-    public void SetPickupData(PickupData data) {
-        this.data = data;
+    public void SetPickupData(PickupEntryData data) {
+        this.entryData = data;
+    }
+    public PickupEntryData GetData() { 
+        return entryData;
     }
 
 
     public abstract void Activate(Player user);
+    protected virtual void OnPickup(Player script) {
+        script.RegisterPickup(this);
+        SetActive(false);
+        gameObject.SetActive(false);
+    }
 
 
     private void OnTriggerEnter2D(Collider2D collision) {
@@ -29,8 +38,6 @@ public abstract class Pickup : MonoBehaviour
         if (!playerScript)
             return;
 
-        playerScript.RegisterPickup(this);
-        SetActive(false);
-        gameObject.SetActive(false);
+        OnPickup(playerScript);
     }
 }

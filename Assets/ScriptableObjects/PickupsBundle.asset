@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69688d3a41d79e041ae7e8f94b4c9494, type: 3}
+  m_Name: PickupsBundle
+  m_EditorClassIdentifier: 
+  pickups:
+  - name: Fuel
+    HUDIcon: {fileID: 0}
+    asset:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    Potency: 0.1
+  - name: Health
+    HUDIcon: {fileID: 0}
+    asset:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    Potency: 0.05
+  - name: Rocket
+    HUDIcon: {fileID: 21300000, guid: f687c66987b84c2489f339954ff932a8, type: 3}
+    asset:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    Potency: 0.2
