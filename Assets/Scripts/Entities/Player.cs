@@ -31,6 +31,10 @@ public class Player : NetworkBehaviour
     private Vector3 thrusterDirection = Vector2.zero;
 
 
+    public float currentHealth = 0.0f;
+    public Pickup equippedPickup = null;
+
+
     private SpriteRenderer spriteRendererComp;
     private NetworkObject networkObjectComp;
 
@@ -42,8 +46,6 @@ public class Player : NetworkBehaviour
         //Disable networking by defualt?
         SetupReferences();
         initialized = true;
-        Debug.Log("Initialized!");
-        //EnableInput(); Call this from instance instead at game start!
     }
     public void Tick() {
         if (!initialized) {
@@ -58,9 +60,6 @@ public class Player : NetworkBehaviour
         CheckInput();
         UpdateMovement();
     }
-
-
-
     private void SetupReferences() {
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
@@ -70,9 +69,13 @@ public class Player : NetworkBehaviour
         Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", true);
         
     }
+    public void SetupStartState() {
+        currentHealth = playerCharacterData.statsData.healthCap;
+    }
 
+    public void SetHUDReference() {
 
-
+    }
     public void SetPlayerType(PlayerType type) {
         currentPlayerType = type;
         if (type == PlayerType.PLAYER_1)
@@ -87,6 +90,8 @@ public class Player : NetworkBehaviour
         playerCharacterData = data;
 
         spriteRendererComp.sprite = data.shipSprite;
+        SetupStartState();
+
         //Apply HUD data! probably have 2 hud modes cause if online or not!
         //Apply data from it!
     }
@@ -166,8 +171,32 @@ public class Player : NetworkBehaviour
         }
     }
 
-    //SetMode? for coop and lan modes!
+    
 
+
+    public void RegisterPickup(Pickup script) {
+        equippedPickup = script;
+    }
+    private void UseEquippedPickup() {
+        if (!equippedPickup)
+            return;
+
+        equippedPickup.Activate(this);
+        equippedPickup = null; //? is this good enough? no resets of any kind?
+    }
+    public void AddHealth(float amount) {
+        if (amount < 0.0f)
+            amount *= -1;
+
+        Debug.Log("Health Pickup Used!");
+
+        //Currenthealth
+    }
+
+
+    public void SetSpriteVisible(bool state) {
+        spriteRendererComp.enabled = state;
+    }
     public void EnableInput() {
         activeControlScheme.boosterInput.Enable();
         activeControlScheme.rotationInput.Enable();

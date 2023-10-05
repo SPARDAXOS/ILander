@@ -42,6 +42,7 @@ public class CustomizationMenu : MonoBehaviour
 
     private GameObject startButtonGameObject = null;
     private GameObject readyButtonGameObject = null;
+    private TextMeshProUGUI readyButtonText = null;
 
     private GameObject player1ReadyCheckGameObject = null;
     private GameObject player2ReadyCheckGameObject = null;
@@ -99,6 +100,12 @@ public class CustomizationMenu : MonoBehaviour
         Utility.Validate(readyButtonGameObject, "Failed to get reference to ReadyButton - CustomizationMenu", true);
 
 
+        Transform readyTextTransform = readyButtonGameObject.transform.Find("ReadyText");
+        Utility.Validate(readyTextTransform, "Failed to get reference to ReadyText - CustomizationMenu", true);
+
+        readyButtonText = readyTextTransform.GetComponent<TextMeshProUGUI>();
+        Utility.Validate(readyButtonText, "Failed to get component TextMeshProUGUI for readyButtonText - CustomizationMenu", true);
+
         //Rename these to make it less confusing!
         Transform Player1Customizer = transform.Find("Player1Customizer").transform;
         Transform Player2Customizer = transform.Find("Player2Customizer").transform;
@@ -117,6 +124,7 @@ public class CustomizationMenu : MonoBehaviour
         player2ReadyCheckGameObject = Player2Customizer.Find("ReadyCheck").gameObject;
         Utility.Validate(player1ReadyCheckGameObject, "Failed to get reference to ReadyCheck1 - CustomizationMenu", true);
         Utility.Validate(player2ReadyCheckGameObject, "Failed to get reference to ReadyCheck2 - CustomizationMenu", true);
+
 
 
         //Player1 ColorPicker
@@ -484,6 +492,13 @@ public class CustomizationMenu : MonoBehaviour
         player1ColorPickerButton.gameObject.SetActive(!player1ReadyCheck);
         player1SpriteSwitchLeft.SetActive(!player1ReadyCheck);
         player1SpriteSwitchRight.SetActive(!player1ReadyCheck);
+
+        if (player1ReadyCheck)
+            readyButtonText.text = "Unready";
+        else
+            readyButtonText.text = "Ready";
+
+
         UpdatePlayer1ReadyCheck();
     }
 }

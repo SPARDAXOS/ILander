@@ -7,57 +7,92 @@ using ILanderUtility;
 
 public class Level : MonoBehaviour
 {
-    [SerializeField] private Transform player1SpawnPoint;
-    [SerializeField] private Transform player2SpawnPoint;
+    //SerializedField Pickups respawn time?
+
 
     private bool initialized = false;
 
-    private Vector3 playerSpawnPoint1;
-    private Vector3 playerSpawnPoint2;
+    private Vector3 player1SpawnPoint;
+    private Vector3 player2SpawnPoint;
+
+    private uint pickupsSpawnPointsCount = 0;
 
     private Transform[] pickupsSpawnPoints;
     private bool[] occupiedPickupsSpawnPoints;
 
-
+    public List<GameObject> pickupsPool;
 
     public void Initialize() {
         if (initialized)
             return;
 
         SetupReferences();
+        CreatePickupsPool();
+        RefreshAllPickupSpawns();
         initialized = true;
     }
+    public void Tick() {
+        if (!initialized) {
+            Debug.LogError("Attempted to tick uninitialized entity " + gameObject.name);
+            return;
+        }
+
+
+        UpdatePickupsSpawns();
+    }
+
 
     private void SetupReferences() {
 
-        if (!Utility.Validate(player1SpawnPoint, "No Player1SpawnPoint has been set for level " + gameObject.name, false))
-            playerSpawnPoint1 = Vector3.zero;
+        Transform player1SpawnPositionTransform = transform.Find("Player1SpawnPoint");
+        if (!Utility.Validate(player1SpawnPositionTransform, "No Player1SpawnPoint was found in level " + gameObject.name, false))
+            player1SpawnPoint = Vector3.zero;
         else
-            playerSpawnPoint1 = player1SpawnPoint.position;
-        if (!Utility.Validate(player2SpawnPoint, "No Player2SpawnPoint has been set for level " + gameObject.name, false))
-            playerSpawnPoint2 = Vector3.zero;
+            player1SpawnPoint = player1SpawnPositionTransform.position;
+
+        Transform player2SpawnPositionTransform = transform.Find("Player2SpawnPoint");
+        if (!Utility.Validate(player2SpawnPositionTransform, "No Player2SpawnPoint was found in level " + gameObject.name, false))
+            player2SpawnPoint = Vector3.zero;
         else
-            playerSpawnPoint2 = player2SpawnPoint.position;
+            player2SpawnPoint = player2SpawnPositionTransform.position;
 
 
-        //Transform PickupsSpawnPointsTransform = transform.Find("PickupSpawnPoints");
-        //pickupsSpawnPoints = new Transform[PickupsSpawnPointsTransform.childCount];
-        //occupiedPickupsSpawnPoints = new bool[PickupsSpawnPointsTransform.childCount];
-        //for (uint i = 0; i < PickupsSpawnPointsTransform.childCount; i++)
-        //    pickupsSpawnPoints[i] = PickupsSpawnPointsTransform.GetChild((int)i).transform;
+        //PickupPoints - Use amount to figure out Pickup Instansiations
+        Transform PickupsSpawnPointsTransform = transform.Find("PickupSpawnPoints");
+        pickupsSpawnPointsCount = (uint)PickupsSpawnPointsTransform.childCount;
+        pickupsSpawnPoints = new Transform[pickupsSpawnPointsCount];
+        occupiedPickupsSpawnPoints = new bool[pickupsSpawnPointsCount];
+        for (uint i = 0; i < PickupsSpawnPointsTransform.childCount; i++)
+            pickupsSpawnPoints[i] = PickupsSpawnPointsTransform.GetChild((int)i).transform;
 
     }
 
     public Vector3 GetPlayer1SpawnPoint() {
-        return playerSpawnPoint1;
+        return player1SpawnPoint;
     }
     public Vector3 GetPlayer2SpawnPoint() {  
-        return playerSpawnPoint2;
+        return player2SpawnPoint;
+    }
+    
+
+    private void CreatePickupsPool() {
+        if (pickupsSpawnPointsCount == 0)
+            return;
+
+        pickupsPool = new List<GameObject>((int)pickupsSpawnPointsCount);
+        for (uint i = 0; i < pickupsSpawnPointsCount; i++) {
+            //Need Projectiles Data
+            //Create All from one type!
+            //Morph them into other types by changing their data on demand
+
+
+        }
     }
 
-    //Use bool to check whether a pickup has spawned at point
-    //
+    private void RefreshAllPickupSpawns() {
+        //Spawns random stuff all over! Called at start!
+    }
+    private void UpdatePickupsSpawns() {
 
-
-
+    }
 }

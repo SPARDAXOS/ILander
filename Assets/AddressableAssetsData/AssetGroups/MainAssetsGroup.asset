@@ -105,6 +105,10 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/Levels/Level3.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 28c9dfb0f51dd5844ad92dea3a78c3a7
+    m_Address: Assets/Prefabs/HUD.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:
