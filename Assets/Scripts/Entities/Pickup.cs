@@ -17,8 +17,9 @@ public abstract class Pickup : MonoBehaviour
     }
 
 
+    //NO ? it doesnt need its own assetreference. Its just the spirte for the hud
     public void SetPickupData(PickupEntryData data) {
-        this.entryData = data;
+        entryData = data;
     }
     public PickupEntryData GetData() { 
         return entryData;

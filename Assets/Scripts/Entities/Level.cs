@@ -142,8 +142,8 @@ public class Level : MonoBehaviour
             GameObject Object = Instantiate(loadedPickupAssets[assetsNames[0]].Result);
             var script = Object.GetComponent<Pickup>();
             script.SetActive(false);
-            script.SetPickupData();
-
+            //script.SetPickupData();
+            //Have to set hud icon everytime i transform the pickup into the type i want.
             pickupsPool.Add(Object);
             //Need Projectiles Data
             //Create All from one type!

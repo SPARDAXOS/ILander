@@ -113,6 +113,18 @@ MonoBehaviour:
     m_Address: Assets/ScriptableObjects/PickupsBundle.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 3385c6d4c1620bf449c45e2a84bbe7db
+    m_Address: Assets/Prefabs/Entities/PickupRocket.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 509137ce41b75cd4cba03fa0dce1986d
+    m_Address: Assets/Prefabs/Entities/PickupFuel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9d712c622a9252944b1f913408495deb
+    m_Address: Assets/Prefabs/Entities/PickupHealth.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:
