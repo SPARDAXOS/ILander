@@ -9,7 +9,6 @@ using UnityEngine.AddressableAssets;
 public struct PickupEntryData {
 
     public string name;
-    public Sprite HUDIcon;
     public AssetReference asset;
 }
 

@@ -16,5 +16,6 @@ public class HealthPickup : Pickup
         Activate(script);
         SetActive(false);
         gameObject.SetActive(false);
+        levelScript.RegisterPickupDispawn(spawnPointIndex);
     }
 }

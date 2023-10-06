@@ -14,26 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pickups:
   - name: Fuel
-    HUDIcon: {fileID: 0}
     asset:
-      m_AssetGUID: 
+      m_AssetGUID: 509137ce41b75cd4cba03fa0dce1986d
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    Potency: 0.1
   - name: Health
-    HUDIcon: {fileID: 0}
     asset:
-      m_AssetGUID: 
+      m_AssetGUID: 9d712c622a9252944b1f913408495deb
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    Potency: 0.05
   - name: Rocket
-    HUDIcon: {fileID: 21300000, guid: f687c66987b84c2489f339954ff932a8, type: 3}
     asset:
-      m_AssetGUID: 
+      m_AssetGUID: 3385c6d4c1620bf449c45e2a84bbe7db
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    Potency: 0.2

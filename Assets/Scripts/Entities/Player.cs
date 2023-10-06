@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using ILanderUtility;
 using Unity.Netcode;
 using Unity.Multiplayer;
+using static GameInstance;
 
 public class Player : NetworkBehaviour
 {
@@ -26,17 +27,21 @@ public class Player : NetworkBehaviour
 
 
     private PlayerControlScheme activeControlScheme;
+    private HUD HUDScript;
 
     public float currentThrusterStrength = 0.0f;
-    private Vector3 thrusterDirection = Vector2.zero;
+    private Vector2 thrusterDirection = Vector2.zero;
 
 
     public float currentHealth = 0.0f;
     public float currentFuel = 0.0f;
     public Pickup equippedPickup = null;
 
+    private bool isMoving = false;
+    private bool isBoosting = false;
 
     private SpriteRenderer spriteRendererComp;
+    private Rigidbody2D rigidbodyComp;
     private NetworkObject networkObjectComp;
 
 
@@ -59,12 +64,25 @@ public class Player : NetworkBehaviour
             return;//mESSGE?
 
         CheckInput();
+    }
+    public void FixedTick() {
+        if (!initialized) {
+            Debug.LogError("Attempted to tick uninitialized entity - " + gameObject.name);
+            return;
+        }
+
+        if (isBoosting) {
+            Boost();
+        }
         UpdateMovement();
     }
     private void SetupReferences() {
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
         Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", true);
+
+        rigidbodyComp = GetComponent<Rigidbody2D>();
+        Utility.Validate(rigidbodyComp, "Failed to get reference to Rigidbody2D component - Player", true);
 
         networkObjectComp = GetComponent<NetworkObject>();
         Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", true);
@@ -73,10 +91,12 @@ public class Player : NetworkBehaviour
     public void SetupStartState() {
         currentHealth = playerCharacterData.statsData.healthCap;
         currentFuel = playerCharacterData.statsData.fuelCap;
+        UpdateAllHUDData();
+        //Remember own spawn location? SetSpawnPoint()?
     }
 
-    public void SetHUDReference() {
-
+    public void SetHUDReference(HUD script) {
+        HUDScript = script;
     }
     public void SetPlayerType(PlayerType type) {
         currentPlayerType = type;
@@ -84,53 +104,57 @@ public class Player : NetworkBehaviour
             activeControlScheme = player1ControlScheme;
         else if (type == PlayerType.PLAYER_2)
             activeControlScheme = player2ControlScheme;
-
-        //Other stuff?
     }
-    //Get skin instead! Change skin to data and data to stats?
     public void SetPlayerData(PlayerCharacterData data) {
         playerCharacterData = data;
-
         spriteRendererComp.sprite = data.shipSprite;
-        SetupStartState();
-
-        //Apply HUD data! probably have 2 hud modes cause if online or not!
-        //Apply data from it!
     }
     public void SetPlayerColor(Color color) {
         spriteRendererComp.color = color;
     }
 
+    private void UpdateAllHUDData() {
+        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+        HUDScript.SetPickupIcon(currentPlayerType, null);
+        HUDScript.SetCharacterPortrait(currentPlayerType, playerCharacterData.portraitSprite);
+    }
 
     private void CheckInput()
     {
+        bool rotating = activeControlScheme.rotationInput.IsPressed();
+
+
+        isMoving = activeControlScheme.movementInput.IsPressed();
+        isBoosting = activeControlScheme.boostInput.triggered;
+
+
+
         //Break into 2 funcs - rot and move
-        if (activeControlScheme.boosterInput.IsPressed()) {
-            float inputValue = activeControlScheme.boosterInput.ReadValue<float>();
-            if (inputValue < 0.0f)
-                BreakThruster();
-            else if (inputValue > 0.0f)
-                AccelerateThruster();
+       // if (moving) {
+       //     float inputValue = activeControlScheme.movementInput.ReadValue<float>();
+       //     if (inputValue < 0.0f)
+       //         BreakThruster();
+       //     else if (inputValue > 0.0f)
+       //         AccelerateThruster();
+       //
+       //     thrusterDirection = new Vector2(transform.up.x, transform.up.y); //* playerCharacterData.statsData.steeringRate;
+       // }
+       // else if (currentThrusterStrength > 0.0f)
+       //     DeccelerateThruster();
 
-            thrusterDirection = Vector3.Normalize(thrusterDirection + transform.up * playerCharacterData.statsData.steeringRate);
 
 
-            //    //Temp
-            //    currentThrusterStrength = 7.0f;
+        //if (moving)
+        //    rigidbodyComp.gravityScale = 0.0f;
+        //else
+        //    rigidbodyComp.gravityScale = playerCharacterData.statsData.gravityScale;
 
-            //Vector3 current = transform.position;
-            //float Speed = currentThrusterStrength;
-            //if (inputValue < 0.0f)
-            //    Speed *= -1;
 
-            //transform.position = current + (transform.up * Speed * Time.deltaTime);
-        }
-        else if (currentThrusterStrength > 0.0f)
-            DeccelerateThruster();
 
-        if (activeControlScheme.rotationInput.IsPressed()) {
+        if (rotating) {
             float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
-            float Speed = playerCharacterData.statsData.turnRate;
+            float Speed = playerCharacterData.statsData.turnRate; //Delta
             if (inputValue < 0.0f)
                 Speed *= -1;
 
@@ -141,11 +165,58 @@ public class Player : NetworkBehaviour
         //Current Thruster value is constantly applied to movement!
         //NOTE: Carefull cause Tick is called in update and not FIXEDUPDATE!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
+    private void UpdateGravity() {
+        if (!isMoving)
+            rigidbodyComp.gravityScale = playerCharacterData.statsData.gravityScale;
+        else
+            rigidbodyComp.gravityScale = 0.0f;
+    }
     private void UpdateMovement() {
-        Vector3 current = transform.position;
-        //Add to current "velocity" to make it adjust instead of snap!
-        transform.position = current + (thrusterDirection * currentThrusterStrength * Time.deltaTime); 
-        //Unless i go with velocity instead. Assignment wants that i think!
+
+
+
+        //NOTE: Mechanic: the moment 2 players bump into each other, the one with the higher velocity pushes the other one away! 
+        //So when there are no pickups, pushing each other is the game!
+
+        if (!isMoving)
+            return;
+
+        Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
+        Vector2 velocity = rigidbodyComp.velocity + force;
+        if (velocity.x > playerCharacterData.statsData.maxVelocity)
+            velocity.x = playerCharacterData.statsData.maxVelocity;
+        if (velocity.y > playerCharacterData.statsData.maxVelocity)
+            velocity.y = playerCharacterData.statsData.maxVelocity;
+
+
+        rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
+
+
+
+        //Debug.Log("Value " + Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.accelerationRate);
+
+        //Vector2 result = currentThrusterStrength * Time.fixedDeltaTime * thrusterDirection;
+
+        //if (result.x > playerCharacterData.statsData.maxSpeed)
+        //    result.x = playerCharacterData.statsData.maxSpeed;
+        //if (result.y > playerCharacterData.statsData.maxSpeed)
+        //    result.y = playerCharacterData.statsData.maxSpeed;
+
+
+        //if (currentPlayerType == PlayerType.PLAYER_1) {
+        //    Debug.Log("Strength " + currentThrusterStrength);
+        //    Debug.Log("Direction " + thrusterDirection);
+        //    //Debug.Log("Velocity " + (Time.fixedDeltaTime * thrusterDirection * result));
+        //}
+
+        //rigidbodyComp.velocity = result;
+
+
+        //rigidbodyComp.AddForce(speed * Time.fixedDeltaTime * transform.up, ForceMode2D.Force);
+        //Debug.Log("Velocity " + (Time.fixedDeltaTime * transform.up * speed));
+
+
+        //rigidbodyComp.AddForce(Time.fixedDeltaTime * thrusterDirection * result, ForceMode2D.Force);
     }
 
 
@@ -172,16 +243,20 @@ public class Player : NetworkBehaviour
             //Stuff
         }
     }
-    private void Boost() { 
-        //Use fuel
-        //AddForce in current up direction!
+    private void Boost() {
+        if(currentFuel >= playerCharacterData.statsData.boostCost)
+            UseFuel(playerCharacterData.statsData.boostCost);
+        rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
+        Debug.Log("BOOST!");
     }
-    
+    private void Pause() {
+        GetInstance().SetGameState(GameState.PAUSE_MENU);
+    }
 
 
-    public void RegisterPickup(Pickup script) {
+    public void RegisterPickup(Pickup script, Sprite icon = null) {
         equippedPickup = script;
-        //script.GetData().HUDIcon To HUD!
+        HUDScript.SetPickupIcon(currentPlayerType, icon);
     }
     private void UseEquippedPickup() {
         if (!equippedPickup)
@@ -189,8 +264,7 @@ public class Player : NetworkBehaviour
 
         equippedPickup.Activate(this);
         equippedPickup = null; //? is this good enough? no resets of any kind?
-
-        //UpdateHUD! SetEquippedPickupIcon(null);
+        HUDScript.SetPickupIcon(currentPlayerType, null);
     }
 
 
@@ -203,7 +277,7 @@ public class Player : NetworkBehaviour
             currentHealth = playerCharacterData.statsData.healthCap;
 
         Debug.Log("Health Pickup Used!");
-        //Update HUD!
+        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
     }
     public void TakeDamage(float amount) {
         if (amount < 0.0f)
@@ -215,8 +289,7 @@ public class Player : NetworkBehaviour
             Debug.Log("Player " + gameObject.name + " is dead!");
             //DEAD!
         }
-
-        //Update HUD!
+        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
         Debug.Log("Damage Taken!");
     }
     public void AddFuel(float amount) {
@@ -228,7 +301,7 @@ public class Player : NetworkBehaviour
             currentFuel = playerCharacterData.statsData.fuelCap;
 
         Debug.Log("Fuel Pickup Used!");
-        //Update HUD!
+        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
     }
     public void UseFuel(float amount) {
         if (amount < 0.0f)
@@ -239,8 +312,7 @@ public class Player : NetworkBehaviour
             currentFuel = 0.0f;
             //Out of fuel?
         }
-
-        //Update HUD!
+        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
         Debug.Log("Fuel Used! " + amount);
     }
 
@@ -250,11 +322,17 @@ public class Player : NetworkBehaviour
         spriteRendererComp.enabled = state;
     }
     public void EnableInput() {
-        activeControlScheme.boosterInput.Enable();
+        activeControlScheme.movementInput.Enable();
         activeControlScheme.rotationInput.Enable();
+        activeControlScheme.boostInput.Enable();
+        activeControlScheme.pauseInput.Enable();
+        activeControlScheme.usePickupInput.Enable();
     }
     public void DisableInput() {
-        activeControlScheme.boosterInput.Disable();
+        activeControlScheme.movementInput.Disable();
         activeControlScheme.rotationInput.Disable();
+        activeControlScheme.boostInput.Disable();
+        activeControlScheme.pauseInput.Disable();
+        activeControlScheme.usePickupInput.Disable();
     }
 }

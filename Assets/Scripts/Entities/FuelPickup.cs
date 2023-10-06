@@ -14,5 +14,6 @@ public class FuelPickup : Pickup
         Activate(script);
         SetActive(false);
         gameObject.SetActive(false);
+        levelScript.RegisterPickupDispawn(spawnPointIndex);
     }
 }

@@ -255,8 +255,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f0e6dcefa7623442b3f9de006b2d835, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player1SpawnPoint: {fileID: 8084628071253668914}
-  player2SpawnPoint: {fileID: 7144273335482688001}
+  pickupsBundle: {fileID: 11400000, guid: 43f3f0506cea86d408c43e69ed21266b, type: 2}
+  assetsNames: []
+  pickupsPool: []
 --- !u!1 &6277713600723378003
 GameObject:
   m_ObjectHideFlags: 0

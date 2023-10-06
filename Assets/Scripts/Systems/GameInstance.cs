@@ -114,6 +114,7 @@ public class GameInstance : MonoBehaviour
     private GameObject eventSystem;
     private GameObject networkManager;
     private GameObject rpcManager;
+    private GameObject HUD;
 
     public Player player1Script;
     public Player player2Script;
@@ -131,6 +132,7 @@ public class GameInstance : MonoBehaviour
     private CountdownMenu countdownMenuScript;
     private NetworkManager networkManagerScript;
     public RpcManager rpcManagerScript;
+    private HUD HUDScript;
 
     private Camera mainCameraComponent;
 
@@ -170,6 +172,14 @@ public class GameInstance : MonoBehaviour
             break;
         }
     }
+    private void FixedUpdate() {
+        switch (currentGameState) {
+            case GameState.PLAYING:
+                UpdatePlayingFixedState();
+                break;
+        }
+    }
+
 
     public static GameInstance GetInstance() {
         return instance;
@@ -229,14 +239,27 @@ public class GameInstance : MonoBehaviour
 
     private void UpdatePlayingState() {
 
+        //ONLINE HERE
+
         //Questionable
         if (countdownMenuScript.IsAnimationPlaying())
             countdownMenuScript.Tick();
+
+        if (currentLoadedLevel)
+            currentLoadedLevelScript.Tick();
 
         player1Script.Tick();
         player2Script.Tick();
         mainCameraScript.Tick();
     }
+    private void UpdatePlayingFixedState() {
+
+        //ONLINE HERE
+
+        player1Script.FixedTick();
+        player2Script.FixedTick();
+    }
+
     private void UpdateLoadingState() {
         float value = 0.0f;
 
@@ -435,6 +458,11 @@ public class GameInstance : MonoBehaviour
             countdownMenuScript = countdownMenu.GetComponent<CountdownMenu>();
             countdownMenuScript.Initialize();
 
+            HUD = Instantiate(loadedAssets["HUD"].Result);
+            HUD.SetActive(false);
+            HUDScript = HUD.GetComponent<HUD>();
+            HUDScript.Initialize();
+
             Debug.Log("Finished Creating Entities!");
         }
         catch (Exception e) {
@@ -460,6 +488,7 @@ public class GameInstance : MonoBehaviour
         player1Script = player1.GetComponent<Player>();
         player1Script.Initialize();
         player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
+        player1Script.SetHUDReference(HUDScript);
 
         player2 = Instantiate(loadedAssets["Player"].Result);
         player2.name = "Player2";
@@ -468,6 +497,7 @@ public class GameInstance : MonoBehaviour
         player2Script = player2.GetComponent<Player>();
         player2Script.Initialize();
         player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
+        player2Script.SetHUDReference(HUDScript);
     }
 
 
@@ -553,6 +583,7 @@ public class GameInstance : MonoBehaviour
             player1Script = player1.GetComponent<Player>();
             player1Script.Initialize();
             player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
+            player1Script.SetHUDReference(HUDScript);
             player1NetworkObject = player1.GetComponent<NetworkObject>();
             player1NetworkObject.SpawnWithOwnership(id);
 
@@ -561,13 +592,15 @@ public class GameInstance : MonoBehaviour
             rpcManagerScript = rpcManager.GetComponent<RpcManager>(); //Need this when im not host!
             rpcManagerScript.Initialize();
             rpcManager.GetComponent<NetworkObject>().Spawn();
-        } else if (networkManagerScript.ConnectedClients.Count == 1) {
+        } 
+        else if (networkManagerScript.ConnectedClients.Count == 1) {
             player2 = Instantiate(loadedAssets["Player"].Result);
             player2.name = "Player2";
             //player2.SetActive(false); //This breaks it - causes mismatching
             player2Script = player2.GetComponent<Player>();
             player2Script.Initialize();
             player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
+            player2Script.SetHUDReference(HUDScript);
             player2NetworkObject = player2.GetComponent<NetworkObject>();
             player2NetworkObject.SpawnWithOwnership(id);
         }
@@ -611,6 +644,8 @@ public class GameInstance : MonoBehaviour
                 clientRpcParams.Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { player2NetworkObject.OwnerClientId } };
                 rpcManagerScript.RelayPlayerReferenceClientRpc(player1, Player.PlayerType.PLAYER_1, clientRpcParams);
                 rpcManagerScript.RelayPlayerReferenceClientRpc(player2, Player.PlayerType.PLAYER_2, clientRpcParams);
+                //HIDE SPRITES?
+
 
                 rpcManagerScript.ProccedToCustomizationMenuClientRpc();
                 Debug.Log("All players connected.");
@@ -638,6 +673,7 @@ public class GameInstance : MonoBehaviour
             player1Script = player1.GetComponent<Player>();
             player1Script.Initialize();
             player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
+            player1Script.SetHUDReference(HUDScript);
         } else if (type == Player.PlayerType.PLAYER_2) {
             player2 = reference;
             player2.name = "Player2";
@@ -645,6 +681,7 @@ public class GameInstance : MonoBehaviour
             player2Script = player2.GetComponent<Player>();
             player2Script.Initialize();
             player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
+            player2Script.SetHUDReference(HUDScript);
         }
     }
     //
@@ -769,12 +806,23 @@ public class GameInstance : MonoBehaviour
 
 
     private void SetupRoundStartState() {
+        //This func needs a online version!
+
+        if (networkManagerScript.IsHost) { 
+        
+        }
+
         player1Script.DisableInput(); //Kinda redundant but at least it disables the monitoring of the input by the input system
         player2Script.DisableInput();
         player1.SetActive(false);
         player2.SetActive(false);
         player1.transform.position = currentLoadedLevelScript.GetPlayer1SpawnPoint();
         player2.transform.position = currentLoadedLevelScript.GetPlayer2SpawnPoint();
+
+
+        player1Script.SetupStartState();
+        player2Script.SetupStartState();
+
         //ResetLevelSpawners and ResetPlayers (Pickups, health, speed, direction, etc)
     }
     private void SetupPlayState() {
@@ -790,6 +838,10 @@ public class GameInstance : MonoBehaviour
         player2Script.EnableInput();
         player1.SetActive(true);
         player2.SetActive(true);
+        HUD.SetActive(true);
+    }
+    private void EndMatch() {
+        //Stops all match related code
     }
 
 

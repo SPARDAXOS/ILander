@@ -32,7 +32,7 @@ Transform:
   m_GameObject: {fileID: 7684361885846780411}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3.2000003, y: 3.2000003, z: 0.2}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -112,9 +112,9 @@ BoxCollider2D:
     adaptiveTilingThreshold: 0.5
     drawMode: 2
     adaptiveTiling: 1
-  m_AutoTiling: 1
+  m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 10.24, y: 10.24}
+  m_Size: {x: 0.28, y: 0.31}
   m_EdgeRadius: 0
 --- !u!50 &5646678073670928432
 Rigidbody2D:
@@ -130,13 +130,13 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_GravityScale: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 38ab5d3276eda6a4c928449f8efb82d9, type: 2}
   m_Interpolate: 0
-  m_SleepingMode: 1
+  m_SleepingMode: 0
   m_CollisionDetection: 1
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!114 &7704044362802371798
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -151,6 +151,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player1ControlScheme: {fileID: 11400000, guid: a2ba8012250634841b30c09c3dbd180e, type: 2}
   player2ControlScheme: {fileID: 11400000, guid: e5f33f5b6f6f4364083b8b89357a278e, type: 2}
+  speed: 100
   initialized: 0
   currentThrusterStrength: 0
   currentHealth: 0

@@ -5,8 +5,9 @@ using UnityEngine;
 public abstract class Pickup : MonoBehaviour
 {
     [SerializeField] protected float Potency = 0.0f;
-    protected PickupEntryData entryData;
     protected bool active = false;
+    protected Level levelScript;
+    protected int spawnPointIndex = -1;
 
     public void SetActive(bool state) {
         active = state;
@@ -16,13 +17,11 @@ public abstract class Pickup : MonoBehaviour
         return active;
     }
 
-
-    //NO ? it doesnt need its own assetreference. Its just the spirte for the hud
-    public void SetPickupData(PickupEntryData data) {
-        entryData = data;
+    public void SetSpawnPointIndex(int index) {
+        spawnPointIndex = index;
     }
-    public PickupEntryData GetData() { 
-        return entryData;
+    public void SetLevelScript(Level script) {
+        levelScript = script;
     }
 
 
@@ -31,6 +30,7 @@ public abstract class Pickup : MonoBehaviour
         script.RegisterPickup(this);
         SetActive(false);
         gameObject.SetActive(false);
+        levelScript.RegisterPickupDispawn(spawnPointIndex);
     }
 
 

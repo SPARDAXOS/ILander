@@ -12,37 +12,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2793c4b4e43085e42973739fc0202136, type: 3}
   m_Name: Player1ControlScheme
   m_EditorClassIdentifier: 
-  boosterInput:
-    m_Name: Booster Input
+  movementInput:
+    m_Name: Movement Input
     m_Type: 0
     m_ExpectedControlType: 
-    m_Id: df3e04ee-3b1b-47af-81b1-4f8ea51f2ea3
+    m_Id: 234aa37d-735d-4662-8cd9-9256bb86af86
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 1D Axis
-      m_Id: a5f69fd7-b3f4-4bee-a29b-f087d99167d2
+      m_Id: 4b438903-cf11-492f-b932-7d79433024e4
       m_Path: 1DAxis
       m_Interactions: 
       m_Processors: 
       m_Groups: 
-      m_Action: Booster Input
+      m_Action: Movement Input
       m_Flags: 4
     - m_Name: negative
-      m_Id: 4ec96341-9e3f-41ca-9972-14f270d6701d
+      m_Id: 5d174ba5-ab4c-48c0-9c9d-f740a3c801cc
       m_Path: <Keyboard>/s
       m_Interactions: 
       m_Processors: 
       m_Groups: 
-      m_Action: Booster Input
+      m_Action: Movement Input
       m_Flags: 8
     - m_Name: positive
-      m_Id: 7e3ba950-4e85-4cfd-b27f-d727316dd602
+      m_Id: a19dec00-b67e-41f1-86f9-ceb42c1da0d6
       m_Path: <Keyboard>/w
       m_Interactions: 
       m_Processors: 
       m_Groups: 
-      m_Action: Booster Input
+      m_Action: Movement Input
       m_Flags: 8
     m_Flags: 0
   rotationInput:
@@ -77,4 +77,55 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Rotation Input
       m_Flags: 8
+    m_Flags: 0
+  boostInput:
+    m_Name: Boost Input
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: c407ac9f-cce1-4db7-885a-9a77e852fc8e
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 5f8659dd-f8bc-435e-bbd7-32e2bd8a2536
+      m_Path: <Keyboard>/q
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Boost Input
+      m_Flags: 0
+    m_Flags: 0
+  usePickupInput:
+    m_Name: Use Pickup Input
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: b0cb41f4-1079-44de-ad5f-eabb847ec47a
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 4e5f1c9e-b586-445c-b720-d17d0286dae6
+      m_Path: <Keyboard>/e
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Use Pickup Input
+      m_Flags: 0
+    m_Flags: 0
+  pauseInput:
+    m_Name: Pause Input
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 0594c3b2-3902-4682-9062-a7eff582e711
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 8439a80a-9c22-486e-aeb2-b9e2ba72fa56
+      m_Path: <Keyboard>/escape
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Pause Input
+      m_Flags: 0
     m_Flags: 0
