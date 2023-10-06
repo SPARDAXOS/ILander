@@ -62,6 +62,9 @@
         },
         {
             "m_Id": "13ce5c3c8f5b48e28ee763f3bb93fd49"
+        },
+        {
+            "m_Id": "ac19bae8480e4dedac5c7f65936f252a"
         }
     ],
     "m_GroupDatas": [],
@@ -182,6 +185,20 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
+                    "m_Id": "809cfa9bddf34bf496a73134dce9d522"
+                },
+                "m_SlotId": 7
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "ac19bae8480e4dedac5c7f65936f252a"
+                },
+                "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
                     "m_Id": "8a08b40edea64462ab592ad358a83851"
                 },
                 "m_SlotId": 0
@@ -227,12 +244,15 @@
     },
     "m_FragmentContext": {
         "m_Position": {
-            "x": 0.0,
-            "y": 200.0
+            "x": -2.384185791015625e-7,
+            "y": 210.00001525878907
         },
         "m_Blocks": [
             {
                 "m_Id": "ab05c89dee1448448bf7f28e62b503a8"
+            },
+            {
+                "m_Id": "ac19bae8480e4dedac5c7f65936f252a"
             }
         ]
     },
@@ -730,7 +750,7 @@
     "m_DefaultRefNameVersion": 1,
     "m_RefNameGeneratedByDisplayName": "MainTexture",
     "m_DefaultReferenceName": "_MainTexture",
-    "m_OverrideReferenceName": "",
+    "m_OverrideReferenceName": "_MainTex",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
     "m_CustomSlotLabel": "",
@@ -739,7 +759,7 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"fileID\":2800000,\"guid\":\"9e2c167b3f3c2d742a1564b4d12cacef\",\"type\":3}}",
+        "m_SerializedTexture": "{\"texture\":{\"fileID\":2800000,\"guid\":\"8da4e69e67a725c4dbed858685e1efff\",\"type\":3}}",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -1241,9 +1261,9 @@
         "m_Position": {
             "serializedVersion": "2",
             "x": -278.0000305175781,
-            "y": 199.99996948242188,
-            "width": 208.00003051757813,
-            "height": 435.0000305175781
+            "y": 200.0,
+            "width": 208.0,
+            "height": 435.0
         }
     },
     "m_Slots": [
@@ -1516,6 +1536,39 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
+    "m_ObjectId": "ac19bae8480e4dedac5c7f65936f252a",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "SurfaceDescription.Alpha",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.0,
+            "height": 0.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "c3cd90dc19fd4950840a3074ebc4ce56"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_SerializedDescriptor": "SurfaceDescription.Alpha"
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "baf16c618ba449b7a95e27b0cc738373",
     "m_Id": 5,
@@ -1591,6 +1644,21 @@
     "m_StageCapability": 3,
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "c3cd90dc19fd4950840a3074ebc4ce56",
+    "m_Id": 0,
+    "m_DisplayName": "Alpha",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Alpha",
+    "m_StageCapability": 2,
+    "m_Value": 1.0,
+    "m_DefaultValue": 1.0,
     "m_Labels": []
 }
 
@@ -1696,7 +1764,7 @@
         "m_Id": "a7e219bc6e634ec780dbc9376860c5fc"
     },
     "m_AllowMaterialOverride": false,
-    "m_SurfaceType": 0,
+    "m_SurfaceType": 1,
     "m_ZTestMode": 4,
     "m_ZWriteControl": 0,
     "m_AlphaMode": 0,

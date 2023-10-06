@@ -617,6 +617,7 @@ public class GameInstance : MonoBehaviour
         Debug.Log("Client has disconnected! Returning to main menu");
 
         StopNetworking();
+        UnloadCurrentLevel();
         SetGameState(GameState.MAIN_MENU);
     }
     private void ClientApprovalCallback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response) {
@@ -674,6 +675,7 @@ public class GameInstance : MonoBehaviour
             player1Script.Initialize();
             player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
             player1Script.SetHUDReference(HUDScript);
+            //HIDE SPRITE?
         } else if (type == Player.PlayerType.PLAYER_2) {
             player2 = reference;
             player2.name = "Player2";
@@ -682,6 +684,7 @@ public class GameInstance : MonoBehaviour
             player2Script.Initialize();
             player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
             player2Script.SetHUDReference(HUDScript);
+            //HIDE SPRITE?
         }
     }
     //
@@ -808,8 +811,14 @@ public class GameInstance : MonoBehaviour
     private void SetupRoundStartState() {
         //This func needs a online version!
 
-        if (networkManagerScript.IsHost) { 
-        
+
+        if (currentGameMode == GameMode.COOP) {
+
+        }
+        else if (currentGameMode == GameMode.LAN) {
+            if (networkManagerScript.IsHost) {
+
+            }
         }
 
         player1Script.DisableInput(); //Kinda redundant but at least it disables the monitoring of the input by the input system
@@ -833,6 +842,9 @@ public class GameInstance : MonoBehaviour
         currentGameState = GameState.PLAYING;
     }
     private void StartMatch() {
+
+        //This here needs online stuff too. to enable sprite and not game object?
+
         Debug.Log("Match started!");
         player1Script.EnableInput();
         player2Script.EnableInput();

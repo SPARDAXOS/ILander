@@ -32,12 +32,15 @@ public class Player : NetworkBehaviour
     public float currentThrusterStrength = 0.0f;
     private Vector2 thrusterDirection = Vector2.zero;
 
+    public bool whilemoving = false;
+
 
     public float currentHealth = 0.0f;
     public float currentFuel = 0.0f;
     public Pickup equippedPickup = null;
 
     private bool isMoving = false;
+    private bool isRotating = false;
     private bool isBoosting = false;
 
     private SpriteRenderer spriteRendererComp;
@@ -58,12 +61,15 @@ public class Player : NetworkBehaviour
             Debug.LogError("Attempted to tick uninitialized entity - " + gameObject.name);
             return;
         }
-
-        //Problem is that the struct is not nullable. Either make it so or just roll with it!
-        if (currentPlayerType == PlayerType.NONE)
-            return;//mESSGE?
+        if (currentPlayerType == PlayerType.NONE) {
+            Debug.LogError("Attempting to tick player of type none : " + gameObject.name);
+            return;
+        }
 
         CheckInput();
+
+        if (isRotating)
+            UpdateRotation(); //idk if should be in fixed input!
     }
     public void FixedTick() {
         if (!initialized) {
@@ -71,10 +77,14 @@ public class Player : NetworkBehaviour
             return;
         }
 
-        if (isBoosting) {
+
+        UpdateGravity();
+        UpdateDrag();
+
+        if (isBoosting)
             Boost();
-        }
-        UpdateMovement();
+        if (isMoving)
+            UpdateMovement();
     }
     private void SetupReferences() {
 
@@ -104,7 +114,15 @@ public class Player : NetworkBehaviour
             activeControlScheme = player1ControlScheme;
         else if (type == PlayerType.PLAYER_2)
             activeControlScheme = player2ControlScheme;
+
+        player2ControlScheme.pauseInput.performed += PauseInputCallback;
     }
+
+    private void PauseInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
+        Debug.Log("Pause callback");
+        Pause();
+    }
+
     public void SetPlayerData(PlayerCharacterData data) {
         playerCharacterData = data;
         spriteRendererComp.sprite = data.shipSprite;
@@ -120,28 +138,29 @@ public class Player : NetworkBehaviour
         HUDScript.SetCharacterPortrait(currentPlayerType, playerCharacterData.portraitSprite);
     }
 
-    private void CheckInput()
-    {
-        bool rotating = activeControlScheme.rotationInput.IsPressed();
-
+    private void CheckInput() {
 
         isMoving = activeControlScheme.movementInput.IsPressed();
+        isRotating = activeControlScheme.rotationInput.IsPressed();
         isBoosting = activeControlScheme.boostInput.triggered;
+        //isUsingPickup = activeControlScheme.usePickupInput.triggered;
+        //pause
+
 
 
 
         //Break into 2 funcs - rot and move
-       // if (moving) {
-       //     float inputValue = activeControlScheme.movementInput.ReadValue<float>();
-       //     if (inputValue < 0.0f)
-       //         BreakThruster();
-       //     else if (inputValue > 0.0f)
-       //         AccelerateThruster();
-       //
-       //     thrusterDirection = new Vector2(transform.up.x, transform.up.y); //* playerCharacterData.statsData.steeringRate;
-       // }
-       // else if (currentThrusterStrength > 0.0f)
-       //     DeccelerateThruster();
+        // if (moving) {
+        //     float inputValue = activeControlScheme.movementInput.ReadValue<float>();
+        //     if (inputValue < 0.0f)
+        //         BreakThruster();
+        //     else if (inputValue > 0.0f)
+        //         AccelerateThruster();
+        //
+        //     thrusterDirection = new Vector2(transform.up.x, transform.up.y); //* playerCharacterData.statsData.steeringRate;
+        // }
+        // else if (currentThrusterStrength > 0.0f)
+        //     DeccelerateThruster();
 
 
 
@@ -152,24 +171,33 @@ public class Player : NetworkBehaviour
 
 
 
-        if (rotating) {
-            float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
-            float Speed = playerCharacterData.statsData.turnRate; //Delta
-            if (inputValue < 0.0f)
-                Speed *= -1;
-
-            transform.Rotate(new Vector3(0.0f, 0.0f, Speed));
-        }
-
         //NOTE: Input just increases or decreases the thrusters. 
         //Current Thruster value is constantly applied to movement!
         //NOTE: Carefull cause Tick is called in update and not FIXEDUPDATE!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    }
+
+
+
+
+    private void UpdateDrag() {
+        if (isMoving)
+            rigidbodyComp.drag = playerCharacterData.statsData.movingDragRate;
+        else
+            rigidbodyComp.drag = playerCharacterData.statsData.stoppedDragRate;
     }
     private void UpdateGravity() {
         if (!isMoving)
             rigidbodyComp.gravityScale = playerCharacterData.statsData.gravityScale;
         else
             rigidbodyComp.gravityScale = 0.0f;
+    }
+    private void UpdateRotation() {
+        float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
+        float Speed = playerCharacterData.statsData.turnRate; //Delta
+        if (inputValue < 0.0f)
+            Speed *= -1;
+
+        transform.Rotate(new Vector3(0.0f, 0.0f, Speed));
     }
     private void UpdateMovement() {
 
@@ -178,18 +206,31 @@ public class Player : NetworkBehaviour
         //NOTE: Mechanic: the moment 2 players bump into each other, the one with the higher velocity pushes the other one away! 
         //So when there are no pickups, pushing each other is the game!
 
-        if (!isMoving)
-            return;
+        //BUG: The cost for fuel
+        //BUG: Boosting input doesnt trigger most of the time
 
-        Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
-        Vector2 velocity = rigidbodyComp.velocity + force;
-        if (velocity.x > playerCharacterData.statsData.maxVelocity)
-            velocity.x = playerCharacterData.statsData.maxVelocity;
-        if (velocity.y > playerCharacterData.statsData.maxVelocity)
-            velocity.y = playerCharacterData.statsData.maxVelocity;
+        float inputValue = activeControlScheme.movementInput.ReadValue<float>();
+        //Break doesnt work its weird and abusable
+        if (inputValue < 0.0f) {
+            if (rigidbodyComp.velocity.y > 0.0f)
+                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x, rigidbodyComp.velocity.y - 0.01f);
+            if (rigidbodyComp.velocity.x > 0.0f)
+                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x - 0.01f, rigidbodyComp.velocity.y);
+        } 
+        else if (inputValue > 0.0f) {
+
+            Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
+            Vector2 velocity = rigidbodyComp.velocity + force;
+            if (velocity.x > playerCharacterData.statsData.maxVelocity)
+                velocity.x = playerCharacterData.statsData.maxVelocity;
+            if (velocity.y > playerCharacterData.statsData.maxVelocity)
+                velocity.y = playerCharacterData.statsData.maxVelocity;
+
+            rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
+        }
 
 
-        rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
+
 
 
 
@@ -243,6 +284,9 @@ public class Player : NetworkBehaviour
             //Stuff
         }
     }
+
+
+
     private void Boost() {
         if(currentFuel >= playerCharacterData.statsData.boostCost)
             UseFuel(playerCharacterData.statsData.boostCost);
@@ -335,4 +379,34 @@ public class Player : NetworkBehaviour
         activeControlScheme.pauseInput.Disable();
         activeControlScheme.usePickupInput.Disable();
     }
+
+
+    public Vector2 GetVelocity() {
+        return rigidbodyComp.velocity;
+    }
+    public void ApplyImpulse(Vector2 direction, float force) {
+        rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
+    }
+    private void OnCollisionEnter2D(Collision2D collision) {
+        var script = collision.gameObject.GetComponent<Player>();
+        if (script) {
+            var otherPlayerVelocity = script.GetVelocity();
+            float otherPlayerForce = otherPlayerVelocity.magnitude;
+            float ownForce = rigidbodyComp.velocity.magnitude;
+
+            //Add = to make both fly away?
+            if (ownForce > otherPlayerForce) {
+                Debug.Log("I triggered it " + gameObject.name);
+                script.ApplyImpulse(transform.up, 500.0f);
+            }
+            else
+                Debug.Log("I couldnt " + gameObject.name);
+
+            //NOTE: Doesnt work! both can not trigger and even trigger it! do same thing or similar for touching geometry but make damage propotional to speed
+        }
+
+
+
+    }
+
 }

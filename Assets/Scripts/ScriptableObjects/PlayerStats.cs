@@ -26,6 +26,8 @@ public class PlayerStats : ScriptableObject
     [Range(1.0f, 1000.0f)] public float boostStrength = 400.0f;
     [Range(1.0f, 100.0f)] public float turnRate = 10.0f;
     [Range(0.0f, 10.0f)] public float gravityScale = 0.2f;
+    [Range(0.0f, 10.0f)] public float movingDragRate = 1.6f;
+    [Range(0.0f, 10.0f)] public float stoppedDragRate = 0.8f;
 
 
 

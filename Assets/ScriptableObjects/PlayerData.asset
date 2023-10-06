@@ -18,7 +18,12 @@ MonoBehaviour:
   thrusterBreaksRate: 1
   healthCap: 1
   fuelCap: 1
+  boostCost: 0.2
+  maxVelocity: 100
+  accelerationRate: 343
+  boostStrength: 400
   turnRate: 1
-  maxSpeed: 20
-  gravityScale: 5
+  gravityScale: 0.2
+  movingDragRate: 1.2
+  stoppedDragRate: 0.8
   steeringRate: 0.005

@@ -37,6 +37,10 @@ public class RpcManager : NetworkBehaviour
     public void RelayLevelSelectorRoleClientRpc(ClientRpcParams clientRpcParameters = default) {
         levelSelectMenuScript.ActivateStartButton();
     }
+    [ClientRpc]
+    public void RelaySpawnPositionClientRpc(ClientRpcParams clientRpcParameters = default) {
+        //Might not even be needed. Just dont let the client move the player.
+    }
 
 
     //TODO: Avoid the senderID != self check if possible and use params instead to send 1 less packet each time!
