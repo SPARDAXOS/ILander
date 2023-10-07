@@ -42,6 +42,12 @@ public class Player : NetworkBehaviour
     private bool isMoving = false;
     private bool isRotating = false;
     private bool isBoosting = false;
+    private bool isUsingPickup = false;
+    private bool isPausingGame = false;
+
+    private bool usedPickup = false;
+    private bool usedBoost = false;
+    private bool pausedGame = false;
 
     private SpriteRenderer spriteRendererComp;
     private Rigidbody2D rigidbodyComp;
@@ -115,13 +121,11 @@ public class Player : NetworkBehaviour
         else if (type == PlayerType.PLAYER_2)
             activeControlScheme = player2ControlScheme;
 
-        player2ControlScheme.pauseInput.performed += PauseInputCallback;
+        activeControlScheme.usePickupInput.started += UsePickupInputCallback;
+        activeControlScheme.boostInput.started += BoostInputCallback;
+        activeControlScheme.pauseInput.started += PauseInputCallback;
     }
 
-    private void PauseInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
-        Debug.Log("Pause callback");
-        Pause();
-    }
 
     public void SetPlayerData(PlayerCharacterData data) {
         playerCharacterData = data;
@@ -139,44 +143,19 @@ public class Player : NetworkBehaviour
     }
 
     private void CheckInput() {
-
         isMoving = activeControlScheme.movementInput.IsPressed();
         isRotating = activeControlScheme.rotationInput.IsPressed();
-        isBoosting = activeControlScheme.boostInput.triggered;
-        //isUsingPickup = activeControlScheme.usePickupInput.triggered;
-        //pause
-
-
-
-
-        //Break into 2 funcs - rot and move
-        // if (moving) {
-        //     float inputValue = activeControlScheme.movementInput.ReadValue<float>();
-        //     if (inputValue < 0.0f)
-        //         BreakThruster();
-        //     else if (inputValue > 0.0f)
-        //         AccelerateThruster();
-        //
-        //     thrusterDirection = new Vector2(transform.up.x, transform.up.y); //* playerCharacterData.statsData.steeringRate;
-        // }
-        // else if (currentThrusterStrength > 0.0f)
-        //     DeccelerateThruster();
-
-
-
-        //if (moving)
-        //    rigidbodyComp.gravityScale = 0.0f;
-        //else
-        //    rigidbodyComp.gravityScale = playerCharacterData.statsData.gravityScale;
-
-
-
-        //NOTE: Input just increases or decreases the thrusters. 
-        //Current Thruster value is constantly applied to movement!
-        //NOTE: Carefull cause Tick is called in update and not FIXEDUPDATE!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
 
-
+    private void PauseInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
+        Pause();
+    }
+    private void BoostInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
+        Boost();
+    }
+    private void UsePickupInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
+        UseEquippedPickup();
+    }
 
 
     private void UpdateDrag() {
@@ -207,7 +186,6 @@ public class Player : NetworkBehaviour
         //So when there are no pickups, pushing each other is the game!
 
         //BUG: The cost for fuel
-        //BUG: Boosting input doesnt trigger most of the time
 
         float inputValue = activeControlScheme.movementInput.ReadValue<float>();
         //Break doesnt work its weird and abusable
@@ -228,62 +206,9 @@ public class Player : NetworkBehaviour
 
             rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
         }
-
-
-
-
-
-
-        //Debug.Log("Value " + Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.accelerationRate);
-
-        //Vector2 result = currentThrusterStrength * Time.fixedDeltaTime * thrusterDirection;
-
-        //if (result.x > playerCharacterData.statsData.maxSpeed)
-        //    result.x = playerCharacterData.statsData.maxSpeed;
-        //if (result.y > playerCharacterData.statsData.maxSpeed)
-        //    result.y = playerCharacterData.statsData.maxSpeed;
-
-
-        //if (currentPlayerType == PlayerType.PLAYER_1) {
-        //    Debug.Log("Strength " + currentThrusterStrength);
-        //    Debug.Log("Direction " + thrusterDirection);
-        //    //Debug.Log("Velocity " + (Time.fixedDeltaTime * thrusterDirection * result));
-        //}
-
-        //rigidbodyComp.velocity = result;
-
-
-        //rigidbodyComp.AddForce(speed * Time.fixedDeltaTime * transform.up, ForceMode2D.Force);
-        //Debug.Log("Velocity " + (Time.fixedDeltaTime * transform.up * speed));
-
-
-        //rigidbodyComp.AddForce(Time.fixedDeltaTime * thrusterDirection * result, ForceMode2D.Force);
     }
 
 
-
-    private void AccelerateThruster() {
-        currentThrusterStrength += playerCharacterData.statsData.thrusterAccelerationRate * Time.deltaTime;
-        if (currentThrusterStrength >= playerCharacterData.statsData.thrusterStrengthLimit) {
-            currentThrusterStrength = playerCharacterData.statsData.thrusterStrengthLimit;
-            //Stuff
-        }
-    }
-    private void DeccelerateThruster() {
-        currentThrusterStrength -= playerCharacterData.statsData.thrusterDecelerationRate * Time.deltaTime;
-        if (currentThrusterStrength <= 0.0f) {
-            currentThrusterStrength = 0.0f;
-            //Stuff
-        }
-    }
-    private void BreakThruster() {
-        Debug.Log("Breaks!");
-        currentThrusterStrength -= playerCharacterData.statsData.thrusterBreaksRate * Time.deltaTime;
-        if (currentThrusterStrength <= 0.0f) {
-            currentThrusterStrength = 0.0f;
-            //Stuff
-        }
-    }
 
 
 
@@ -306,7 +231,7 @@ public class Player : NetworkBehaviour
         if (!equippedPickup)
             return;
 
-        equippedPickup.Activate(this);
+        equippedPickup.Activate(this); //This also makes it reset and deactivate itself so no worries
         equippedPickup = null; //? is this good enough? no resets of any kind?
         HUDScript.SetPickupIcon(currentPlayerType, null);
     }

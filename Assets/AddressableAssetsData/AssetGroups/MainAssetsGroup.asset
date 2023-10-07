@@ -125,6 +125,18 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/Entities/PickupHealth.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: c75a5475f26318943bf70d629e6e435d
+    m_Address: Assets/Prefabs/Entities/PickupIceBomb.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a3174748d8ec43b4383076244ff556ea
+    m_Address: Assets/Prefabs/ProjectileRocket.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: eb953a1da2721054791aaafea13a80fc
+    m_Address: Assets/Prefabs/ProjectileIceBomb.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:

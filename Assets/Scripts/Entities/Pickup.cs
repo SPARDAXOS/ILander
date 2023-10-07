@@ -5,6 +5,7 @@ using UnityEngine;
 public abstract class Pickup : MonoBehaviour
 {
     [SerializeField] protected float Potency = 0.0f;
+
     protected bool active = false;
     protected Level levelScript;
     protected int spawnPointIndex = -1;
@@ -13,7 +14,7 @@ public abstract class Pickup : MonoBehaviour
         active = state;
         gameObject.SetActive(state);
     }
-    public bool GetActive() {
+    public bool IsActive() {
         return active;
     }
 
@@ -29,7 +30,6 @@ public abstract class Pickup : MonoBehaviour
     protected virtual void OnPickup(Player script) {
         script.RegisterPickup(this);
         SetActive(false);
-        gameObject.SetActive(false);
         levelScript.RegisterPickupDispawn(spawnPointIndex);
     }
 

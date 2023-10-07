@@ -4,20 +4,20 @@ using UnityEngine.AddressableAssets;
 
 
 
-//Break this into 2 - Data and the entry for loading
+
 [Serializable]
-public struct PickupEntryData {
+public struct PickupEntry {
 
     public string name;
-    public AssetReference asset;
+    public AssetReference assetReference;
+    public Projectile.ProjectileType associatedProjectile;
 }
 
 
 [CreateAssetMenu(fileName = "PickupsBundle", menuName = "Data/PickupsBundle", order = 7)]
 public class PickupsBundle : ScriptableObject
 {
-    public PickupEntryData[] pickups;
-
+    public PickupEntry[] pickups;
 
 
 

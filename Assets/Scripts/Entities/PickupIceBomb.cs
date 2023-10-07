@@ -2,16 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RocketPickup : Pickup
+public class PickupIceBomb : Pickup
 {
     [SerializeField] private Sprite HUDIcon;
+    [SerializeField] private Projectile.ProjectileType associatedProjectileType;
 
-    //GetRefToRocket? idk how im gonna spawn the thing. 
+
 
 
     public override void Activate(Player user) {
-        
-
+        levelScript.SpawnProjectile(user, associatedProjectileType);
+        SetActive(false);
+        levelScript.RegisterPickupDispawn(spawnPointIndex);
     }
     protected override void OnPickup(Player script) {
         script.RegisterPickup(this, HUDIcon);
