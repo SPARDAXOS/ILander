@@ -26,7 +26,7 @@ public abstract class Pickup : MonoBehaviour
     }
 
 
-    public abstract void Activate(Player user);
+    public abstract bool Activate(Player user);
     protected virtual void OnPickup(Player script) {
         script.RegisterPickup(this);
         SetActive(false);

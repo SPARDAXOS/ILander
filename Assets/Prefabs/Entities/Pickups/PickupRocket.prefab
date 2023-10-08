@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 6974209642638180669}
   m_Layer: 0
   m_Name: PickupRocket
-  m_TagString: Untagged
+  m_TagString: Pickup
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -146,5 +146,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Potency: 0.2
-  HUDIcon: {fileID: 21300000, guid: b1959ca156be67546a9a208e0bbadbf0, type: 3}
+  HUDIcon: {fileID: 21300000, guid: dd1c54a16b7dd14498f7e9e8e3f584b4, type: 3}
   associatedProjectileType: 1

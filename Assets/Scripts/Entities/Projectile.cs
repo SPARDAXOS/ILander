@@ -7,21 +7,30 @@ public class Projectile : MonoBehaviour
         ROCKET,
         ICE_BOMB
     }
-    [SerializeField] protected ProjectileType type = ProjectileType.NONE;
 
-    [SerializeField] private float damage = 0.1f;
-    [SerializeField] private float speed = 10.0f;
-    [SerializeField] private float spawnOffset = 10.0f;
 
+    [SerializeField] protected float damage = 0.1f;
+    [SerializeField] protected float speed = 10.0f;
+    [SerializeField] protected Vector2 spawnOffset = new Vector2(0.5f, 0.5f);
+
+    
+    protected ProjectileType type = ProjectileType.NONE;
     protected bool active = false;
     protected Player ownerScript = null;
 
+    protected bool moving = false;
+
     protected Vector2 currentDirection = Vector2.zero;
+
+
+    protected BoxCollider2D boxCollider2DComp;
+    protected SpriteRenderer spriteRendererComp;
+
+
 
     public void SetActive(bool state) {
         active = state;
         gameObject.SetActive(state);
-
     }
     public bool IsActive() {
         return active;
@@ -29,50 +38,69 @@ public class Projectile : MonoBehaviour
     public ProjectileType GetProjectileType() {
         return type;
     }
-    private void ResetToStartState() {
+
+
+    virtual public void Initialize() {
+        type = ProjectileType.NONE;
+        spriteRendererComp = GetComponent<SpriteRenderer>();
+        boxCollider2DComp = GetComponent<BoxCollider2D>();
+        boxCollider2DComp.enabled = false;
+    }
+    virtual protected void ResetToStartState() {
         ownerScript = null;
         currentDirection = Vector2.zero;
         transform.position = Vector2.zero;
-    }
-    private void UpdateRotation() {
-
-        transform.localRotation = Quaternion.LookRotation(transform.forward, currentDirection);
+        moving = false;
+        boxCollider2DComp.enabled = false;
     }
 
-    virtual public void Shoot(Player owner) {
-        ownerScript = owner;
+    virtual public bool Shoot(Player owner) {
+        //Pos
         currentDirection = owner.transform.up;
-        Vector3 ownerPosition = owner.transform.position;
-        transform.position = new Vector3(ownerPosition.x + (spawnOffset * currentDirection.x), ownerPosition.y + (spawnOffset * currentDirection.y), ownerPosition.z);
-        SetActive(true);
+        Vector3 ownerPosition = owner.GetMuzzleFlashPosition();
+        transform.position = new Vector3(ownerPosition.x + (spawnOffset.x * currentDirection.x), ownerPosition.y + (spawnOffset.y * currentDirection.y), ownerPosition.z);
+        //Rot
         transform.localRotation = Quaternion.LookRotation(owner.transform.forward, owner.transform.up);
         transform.Rotate(0.0f, 0.0f, 90.0f); //Projectile sprite is facing right while player sprite is facing up
+
+        ownerScript = owner;
+        SetActive(true);
+        moving = true;
+        boxCollider2DComp.enabled = true;
+        return true;
+    }
+    virtual public void Dispawn() {
+        SetActive(false);
+        ResetToStartState();
+
     }
 
 
 
 
-
-    public void Tick() {
-
+    virtual public void Tick() {
 
 
 
-        UpdateMovement();
+        if (moving)
+            UpdateMovement();
     }
     virtual protected void UpdateMovement() {
         Vector2 result = currentDirection * speed * Time.deltaTime;
         transform.position += new Vector3(result.x, result.y, 0.0f);
     }
-    virtual protected void OnCollision(Collision2D collision) {
+    virtual protected void OnCollision(Collider2D collision) {
+        Player script = collision.gameObject.GetComponent<Player>();
+        if (script == ownerScript)
+            return;
 
         Debug.Log("I HIT SOMEONE!");
-        SetActive(false);
-        ResetToStartState();
+        Dispawn();
     }
 
 
-    private void OnCollisionEnter2D(Collision2D collision) {
+    private void OnTriggerEnter2D(Collider2D collision) {
+
         OnCollision(collision);
     }
 }

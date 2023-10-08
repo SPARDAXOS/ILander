@@ -144,9 +144,9 @@ public class Level : MonoBehaviour
 
             //Update queued entities
             if (queuedProjectileElements.ContainsKey(pickupEntry.associatedProjectile))
-                queuedProjectileElements[pickupEntry.associatedProjectile]++;
+                queuedProjectileElements[pickupEntry.associatedProjectile] += 2; //One for each player!
             else
-                queuedProjectileElements.Add(pickupEntry.associatedProjectile, 1);
+                queuedProjectileElements.Add(pickupEntry.associatedProjectile, 2);
 
             //Start loading asset if it has no entry
             if (!loadedProjectileAssets.ContainsKey(pickupEntry.associatedProjectile)) {
@@ -237,6 +237,7 @@ public class Level : MonoBehaviour
                 var gameObject = Instantiate(GetProjectileAsset(queue.Key));
                 Projectile projectile = gameObject.GetComponent<Projectile>();
                 projectile.SetActive(false);
+                projectile.Initialize();
 
                 if (i == 0)
                     projectilesPool.Initialize(projectile);
@@ -369,16 +370,17 @@ public class Level : MonoBehaviour
     }
     
 
-    public void SpawnProjectile(Player owner, Projectile.ProjectileType type) {
+    public bool SpawnProjectile(Player owner, Projectile.ProjectileType type) {
         if (type == Projectile.ProjectileType.NONE) {
             Debug.LogWarning("Received NONE as type in SpawnProjectile");
-            return;
+            return false;
+        }
+        if (!projectilePools.ContainsKey(type)) {
+            Debug.LogError("Unable to find projectiles pool associated with type " + type.ToString());
+            return false;
         }
 
-        if (!projectilePools.ContainsKey(type))
-            return;
-
-        projectilePools[type].SpawnProjectile(owner);
+        return projectilePools[type].SpawnProjectile(owner);
     }
 
     private void RefreshAllPickupSpawns() {

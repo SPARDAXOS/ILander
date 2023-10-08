@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class PickupHealth : Pickup
 {
-    public override void Activate(Player user) {
+    public override bool Activate(Player user) {
         user.AddHealth(Potency);
+        return true;
     }
     protected override void OnPickup(Player script) {
         Activate(script);

@@ -103,3 +103,9 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: PauseMenu
+    reference:
+      m_AssetGUID: 77053dcbabcff7f42b722d4ab8ce99a6
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0

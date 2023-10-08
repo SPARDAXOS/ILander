@@ -12,4 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a95a2664517e7a479739f68c967dc21, type: 3}
   m_Name: ProjectilesBundle
   m_EditorClassIdentifier: 
-  pickups: []
+  Entries:
+  - type: 1
+    assetReference:
+      m_AssetGUID: a3174748d8ec43b4383076244ff556ea
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - type: 2
+    assetReference:
+      m_AssetGUID: eb953a1da2721054791aaafea13a80fc
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0

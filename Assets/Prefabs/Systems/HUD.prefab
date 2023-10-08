@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 6735958783765051786}
   - component: {fileID: 8568845910505617477}
   - component: {fileID: 4375410003617520259}
+  - component: {fileID: 4294468349973474301}
   m_Layer: 5
   m_Name: FuelBarFill
   m_TagString: Untagged
@@ -136,7 +137,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.627451, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -153,6 +154,23 @@ MonoBehaviour:
   m_FillOrigin: 1
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &4294468349973474301
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1201122475383557545}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 0}
+  m_Animations:
+  - {fileID: 7400000, guid: e6cedad6900ec0a41a1e2f60f1519444, type: 2}
+  - {fileID: 7400000, guid: 6e06ac327b4c6914c9a205934e947a1f, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 0
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &2127933884647790986
 GameObject:
   m_ObjectHideFlags: 0
@@ -472,6 +490,7 @@ GameObject:
   - component: {fileID: 7657865239597799641}
   - component: {fileID: 8201805656506064312}
   - component: {fileID: 8887381821757030926}
+  - component: {fileID: 8187323973664712309}
   m_Layer: 5
   m_Name: Portrait
   m_TagString: Untagged
@@ -537,6 +556,23 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &8187323973664712309
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4714724082341218167}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: a7d212384f3cc6e46bebb97d0774205a, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: a7d212384f3cc6e46bebb97d0774205a, type: 2}
+  - {fileID: 7400000, guid: 4667187ff5b52ac41b0951968cd4439f, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 0
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &5163030600958566555
 GameObject:
   m_ObjectHideFlags: 0
@@ -663,6 +699,7 @@ GameObject:
   - component: {fileID: 5425187777608625064}
   - component: {fileID: 8656086970169731637}
   - component: {fileID: 6023167542995033414}
+  - component: {fileID: 5067960593418207707}
   m_Layer: 5
   m_Name: Portrait
   m_TagString: Untagged
@@ -728,6 +765,23 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &5067960593418207707
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5543939317106522090}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: a7d212384f3cc6e46bebb97d0774205a, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: a7d212384f3cc6e46bebb97d0774205a, type: 2}
+  - {fileID: 7400000, guid: 4667187ff5b52ac41b0951968cd4439f, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 0
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &5728271859728169639
 GameObject:
   m_ObjectHideFlags: 0
@@ -739,6 +793,7 @@ GameObject:
   - component: {fileID: 5969860944843297737}
   - component: {fileID: 8601113817920107708}
   - component: {fileID: 5093999871847453792}
+  - component: {fileID: 688118573941315994}
   m_Layer: 5
   m_Name: FuelBarFill
   m_TagString: Untagged
@@ -788,7 +843,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.6268611, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -805,6 +860,23 @@ MonoBehaviour:
   m_FillOrigin: 1
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &688118573941315994
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5728271859728169639}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 0}
+  m_Animations:
+  - {fileID: 7400000, guid: e6cedad6900ec0a41a1e2f60f1519444, type: 2}
+  - {fileID: 7400000, guid: 6e06ac327b4c6914c9a205934e947a1f, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 0
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &6879848693731871549
 GameObject:
   m_ObjectHideFlags: 0
@@ -892,6 +964,7 @@ GameObject:
   - component: {fileID: 4973193326861348637}
   - component: {fileID: 5291754793687717026}
   - component: {fileID: 5475865130047545655}
+  - component: {fileID: 6232901096614165413}
   m_Layer: 5
   m_Name: HealthBarFill
   m_TagString: Untagged
@@ -941,7 +1014,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 1, b: 0.32679844, a: 1}
+  m_Color: {r: 0, g: 1, b: 0.078431375, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -958,6 +1031,23 @@ MonoBehaviour:
   m_FillOrigin: 1
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &6232901096614165413
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7200286432966571226}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: 965b8130750ba814da0ebaba689d3f6e, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: 965b8130750ba814da0ebaba689d3f6e, type: 2}
+  - {fileID: 7400000, guid: 28e040e2bdb4d40448f139940724ad6a, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 0
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &8062668120675773282
 GameObject:
   m_ObjectHideFlags: 0
@@ -1123,6 +1213,7 @@ GameObject:
   - component: {fileID: 6232986388925092579}
   - component: {fileID: 1568992448110929470}
   - component: {fileID: 4799236860912729157}
+  - component: {fileID: 1857572300165483827}
   m_Layer: 5
   m_Name: HealthBarFill
   m_TagString: Untagged
@@ -1172,7 +1263,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 1, b: 0.32679844, a: 1}
+  m_Color: {r: 0, g: 1, b: 0.07870889, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1189,6 +1280,23 @@ MonoBehaviour:
   m_FillOrigin: 1
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &1857572300165483827
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8815758442672165238}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: 965b8130750ba814da0ebaba689d3f6e, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: 965b8130750ba814da0ebaba689d3f6e, type: 2}
+  - {fileID: 7400000, guid: 28e040e2bdb4d40448f139940724ad6a, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 0
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &8879380235826618824
 GameObject:
   m_ObjectHideFlags: 0

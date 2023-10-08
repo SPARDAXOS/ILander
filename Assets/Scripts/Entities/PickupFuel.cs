@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class PickupFuel : Pickup
 {
-    public override void Activate(Player user) {
+    public override bool Activate(Player user) {
         user.AddFuel(Potency);
+        return true;
     }
     protected override void OnPickup(Player script) {
         Activate(script);

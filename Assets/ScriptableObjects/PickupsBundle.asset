@@ -14,46 +14,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pickups:
   - name: Fuel
-    pickup:
+    assetReference:
       m_AssetGUID: 509137ce41b75cd4cba03fa0dce1986d
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    projectile:
-      m_AssetGUID: 
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0
+    associatedProjectile: 0
   - name: Health
-    pickup:
+    assetReference:
       m_AssetGUID: 9d712c622a9252944b1f913408495deb
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    projectile:
-      m_AssetGUID: 
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0
+    associatedProjectile: 0
   - name: Rocket
-    pickup:
+    assetReference:
       m_AssetGUID: 3385c6d4c1620bf449c45e2a84bbe7db
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    projectile:
-      m_AssetGUID: a3174748d8ec43b4383076244ff556ea
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0
+    associatedProjectile: 1
   - name: IceBomb
-    pickup:
+    assetReference:
       m_AssetGUID: c75a5475f26318943bf70d629e6e435d
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    projectile:
-      m_AssetGUID: eb953a1da2721054791aaafea13a80fc
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0
+    associatedProjectile: 2

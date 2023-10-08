@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5432787026842891958}
   - component: {fileID: 5432787026842891956}
   - component: {fileID: 460911660874065750}
+  - component: {fileID: 7641772048022472048}
   - component: {fileID: -4846503114566520768}
   m_Layer: 0
   m_Name: ProjectileRocket
@@ -96,7 +97,7 @@ BoxCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: -0.045390524, y: -0.013617091}
@@ -112,6 +113,26 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.53399146, y: 0.09521724}
   m_EdgeRadius: 0
+--- !u!95 &7641772048022472048
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5432787026842891959}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: e3fcc44a74ff6624c8ec088d27fde050, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!114 &-4846503114566520768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124,7 +145,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8854f834952a9374cb91a7c85ca6810e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 1
-  damage: 0.1
-  speed: 0.1
-  spawnOffset: 2
+  damage: 5
+  speed: 12
+  spawnOffset: {x: 0.5, y: 0.5}

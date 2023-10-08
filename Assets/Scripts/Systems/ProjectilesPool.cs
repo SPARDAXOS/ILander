@@ -54,14 +54,14 @@ public class ProjectilesPool<T> where T : Projectile
         pool.Add(element);
         return true;
     }
-    public void SpawnProjectile(Player owner) {
-        Debug.Log("Projectile spawned!");
-
+    public bool SpawnProjectile(Player owner) {
         var projectile = GetUnactiveProjectile();
-        if (!projectile)
-            return;
+        if (!projectile) {
+            Debug.LogWarning("Unable to spawn projectile due to none being unactive - ProjectilesPool_" + typeKey.ToString());
+            return false;
+        }
 
-        projectile.Shoot(owner);
+        return projectile.Shoot(owner); ;
     }
 
 

@@ -10,15 +10,17 @@ public class PickupIceBomb : Pickup
 
 
 
-    public override void Activate(Player user) {
-        levelScript.SpawnProjectile(user, associatedProjectileType);
-        SetActive(false);
-        levelScript.RegisterPickupDispawn(spawnPointIndex);
+    public override bool Activate(Player user) {
+        if (levelScript.SpawnProjectile(user, associatedProjectileType)) {
+            SetActive(false);
+            levelScript.RegisterPickupDispawn(spawnPointIndex);
+            return true;
+        }
+        return false;
     }
     protected override void OnPickup(Player script) {
         script.RegisterPickup(this, HUDIcon);
         SetActive(false);
-        gameObject.SetActive(false);
         levelScript.RegisterPickupDispawn(spawnPointIndex);
     }
 }

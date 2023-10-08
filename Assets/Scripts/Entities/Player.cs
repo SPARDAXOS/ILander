@@ -7,6 +7,7 @@ using ILanderUtility;
 using Unity.Netcode;
 using Unity.Multiplayer;
 using static GameInstance;
+using System;
 
 public class Player : NetworkBehaviour
 {
@@ -20,6 +21,9 @@ public class Player : NetworkBehaviour
 
     [SerializeField] private PlayerControlScheme player1ControlScheme;
     [SerializeField] private PlayerControlScheme player2ControlScheme;
+    [SerializeField] private Color frozenColor = Color.cyan;
+    [SerializeField] private Color hitEffectColor = Color.red;
+    [SerializeField] private float hitEffectDuration = 1.0f;
 
     public bool initialized = false;
     private PlayerCharacterData playerCharacterData; //Add Check to validate if player has data before doing any updates!
@@ -30,9 +34,9 @@ public class Player : NetworkBehaviour
     private HUD HUDScript;
 
     public float currentThrusterStrength = 0.0f;
-    private Vector2 thrusterDirection = Vector2.zero;
 
-    public bool whilemoving = false;
+
+    private Color defaultColor = Color.white;
 
 
     public float currentHealth = 0.0f;
@@ -41,15 +45,18 @@ public class Player : NetworkBehaviour
 
     private bool isMoving = false;
     private bool isRotating = false;
-    private bool isBoosting = false;
-    private bool isUsingPickup = false;
-    private bool isPausingGame = false;
+    private bool isFrozen = false;
+    private bool isDead = false;
 
-    private bool usedPickup = false;
-    private bool usedBoost = false;
-    private bool pausedGame = false;
+    private bool hitEffectOn = false;
 
+    private float freezeTimer = 0.0f;
+    private float hitEffectTimer = 0.0f;
+
+    private MuzzleFlashSpawner muzzleFlashSpawnerScript;
+    private ExplosionSpawner explosionSpawnerScript;
     private SpriteRenderer spriteRendererComp;
+    private BoxCollider2D boxCollider2DComp;
     private Rigidbody2D rigidbodyComp;
     private NetworkObject networkObjectComp;
 
@@ -60,6 +67,8 @@ public class Player : NetworkBehaviour
 
         //Disable networking by defualt?
         SetupReferences();
+        muzzleFlashSpawnerScript.Initialize();
+        explosionSpawnerScript.Initialize();
         initialized = true;
     }
     public void Tick() {
@@ -72,8 +81,18 @@ public class Player : NetworkBehaviour
             return;
         }
 
-        CheckInput();
+        if (isDead)
+            return;
 
+        if (isFrozen) {
+            UpdateFreezeTimer();
+            return;
+        }
+        if (hitEffectOn)
+            UpdateHitEffectTimer();
+
+        CheckInput();
+        
         if (isRotating)
             UpdateRotation(); //idk if should be in fixed input!
     }
@@ -82,17 +101,22 @@ public class Player : NetworkBehaviour
             Debug.LogError("Attempted to tick uninitialized entity - " + gameObject.name);
             return;
         }
+        if (isDead)
+            return;
 
 
         UpdateGravity();
         UpdateDrag();
-
-        if (isBoosting)
-            Boost();
         if (isMoving)
             UpdateMovement();
     }
     private void SetupReferences() {
+
+        Transform explosionSpawnerTransform = transform.Find("ExplosionSpawner");
+        Utility.Validate(explosionSpawnerTransform, "Failed to get reference to ExplosionSpawner gameobject - Player", true);
+
+        explosionSpawnerScript = explosionSpawnerTransform.GetComponent<ExplosionSpawner>();
+        Utility.Validate(explosionSpawnerScript, "Failed to get reference to DeathExplosionSpawner component - Player", true);
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
         Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", true);
@@ -100,14 +124,27 @@ public class Player : NetworkBehaviour
         rigidbodyComp = GetComponent<Rigidbody2D>();
         Utility.Validate(rigidbodyComp, "Failed to get reference to Rigidbody2D component - Player", true);
 
+        boxCollider2DComp = GetComponent<BoxCollider2D>();
+        Utility.Validate(boxCollider2DComp, "Failed to get reference to BoxCollider2D component - Player", true);
+
         networkObjectComp = GetComponent<NetworkObject>();
         Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", true);
-        
+
+        Transform muzzleFlashSpawnerTransformn = transform.Find("MuzzleFlashSpawner");
+        Utility.Validate(muzzleFlashSpawnerTransformn, "Failed to get reference to MuzzleFlashSpawner - Player", true);
+
+        muzzleFlashSpawnerScript = muzzleFlashSpawnerTransformn.GetComponent<MuzzleFlashSpawner>();
+        Utility.Validate(muzzleFlashSpawnerScript, "Failed to get reference to MuzzleFlashSpawner component - Player", true);
     }
     public void SetupStartState() {
         currentHealth = playerCharacterData.statsData.healthCap;
         currentFuel = playerCharacterData.statsData.fuelCap;
         UpdateAllHUDData();
+
+        //Timers and color effects
+        boxCollider2DComp.enabled = true;
+        isDead = false;
+        SetSpriteVisibility(true); //Questionable whether gameinstance does this or this
         //Remember own spawn location? SetSpawnPoint()?
     }
 
@@ -133,6 +170,7 @@ public class Player : NetworkBehaviour
     }
     public void SetPlayerColor(Color color) {
         spriteRendererComp.color = color;
+        defaultColor = color;
     }
 
     private void UpdateAllHUDData() {
@@ -148,13 +186,61 @@ public class Player : NetworkBehaviour
     }
 
     private void PauseInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
-        Pause();
+        GetInstance().PauseGame();
     }
     private void BoostInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
         Boost();
     }
     private void UsePickupInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
         UseEquippedPickup();
+    }
+
+
+    private void UpdateFreezeTimer() {
+        if (freezeTimer > 0.0f) {
+            freezeTimer -= Time.deltaTime;
+            if (freezeTimer < 0.0f)
+                RemoveFreeze();
+        }
+        else
+            RemoveFreeze();
+    }
+    private void RemoveFreeze() {
+        freezeTimer = 0.0f;
+        isFrozen = false;
+        EnableInput();
+        spriteRendererComp.color = defaultColor;
+    }
+    public void ApplyFreeze(float duration) {
+        if (isDead)
+            return;
+
+        freezeTimer = duration;
+        isFrozen = true;
+        DisableInput();
+        spriteRendererComp.color = frozenColor;
+    }
+
+
+    private void UpdateHitEffectTimer() {
+        if (hitEffectTimer > 0.0f) {
+            hitEffectTimer -= Time.deltaTime;
+            if (hitEffectTimer < 0.0f)
+                RemoveHitEffect();
+        }
+        else
+            RemoveHitEffect();
+    }
+    private void RemoveHitEffect() {
+        hitEffectOn = false;
+        spriteRendererComp.color = defaultColor;
+        hitEffectTimer = 0.0f;
+    }
+    private void ApplyHitEffect() {
+        hitEffectOn = true;
+        spriteRendererComp.color = hitEffectColor;
+        //Any camera shake or hit stop here!
+        hitEffectTimer = hitEffectDuration;
     }
 
 
@@ -213,13 +299,14 @@ public class Player : NetworkBehaviour
 
 
     private void Boost() {
-        if(currentFuel >= playerCharacterData.statsData.boostCost)
+        if (isDead)
+            return;
+
+        if (currentFuel >= playerCharacterData.statsData.boostCost) {
             UseFuel(playerCharacterData.statsData.boostCost);
-        rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
-        Debug.Log("BOOST!");
-    }
-    private void Pause() {
-        GetInstance().SetGameState(GameState.PAUSE_MENU);
+            rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
+            Debug.Log("BOOST!");
+        }
     }
 
 
@@ -228,16 +315,23 @@ public class Player : NetworkBehaviour
         HUDScript.SetPickupIcon(currentPlayerType, icon);
     }
     private void UseEquippedPickup() {
-        if (!equippedPickup)
+        if (!equippedPickup || isDead)
             return;
 
-        equippedPickup.Activate(this); //This also makes it reset and deactivate itself so no worries
-        equippedPickup = null; //? is this good enough? no resets of any kind?
-        HUDScript.SetPickupIcon(currentPlayerType, null);
+        //BUG: Shooting a projectile will also disable the pickup if it was respawned! 
+
+        //This also makes it reset and deactivate itself so no worries
+        if (equippedPickup.Activate(this)) {
+            equippedPickup = null; //? is this good enough? no resets of any kind?
+            HUDScript.SetPickupIcon(currentPlayerType, null);
+        }
     }
 
 
     public void AddHealth(float amount) {
+        if (isDead)
+            return;
+
         if (amount < 0.0f)
             amount *= -1;
 
@@ -249,6 +343,9 @@ public class Player : NetworkBehaviour
         HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
     }
     public void TakeDamage(float amount) {
+        if (isDead)
+            return;
+
         if (amount < 0.0f)
             amount *= -1;
 
@@ -256,12 +353,30 @@ public class Player : NetworkBehaviour
         if (currentHealth <= 0.0f) {
             currentHealth = 0.0f;
             Debug.Log("Player " + gameObject.name + " is dead!");
-            //DEAD!
+            Dead();
         }
+
+        ApplyHitEffect();
         HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
         Debug.Log("Damage Taken!");
     }
+    private void Dead() {
+        isDead = true;
+        DisableInput();
+        rigidbodyComp.velocity = Vector3.zero;
+        rigidbodyComp.gravityScale = 0.0f;
+        boxCollider2DComp.enabled = false;
+        SetSpriteVisibility(false);
+        explosionSpawnerScript.PlayAnimation("PlayerDead", DeadAnimationCallback);
+    }
+    public void DeadAnimationCallback() {
+        GetInstance().RegisterPlayerDeath(currentPlayerType);
+    }
+
     public void AddFuel(float amount) {
+        if (isDead)
+            return;
+
         if (amount < 0.0f)
             amount *= -1;
 
@@ -273,6 +388,9 @@ public class Player : NetworkBehaviour
         HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
     }
     public void UseFuel(float amount) {
+        if (isDead)
+            return;
+
         if (amount < 0.0f)
             amount *= -1;
 
@@ -282,12 +400,17 @@ public class Player : NetworkBehaviour
             //Out of fuel?
         }
         HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
-        Debug.Log("Fuel Used! " + amount);
+    }
+
+    public bool PlayMuzzleFlashAnim(string name, Action callback, Vector3 customSize) {
+        return muzzleFlashSpawnerScript.PlayAnimation(name, callback, customSize);
+    }
+    public Vector3 GetMuzzleFlashPosition() {
+        return muzzleFlashSpawnerScript.transform.position;
     }
 
 
-
-    public void SetSpriteVisible(bool state) {
+    public void SetSpriteVisibility(bool state) {
         spriteRendererComp.enabled = state;
     }
     public void EnableInput() {
@@ -310,9 +433,15 @@ public class Player : NetworkBehaviour
         return rigidbodyComp.velocity;
     }
     public void ApplyImpulse(Vector2 direction, float force) {
+        if (isDead)
+            return;
+
         rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
     }
     private void OnCollisionEnter2D(Collision2D collision) {
+        if (isDead)
+            return;
+
         var script = collision.gameObject.GetComponent<Player>();
         if (script) {
             var otherPlayerVelocity = script.GetVelocity();

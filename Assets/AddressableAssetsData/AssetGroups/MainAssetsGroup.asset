@@ -137,6 +137,14 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/ProjectileIceBomb.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 17ab6791bc63d1a479081fd25e612299
+    m_Address: Assets/ScriptableObjects/ProjectilesBundle.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 77053dcbabcff7f42b722d4ab8ce99a6
+    m_Address: Assets/Prefabs/Menus/PauseMenu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:

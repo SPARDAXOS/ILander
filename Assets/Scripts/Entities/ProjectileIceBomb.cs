@@ -4,14 +4,55 @@ using UnityEngine;
 
 public class ProjectileIceBomb : Projectile
 {
+    [SerializeField] private float freezeDuration = 1.0f;
+    private Animator animatorComp;
+    
 
-    protected override void OnCollision(Collision2D collision) {
-        //base.OnCollision(collision);
-        Debug.Log("I hit " + collision.gameObject.name);
-        //damage player for amount
-        //Dispawn by setting active to false
-        //Play explosion somehow
-        //Should add dispawner after time
+    private void DefaultHitReaction() {
+        animatorComp.SetTrigger("Hit"); //Will call dispawn at the end of anim
+        moving = false;
+        boxCollider2DComp.enabled = false;
+    }
+    private void PlayerHitReaction(Player script) {
+        script.TakeDamage(damage);
+        script.ApplyFreeze(freezeDuration);
+        animatorComp.SetTrigger("Hit");
+        moving = false;
+        boxCollider2DComp.enabled = false;
+    }
+
+    public override void Initialize() {
+        base.Initialize();
+
+        type = ProjectileType.ICE_BOMB;
+        animatorComp = GetComponent<Animator>();
+    }
+    public override bool Shoot(Player owner) {
+        ownerScript = owner;
+        return ownerScript.PlayMuzzleFlashAnim("ProjectileIceBomb", DelayedShoot, gameObject.transform.localScale);
+    }
+    public void DelayedShoot() {
+        base.Shoot(ownerScript);
+    }
+
+    protected override void OnCollision(Collider2D collision) {
+
+        //Add got damaged effect for players!
+
+        var tag = collision.tag;
+        if (tag == "Pickup")
+            return;
+
+        if (tag == "Player") {
+            Player script = collision.gameObject.GetComponent<Player>();
+            if (script == ownerScript)
+                return;
+            else
+                PlayerHitReaction(script);
+        }
+        else
+            DefaultHitReaction();
+
 
     }
 }

@@ -34,6 +34,7 @@ public class GameInstance : MonoBehaviour
         LEVEL_SELECT_MENU,
         LOADING_SCREEN,
         PAUSE_MENU,
+        RESULTS_MENU,
         PLAYING
     }
     public enum GameMode
@@ -99,6 +100,9 @@ public class GameInstance : MonoBehaviour
     public uint connectedClients = 0;
     public long clientID = -1;
 
+    private uint player1Wins = 0;
+    private uint player2Wins = 0;
+
     private GameObject player1;
     private GameObject player2;
     private GameObject mainCamera;
@@ -115,6 +119,7 @@ public class GameInstance : MonoBehaviour
     private GameObject networkManager;
     private GameObject rpcManager;
     private GameObject HUD;
+    private GameObject pauseMenu;
 
     public Player player1Script;
     public Player player2Script;
@@ -133,8 +138,11 @@ public class GameInstance : MonoBehaviour
     private NetworkManager networkManagerScript;
     public RpcManager rpcManagerScript;
     private HUD HUDScript;
+    private PauseMenu pauseMenuScript;
 
     private Camera mainCameraComponent;
+
+    private bool matchStarted = false;
 
 
 
@@ -463,6 +471,13 @@ public class GameInstance : MonoBehaviour
             HUDScript = HUD.GetComponent<HUD>();
             HUDScript.Initialize();
 
+            pauseMenu = Instantiate(loadedAssets["PauseMenu"].Result);
+            pauseMenu.SetActive(false);
+            pauseMenuScript = pauseMenu.GetComponent<PauseMenu>();
+            //Init?
+            
+
+
             Debug.Log("Finished Creating Entities!");
         }
         catch (Exception e) {
@@ -726,8 +741,14 @@ public class GameInstance : MonoBehaviour
     //FIX INIFINITE RELOADING OF ASSETS IN CASE OF ERROR! initialization loop
     public void SetGameState(GameState state) {
         switch (state) {
-            case GameState.MAIN_MENU:
-                transitionMenuScript.StartTransition(SetupMainMenuState);
+            case GameState.MAIN_MENU: {
+                    if (matchStarted) {
+                        Debug.LogWarning("You cant use SetGameState to quit a match. \n Use QuitMatch() instead!");
+                        return;
+                    }
+                    else
+                        transitionMenuScript.StartTransition(SetupMainMenuState);
+                }
                 break;
             case GameState.SETTINGS_MENU:
                 transitionMenuScript.StartTransition(SetupSettingsMenuState);
@@ -748,7 +769,7 @@ public class GameInstance : MonoBehaviour
                 Debug.LogWarning("You cant use SetGameState to transition into a loading screen \n StartLoadingScreenProcess is used instead for internal use only!");
                 break;
             case GameState.PAUSE_MENU:
-                SetupPauseMenuState();
+                Debug.LogWarning("You cant use SetGameState to transition into a pause menu \n Use PauseGame/UnpauseGame instead!");
                 break;
             case GameState.PLAYING:
                 transitionMenuScript.StartTransition(SetupPlayState);
@@ -800,11 +821,88 @@ public class GameInstance : MonoBehaviour
         loadingScreen.SetActive(true);
         currentGameState = GameState.LOADING_SCREEN;
     }
+
+
+    //NOTE: SINCE I HAVE CONTROL, I COULD PAUSE BY JUST NOT UPDATING. but physics, anim and such will break stuff..
+    //DELETE
     private void SetupPauseMenuState() {
-        //Hide HUDs
+        HideAllMenus();
         EnableMouseCursor();
-        //mainMenu.SetActive(true);
+        HUD.gameObject.SetActive(false); //Or should the menu do it?
+        pauseMenu.SetActive(true);
+        //Careful online disconnection
+        player1Script.DisableInput();
+        player2Script.DisableInput();
+
         currentGameState = GameState.PAUSE_MENU;
+        if (currentGameMode == GameMode.COOP)
+            Time.timeScale = 0.0f;
+    }
+
+    //Also remove the above function i guess
+    //Use this api and remove pause menu from set game state!
+    public void PauseGame() {
+        HideAllMenus();
+        EnableMouseCursor();
+        currentGameState = GameState.PAUSE_MENU;
+        HUD.gameObject.SetActive(false);
+        pauseMenu.SetActive(true);
+        //Careful online disconnection
+        player1Script.DisableInput();
+        player2Script.DisableInput();
+
+        if (currentGameMode == GameMode.COOP)
+            Time.timeScale = 0.0f;
+    }
+    public void UnpauseGame() {
+        HideAllMenus();
+        DisableMouseCursor();
+        currentGameState = GameState.PLAYING;
+        HUD.gameObject.SetActive(true);
+        pauseMenu.SetActive(false);
+        //Careful online disconnection
+        player1Script.EnableInput();
+        player2Script.EnableInput();
+
+        if (currentGameMode == GameMode.COOP)
+            Time.timeScale = 1.0f;
+    }
+
+    //API for quiting matches instead of setgamestate to mainmenu - Put check in setgamestate in case match was running?
+    public void QuitMatch() {
+
+        //General
+        //SetStateToMainMenu
+        //Reset GameMode
+        //matchStarted = false; ON DISCONNECTION TOO!
+        //Unload Level!
+
+        //COOP
+        //Delete both players
+        //Reset GameMode
+
+        //Online
+        //Stop Networking
+        //
+    }
+    public void RegisterPlayerDeath(Player.PlayerType type) {
+        if (type == Player.PlayerType.NONE)
+            return;
+
+        if (type == Player.PlayerType.PLAYER_1) {
+            player2Wins++;
+
+            //Check if player reached score goal
+            //-Yes Trigger score update but set callback to switch to results menu
+            //-No trigger score update but set callback to reset round?
+
+            Debug.Log("Player 1 dead");
+        }
+        else if (type == Player.PlayerType.PLAYER_2) {
+            player1Wins++;
+
+            Debug.Log("Player 2 dead");
+        }
     }
 
 
@@ -829,7 +927,7 @@ public class GameInstance : MonoBehaviour
         player2.transform.position = currentLoadedLevelScript.GetPlayer2SpawnPoint();
 
 
-        player1Script.SetupStartState();
+        player1Script.SetupStartState(); //This also sets sprite visibility internally! should be used to reset after death!
         player2Script.SetupStartState();
 
         //ResetLevelSpawners and ResetPlayers (Pickups, health, speed, direction, etc)
@@ -850,9 +948,13 @@ public class GameInstance : MonoBehaviour
         player2Script.EnableInput();
         player1.SetActive(true);
         player2.SetActive(true);
+        player1Wins = 0; //here?
+        player2Wins = 0;
         HUD.SetActive(true);
+        matchStarted = true;
     }
     private void EndMatch() {
+        matchStarted = false;
         //Stops all match related code
     }
 
@@ -880,6 +982,7 @@ public class GameInstance : MonoBehaviour
         countdownMenu.SetActive(false);
         loadingScreen.SetActive(false);
         connectionMenu.SetActive(false);
+        pauseMenu.SetActive(false);
     }
     private void EnableMouseCursor()
     {
