@@ -109,3 +109,15 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: ResultsMenu
+    reference:
+      m_AssetGUID: 1e058214cb6447d43b7419c401f2ac0e
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - name: MatchDirector
+    reference:
+      m_AssetGUID: d2283400df20882428afe474aff82cbc
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0

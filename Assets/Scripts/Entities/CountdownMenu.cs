@@ -24,7 +24,6 @@ public class CountdownMenu : MonoBehaviour
     }
 
     public void Tick() {
-        //ADD THIS TO THE REST!
         if (!initialized) {
             Debug.LogError("Attempted to tick uninitialized entity - CountdownMenu");
             return;

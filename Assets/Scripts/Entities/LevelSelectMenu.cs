@@ -146,7 +146,7 @@ public class LevelSelectMenu : MonoBehaviour
             instance.GetRpcManagerScript().UpdateSelectedLevelIndexServerRpc(instance.GetClientID(), currentLevelIndex);
 
 
-        //TODO: Reset state or make gameinstance do it!
+        //TODO: Reset state or make gameinstance do it! THE SCOND THING
     }
 }
 

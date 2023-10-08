@@ -28,37 +28,32 @@ public class Player : NetworkBehaviour
     public bool initialized = false;
     private PlayerCharacterData playerCharacterData; //Add Check to validate if player has data before doing any updates!
     private PlayerType currentPlayerType = PlayerType.NONE;
-
-
-    private PlayerControlScheme activeControlScheme;
-    private HUD HUDScript;
-
-    public float currentThrusterStrength = 0.0f;
-
-
     private Color defaultColor = Color.white;
+    private Vector3 spawnPoint = Vector3.zero;
 
 
     public float currentHealth = 0.0f;
     public float currentFuel = 0.0f;
-    public Pickup equippedPickup = null;
 
-    private bool isMoving = false;
-    private bool isRotating = false;
-    private bool isFrozen = false;
-    private bool isDead = false;
+    private bool isMoving       = false;
+    private bool isRotating     = false;
+    private bool isFrozen       = false;
+    private bool isDead         = false;
 
     private bool hitEffectOn = false;
 
     private float freezeTimer = 0.0f;
     private float hitEffectTimer = 0.0f;
 
-    private MuzzleFlashSpawner muzzleFlashSpawnerScript;
-    private ExplosionSpawner explosionSpawnerScript;
-    private SpriteRenderer spriteRendererComp;
-    private BoxCollider2D boxCollider2DComp;
-    private Rigidbody2D rigidbodyComp;
-    private NetworkObject networkObjectComp;
+    public Pickup equippedPickup                            = null;
+    private HUD HUDScript                                   = null;
+    private PlayerControlScheme activeControlScheme         = null;
+    private MuzzleFlashSpawner muzzleFlashSpawnerScript     = null;
+    private ExplosionSpawner explosionSpawnerScript         = null;
+    private SpriteRenderer spriteRendererComp               = null;
+    private BoxCollider2D boxCollider2DComp                 = null;
+    private Rigidbody2D rigidbodyComp                       = null;
+    private NetworkObject networkObjectComp                 = null;
 
 
     public void Initialize() {
@@ -139,7 +134,12 @@ public class Player : NetworkBehaviour
     public void SetupStartState() {
         currentHealth = playerCharacterData.statsData.healthCap;
         currentFuel = playerCharacterData.statsData.fuelCap;
+        equippedPickup = null;
+        RemoveFreeze();
+        RemoveHitEffect();
         UpdateAllHUDData();
+
+        transform.position = spawnPoint;
 
         //Timers and color effects
         boxCollider2DComp.enabled = true;
@@ -148,6 +148,9 @@ public class Player : NetworkBehaviour
         //Remember own spawn location? SetSpawnPoint()?
     }
 
+    public void SetSpawnPoint(Vector3 position) {
+        spawnPoint = position;
+    }
     public void SetHUDReference(HUD script) {
         HUDScript = script;
     }
@@ -161,6 +164,14 @@ public class Player : NetworkBehaviour
         activeControlScheme.usePickupInput.started += UsePickupInputCallback;
         activeControlScheme.boostInput.started += BoostInputCallback;
         activeControlScheme.pauseInput.started += PauseInputCallback;
+    }
+
+    //Maybe overkill to get all data..
+    public PlayerCharacterData GetPlayerData() {
+        return playerCharacterData;
+    }
+    public float GetCurrentHealth() {
+        return currentHealth;
     }
 
 
@@ -271,7 +282,7 @@ public class Player : NetworkBehaviour
         //NOTE: Mechanic: the moment 2 players bump into each other, the one with the higher velocity pushes the other one away! 
         //So when there are no pickups, pushing each other is the game!
 
-        //BUG: The cost for fuel
+        //NOTE IMPORTANT: WTF IS THIS LITERALS!½
 
         float inputValue = activeControlScheme.movementInput.ReadValue<float>();
         //Break doesnt work its weird and abusable

@@ -74,10 +74,10 @@ public class GameInstance : MonoBehaviour
 
     //Dont like names,  game, characters
     private LevelsBundle levelsBundle = null;
-    public AssetsBundle assetsBundle = null;
-    public GameSettings gameSettings = null;
-    public PlayerCharactersBundle playerCharactersBundle = null;
-    public Dictionary<string, AsyncOperationHandle<GameObject>> loadedAssets = new Dictionary<string, AsyncOperationHandle<GameObject>>();
+    private AssetsBundle assetsBundle = null;
+    private GameSettings gameSettings = null;
+    private PlayerCharactersBundle playerCharactersBundle = null;
+    private Dictionary<string, AsyncOperationHandle<GameObject>> loadedAssets = new Dictionary<string, AsyncOperationHandle<GameObject>>();
 
 
     //Terrible names
@@ -100,9 +100,6 @@ public class GameInstance : MonoBehaviour
     public uint connectedClients = 0;
     public long clientID = -1;
 
-    private uint player1Wins = 0;
-    private uint player2Wins = 0;
-
     private GameObject player1;
     private GameObject player2;
     private GameObject mainCamera;
@@ -120,6 +117,8 @@ public class GameInstance : MonoBehaviour
     private GameObject rpcManager;
     private GameObject HUD;
     private GameObject pauseMenu;
+    private GameObject resultsMenu;
+    private GameObject matchDirector;
 
     public Player player1Script;
     public Player player2Script;
@@ -139,10 +138,11 @@ public class GameInstance : MonoBehaviour
     public RpcManager rpcManagerScript;
     private HUD HUDScript;
     private PauseMenu pauseMenuScript;
+    private ResultsMenu resultsMenuScript;
+    private MatchDirector matchDirectorScript;
 
     private Camera mainCameraComponent;
 
-    private bool matchStarted = false;
 
 
 
@@ -237,6 +237,9 @@ public class GameInstance : MonoBehaviour
             case GameState.CUSTOMIZATION_MENU:
                 customizationMenuScript.Tick();
                 break;
+            case GameState.RESULTS_MENU:
+                resultsMenuScript.Tick();
+                break;
             case GameState.PLAYING:
                 UpdatePlayingState();
                 break;
@@ -256,6 +259,9 @@ public class GameInstance : MonoBehaviour
         if (currentLoadedLevel)
             currentLoadedLevelScript.Tick();
 
+        matchDirectorScript.Tick();
+
+        //Crashes in online
         player1Script.Tick();
         player2Script.Tick();
         mainCameraScript.Tick();
@@ -264,6 +270,7 @@ public class GameInstance : MonoBehaviour
 
         //ONLINE HERE
 
+        //Crashes in online
         player1Script.FixedTick();
         player2Script.FixedTick();
     }
@@ -474,9 +481,16 @@ public class GameInstance : MonoBehaviour
             pauseMenu = Instantiate(loadedAssets["PauseMenu"].Result);
             pauseMenu.SetActive(false);
             pauseMenuScript = pauseMenu.GetComponent<PauseMenu>();
-            //Init?
-            
 
+            resultsMenu = Instantiate(loadedAssets["ResultsMenu"].Result);
+            resultsMenu.SetActive(false);
+            resultsMenuScript = resultsMenu.GetComponent<ResultsMenu>();
+            resultsMenuScript.Initialize();
+
+            matchDirector = Instantiate(loadedAssets["MatchDirector"].Result);
+            matchDirector.SetActive(false);
+            matchDirectorScript = matchDirector.GetComponent<MatchDirector>();
+            matchDirectorScript.Initialize();
 
             Debug.Log("Finished Creating Entities!");
         }
@@ -488,6 +502,7 @@ public class GameInstance : MonoBehaviour
     private void SetupEntities() {
         //Setup any special dependencies before game start.
         customizationMenuScript.SetRenderCameraTarget(mainCameraComponent);
+        resultsMenuScript.SetRenderCameraTarget(mainCameraComponent);
         //Consider ditching this if possible
     }
     private void CreatePlayers() {
@@ -742,7 +757,7 @@ public class GameInstance : MonoBehaviour
     public void SetGameState(GameState state) {
         switch (state) {
             case GameState.MAIN_MENU: {
-                    if (matchStarted) {
+                    if (matchDirectorScript.HasMatchStarted()) {
                         Debug.LogWarning("You cant use SetGameState to quit a match. \n Use QuitMatch() instead!");
                         return;
                     }
@@ -770,6 +785,9 @@ public class GameInstance : MonoBehaviour
                 break;
             case GameState.PAUSE_MENU:
                 Debug.LogWarning("You cant use SetGameState to transition into a pause menu \n Use PauseGame/UnpauseGame instead!");
+                break;
+            case GameState.RESULTS_MENU:
+                transitionMenuScript.StartTransition(SetupResultsMenuState);
                 break;
             case GameState.PLAYING:
                 transitionMenuScript.StartTransition(SetupPlayState);
@@ -821,27 +839,29 @@ public class GameInstance : MonoBehaviour
         loadingScreen.SetActive(true);
         currentGameState = GameState.LOADING_SCREEN;
     }
-
-
-    //NOTE: SINCE I HAVE CONTROL, I COULD PAUSE BY JUST NOT UPDATING. but physics, anim and such will break stuff..
-    //DELETE
-    private void SetupPauseMenuState() {
+    private void SetupResultsMenuState() {
+        //No idea about online here yet!
+        //Director should call this when it detects a win!
         HideAllMenus();
         EnableMouseCursor();
-        HUD.gameObject.SetActive(false); //Or should the menu do it?
-        pauseMenu.SetActive(true);
-        //Careful online disconnection
-        player1Script.DisableInput();
-        player2Script.DisableInput();
+        resultsMenuScript.StartReturnTimer(12.0f); //Move to some value. Maybe in the menu itself! prefab serializedfield
+        resultsMenuScript.SetWinner(matchDirectorScript.GetWinner());
+        resultsMenuScript.SetPlayerPortrait(Player.PlayerType.PLAYER_1, player1Script.GetPlayerData().portraitSprite);
+        resultsMenuScript.SetPlayerPortrait(Player.PlayerType.PLAYER_2, player2Script.GetPlayerData().portraitSprite);
 
-        currentGameState = GameState.PAUSE_MENU;
-        if (currentGameMode == GameMode.COOP)
-            Time.timeScale = 0.0f;
+        //NOTE: On return to main menu, host kicks client! Delete players!
+
+        resultsMenu.SetActive(true);
+        currentGameState = GameState.RESULTS_MENU;
     }
 
-    //Also remove the above function i guess
-    //Use this api and remove pause menu from set game state!
+
+
+
     public void PauseGame() {
+        if (countdownMenuScript.IsAnimationPlaying())
+            return;
+
         HideAllMenus();
         EnableMouseCursor();
         currentGameState = GameState.PAUSE_MENU;
@@ -869,7 +889,117 @@ public class GameInstance : MonoBehaviour
     }
 
     //API for quiting matches instead of setgamestate to mainmenu - Put check in setgamestate in case match was running?
+
+    //Called by match director to dictate the state of the game
+    //StartMatch is the very start of a match
+    //Something for round? 
+    //EndMatch is when match is finished and we going to results
+    //QuitMatch is when the match is interrupted by disconnection or quiting through pause menu
+
+    //This is the start
+    private void SetupPlayState() {
+        HideAllMenus();
+        DisableMouseCursor();
+        //Call start match? 
+        //It calls start match on director which resets his data, and starts properly
+        //Maybe call transition first using countdown and that calls startmatch
+
+        //Note: Spawn points are decided at match start!
+        if (currentGameMode == GameMode.COOP) {
+            player1Script.SetSpawnPoint(currentLoadedLevelScript.GetPlayer1SpawnPoint());
+            player2Script.SetSpawnPoint(currentLoadedLevelScript.GetPlayer2SpawnPoint());
+        }
+        else if (currentGameMode == GameMode.LAN) {
+            if (networkManagerScript.IsHost) {
+                //SendRPC
+            }
+            else if (networkManagerScript.IsClient) {
+                //Nothing?
+            }
+        }
+
+        matchDirector.SetActive(true); //Should set to false when match over
+        SetupRoundStartState();
+        countdownMenuScript.StartAnimation(StartMatch);
+        currentGameState = GameState.PLAYING;
+    }
+
+    //These two are a lot simpler to look at now!!! 
+    private void SetupRoundStartState() {
+        //This func needs a online version!
+
+        //IMPORTANT NOTE: I could reuse those all over the place honsetly and do the online version once!
+
+
+
+
+        player1Script.DisableInput(); //Kinda redundant but at least it disables the monitoring of the input by the input system
+        player2Script.DisableInput();
+
+        //This part needs online version probably with disabling sprites instead. But physics tho? Disable rigidbody too then? seems to be what online solutions say!
+        player1.SetActive(false);
+        player2.SetActive(false);
+
+        player1Script.SetupStartState(); //This also sets sprite visibility internally! should be used to reset after death!
+        player2Script.SetupStartState();
+
+        HUD.SetActive(false); //?? semeed messing from the grouo dowon there
+
+        //Disable round timer either here or before this is called! im just worried since this one is used all over the place later!
+
+        //ResetLevelSpawners and ResetPlayers (Pickups, health, speed, direction, etc)
+    }
+    public void StartNewRound() {
+        SetupRoundStartState();
+        countdownMenuScript.StartAnimation(StartRound);
+    }
+    public void StartRound() {
+        //Need online version!
+        player1Script.EnableInput();
+        player2Script.EnableInput();
+
+        player1.SetActive(true);
+        player2.SetActive(true);
+
+        HUD.SetActive(true);
+    }
+
+    //StartMatch is called by countdown callback. It calls director startmatch
+    //EndMatch is called by director when match has concluded
+    //QuitMatch is called by game instance when disconnected or quit through pause menu. It calls director to quit game too.
+    private void StartMatch() {
+
+        Debug.Log("Match started!");
+        matchDirectorScript.StartMatch();
+        StartRound();
+    }
+    public void EndMatch() {
+
+        matchDirector.SetActive(false); // I THINK?
+
+        player1Script.DisableInput();
+        player2Script.DisableInput();
+
+        //Online stuff!
+        player1.SetActive(false);
+        player2.SetActive(false);
+
+        HUD.SetActive(false);
+
+        //FINAL NOTES ON THIS MATCH STUFF
+        //It works but there are minor stuff that needs fixing like timer starting on countdown start and it being visible during start countdown!
+        //BUG: Player 1 got points when player 1 was the one who died! And the score was correct! at the results menu! Something is reversed!
+
+        UnloadCurrentLevel(); //this is here! and in quit!
+        SetGameState(GameState.RESULTS_MENU);
+        //ToResults menu!
+        //Stops all match related code
+    }
     public void QuitMatch() {
+
+        matchDirectorScript.QuitMatch(); //Mandatory
+
+        matchDirector.SetActive(false); // I THINK?
 
         //General
         //SetStateToMainMenu
@@ -884,78 +1014,21 @@ public class GameInstance : MonoBehaviour
         //Online
         //Stop Networking
         //
+
+        //To main menu!
     }
+
+
     public void RegisterPlayerDeath(Player.PlayerType type) {
         if (type == Player.PlayerType.NONE)
             return;
-
-        if (type == Player.PlayerType.PLAYER_1) {
-            player2Wins++;
-
-            //Check if player reached score goal
-            //-Yes Trigger score update but set callback to switch to results menu
-            //-No trigger score update but set callback to reset round?
-
-            Debug.Log("Player 1 dead");
-        }
-        else if (type == Player.PlayerType.PLAYER_2) {
-            player1Wins++;
-
-            Debug.Log("Player 2 dead");
-        }
-    }
+        Debug.Log("Death registery by " + type.ToString() + " " + Time.frameCount);
 
 
-    private void SetupRoundStartState() {
-        //This func needs a online version!
+        //IMPORTANT NOTE: Its possible to trigger multiple death registries somehow! this could end the match immediately! FIX THIS!
 
 
-        if (currentGameMode == GameMode.COOP) {
-
-        }
-        else if (currentGameMode == GameMode.LAN) {
-            if (networkManagerScript.IsHost) {
-
-            }
-        }
-
-        player1Script.DisableInput(); //Kinda redundant but at least it disables the monitoring of the input by the input system
-        player2Script.DisableInput();
-        player1.SetActive(false);
-        player2.SetActive(false);
-        player1.transform.position = currentLoadedLevelScript.GetPlayer1SpawnPoint();
-        player2.transform.position = currentLoadedLevelScript.GetPlayer2SpawnPoint();
-
-
-        player1Script.SetupStartState(); //This also sets sprite visibility internally! should be used to reset after death!
-        player2Script.SetupStartState();
-
-        //ResetLevelSpawners and ResetPlayers (Pickups, health, speed, direction, etc)
-    }
-    private void SetupPlayState() {
-        HideAllMenus();
-        DisableMouseCursor();
-        SetupRoundStartState();
-        countdownMenuScript.StartAnimation(StartMatch);
-        currentGameState = GameState.PLAYING;
-    }
-    private void StartMatch() {
-
-        //This here needs online stuff too. to enable sprite and not game object?
-
-        Debug.Log("Match started!");
-        player1Script.EnableInput();
-        player2Script.EnableInput();
-        player1.SetActive(true);
-        player2.SetActive(true);
-        player1Wins = 0; //here?
-        player2Wins = 0;
-        HUD.SetActive(true);
-        matchStarted = true;
-    }
-    private void EndMatch() {
-        matchStarted = false;
-        //Stops all match related code
+        matchDirectorScript.ScorePoint(type);
     }
 
 
@@ -999,8 +1072,7 @@ public class GameInstance : MonoBehaviour
     public GameSettings GetGameSettings() {
         return gameSettings;
     }
-    public RpcManager GetRpcManagerScript()
-    {
+    public RpcManager GetRpcManagerScript() {
         return rpcManagerScript;
     }
     public CustomizationMenu GetCustomizationMenuScript() {
@@ -1008,6 +1080,12 @@ public class GameInstance : MonoBehaviour
     }
     public LevelSelectMenu GetLevelSelectMenuScript() {  
         return levelSelectMenuScript; 
+    }
+    public Player GetPlayer1Script() {
+        return player1Script;
+    }
+    public Player GetPlayer2Script() {
+        return player2Script;  
     }
 
 
