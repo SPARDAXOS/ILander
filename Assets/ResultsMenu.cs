@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class ResultsMenu : MonoBehaviour
 {
     private bool initialized = false;
-
+    [SerializeField] private float returnTimerDuration = 12.0f;
 
     private float returnTimer = 0.0f;
 
@@ -88,23 +88,25 @@ public class ResultsMenu : MonoBehaviour
     }
 
 
-    //Use match results instead of just player type since i need draw !
-    public void SetWinner(Player.PlayerType type) {
-        //^^
-        if (type == Player.PlayerType.NONE) {
+    public void SetWinner(MatchDirector.MatchResults results) {
+        if (results == MatchDirector.MatchResults.NONE) {
+            Debug.LogWarning("Invalid match results sent to ResultsMenu");
+            return;
+        }
+
+        if (results == MatchDirector.MatchResults.DRAW) {
             player1ResultsText.text = "Draw";
             player2ResultsText.text = "Draw";
             player1ResultsText.color = Color.yellow;
             player2ResultsText.color = Color.yellow;
         }
-
-        if (type == Player.PlayerType.PLAYER_1) {
+        else if (results == MatchDirector.MatchResults.PLAYER_1_WINS) {
             player1ResultsText.text = "Winner";
             player2ResultsText.text = "Loser";
             player1ResultsText.color = Color.green;
             player2ResultsText.color = Color.red;
         }
-        else if (type == Player.PlayerType.PLAYER_2) {
+        else if (results == MatchDirector.MatchResults.PLAYER_2_WINS) {
             player1ResultsText.text = "Loser";
             player2ResultsText.text = "Winner";
             player1ResultsText.color = Color.red;
@@ -121,8 +123,8 @@ public class ResultsMenu : MonoBehaviour
             player2PortraitSprite.sprite = portrait;
     }
 
-    public void StartReturnTimer(float duration) {
-        returnTimer = duration;
+    public void StartReturnTimer() {
+        returnTimer = returnTimerDuration;
         notificationText.text = "Returning to main menu in " + (int)returnTimer + " ..";
     }
     private void UpdateReturnTimer() {
@@ -131,7 +133,7 @@ public class ResultsMenu : MonoBehaviour
             notificationText.text = "Returning to main menu in " + (int)returnTimer + " ..";
             if (returnTimer <= 0.0f) {
                 returnTimer = 0.0f;
-                GetInstance().SetGameState(GameState.MAIN_MENU); //Questionable! calls special func cause some stuff needs to happen! THIS! Destroy players if offline, other wise do network stuff!
+                GetInstance().RestartGameState();
             }
         }
     }

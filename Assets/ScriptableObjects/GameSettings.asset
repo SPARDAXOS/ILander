@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed256105b1eed0e4c8087f31f0393540, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: 
-  defualtPreset: 0
+  defualtPreset: 3
   lowPreset:
     antiAliasing: 0
     textureQuality: 3

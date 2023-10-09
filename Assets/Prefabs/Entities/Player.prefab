@@ -393,7 +393,6 @@ MonoBehaviour:
   hitEffectColor: {r: 1, g: 0, b: 0, a: 1}
   hitEffectDuration: 1
   initialized: 0
-  currentThrusterStrength: 0
   currentHealth: 0
   currentFuel: 0
   equippedPickup: {fileID: 0}

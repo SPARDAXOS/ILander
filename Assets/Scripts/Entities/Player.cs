@@ -422,6 +422,24 @@ public class Player : NetworkBehaviour
     public void SetSpriteVisibility(bool state) {
         spriteRendererComp.enabled = state;
     }
+
+    /// <summary>
+    /// Meant for enabling networked entities.
+    /// </summary>
+    public void ActivateNetworkedEntity() {
+        spriteRendererComp.enabled = true;
+        boxCollider2DComp.enabled = true;
+        rigidbodyComp.isKinematic = false;
+    }
+    /// <summary>
+    /// Meant for disabling networked entities.
+    /// </summary>
+    public void DeactivateNetworkedEntity() {
+        spriteRendererComp.enabled = false;
+        boxCollider2DComp.enabled = false;
+        rigidbodyComp.isKinematic = true;
+    }
+
     public void EnableInput() {
         activeControlScheme.movementInput.Enable();
         activeControlScheme.rotationInput.Enable();

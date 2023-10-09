@@ -5,6 +5,13 @@ using static GameInstance;
 
 public class MatchDirector : MonoBehaviour
 {
+    public enum MatchResults {
+        NONE,
+        DRAW,
+        PLAYER_1_WINS,
+        PLAYER_2_WINS
+    }
+
     [Range(1, 10)]
     [SerializeField] uint pointsToWin = 2;
 
@@ -18,7 +25,7 @@ public class MatchDirector : MonoBehaviour
 
     public uint player1Score = 0;
     public uint player2Score = 0;
-    public Player.PlayerType winner = Player.PlayerType.NONE;
+    public MatchResults matchResults = MatchResults.NONE;
 
     public float roundTimer = 0.0f;
 
@@ -149,27 +156,15 @@ public class MatchDirector : MonoBehaviour
     //QutMatch is to be called by game instance in case of disconnection or quitting.
 
     private void StartNewRound() {
-        //Redo the whole process again? 
-        //Players invisible
-        //Players input off
-        //Reset player data
-        //Reset players to initial spawn pos
-        //Trigger countdown
-        //Reenable stuff on countdown callback!
-
-        //SetRoundTimerVisibility(false); //here?
-
-
         GetInstance().StartNewRound();
         ResetRoundTimer();
     }
     public void StartMatch() {
-        ResetMatchData();
         matchStarted = true;
+        ResetMatchData();
         ResetRoundTimer();
     }
     public void EndMatch() {
-        
         matchStarted = false;
         SetRoundTimerState(false);
         GetInstance().EndMatch();
@@ -186,51 +181,50 @@ public class MatchDirector : MonoBehaviour
         player1Score = 0;
         player2Score = 0;
         ScoreUpdateRefresh(); //Per match reset - will update to 0 - 0
-        winner = Player.PlayerType.NONE;
+        matchResults = MatchResults.NONE;
         roundTimer = 0.0f;
     }
 
 
     private void ScoreDrawPoints() {
-
         player1Score++;
         player2Score++;
 
         if (player1Score == pointsToWin && player2Score == pointsToWin)
-            winner = Player.PlayerType.NONE;
+            matchResults = MatchResults.DRAW;
         else if (player1Score == pointsToWin)
-            winner = Player.PlayerType.PLAYER_1;
+            matchResults = MatchResults.PLAYER_1_WINS;
         else if (player2Score == pointsToWin)
-            winner = Player.PlayerType.PLAYER_2;
+            matchResults = MatchResults.PLAYER_2_WINS;
 
         SetRoundTimerState(false);
         StartScoreUpdate(); //Triggers score update at each score point!
     }
     public void ScorePoint(Player.PlayerType type) {
-        if (type == Player.PlayerType.NONE || winner != Player.PlayerType.NONE)
+        if (type == Player.PlayerType.NONE || matchResults != MatchResults.NONE)
             return;
 
         if (type == Player.PlayerType.PLAYER_1) {
-            player2Score++;
-            if (player2Score == pointsToWin)
-                winner = Player.PlayerType.PLAYER_2;
-        }
-        else if (type == Player.PlayerType.PLAYER_2) {
             player1Score++;
             if (player1Score == pointsToWin)
-                winner = Player.PlayerType.PLAYER_1;
+                matchResults = MatchResults.PLAYER_1_WINS;
+        }
+        else if (type == Player.PlayerType.PLAYER_2) {
+            player2Score++;
+            if (player2Score == pointsToWin)
+                matchResults = MatchResults.PLAYER_2_WINS;
         }
 
         SetRoundTimerState(false);
         StartScoreUpdate(); //Triggers score update at each score point!
     }
     private bool IsWinnerDecided() {
-        if (winner != Player.PlayerType.NONE)
+        if (matchResults != MatchResults.NONE)
             return true;
         return false;
     }
-    public Player.PlayerType GetWinner() {
-        return winner;
+    public MatchResults GetWinner() {
+        return matchResults;
     }
     public bool HasMatchStarted() {
         return matchStarted;

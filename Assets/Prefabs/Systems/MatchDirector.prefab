@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointsToWin: 2
-  roundTimeLimit: 5
+  roundTimeLimit: 60
   matchStarted: 0
   player1Score: 0
   player2Score: 0

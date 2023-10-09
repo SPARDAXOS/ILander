@@ -82,8 +82,8 @@ public class GameInstance : MonoBehaviour
 
     //Terrible names
     private AsyncOperationHandle<GameObject> currentLoadedLevelHandle;
-    private GameObject currentLoadedLevel = null;
-    private Level currentLoadedLevelScript = null;
+    public GameObject currentLoadedLevel = null;
+    public Level currentLoadedLevelScript = null;
 
 
     private bool initializationInProgress = false;
@@ -100,8 +100,8 @@ public class GameInstance : MonoBehaviour
     public uint connectedClients = 0;
     public long clientID = -1;
 
-    private GameObject player1;
-    private GameObject player2;
+    public GameObject player1;
+    public GameObject player2;
     private GameObject mainCamera;
     private GameObject mainMenu;
     private GameObject settingsMenu;
@@ -114,7 +114,7 @@ public class GameInstance : MonoBehaviour
     private GameObject countdownMenu;
     private GameObject eventSystem;
     private GameObject networkManager;
-    private GameObject rpcManager;
+    public GameObject rpcManager;
     private GameObject HUD;
     private GameObject pauseMenu;
     private GameObject resultsMenu;
@@ -543,6 +543,11 @@ public class GameInstance : MonoBehaviour
         StartLoadingScreenProcess(LoadingScreenProcess.LOADING_LEVEL);
     }
     private void UnloadCurrentLevel() {
+        if (!currentLoadedLevel) {
+            Debug.LogWarning("Attempted to unload a level but currrentLoadedLevel was set to null!");
+            return;
+        }
+
         currentLoadedLevelScript.ReleaseResources();
         Destroy(currentLoadedLevel);
         if (currentLoadedLevelHandle.IsValid()) //???? wot
@@ -580,11 +585,10 @@ public class GameInstance : MonoBehaviour
     private void StopNetworking() {
         networkManagerScript.Shutdown();
         networkManager.SetActive(false);
-        clientID = -1;
-        currentConnectionState = ConnectionState.NONE;
-        currentGameMode = GameMode.NONE;
 
+        clientID = -1;
         connectedClients = 0;
+        currentConnectionState = ConnectionState.NONE;
 
         player1 = null;
         player2 = null;
@@ -594,10 +598,6 @@ public class GameInstance : MonoBehaviour
         player2NetworkObject = null;
         rpcManager = null;
         rpcManagerScript = null;
-
-        connectionMenuScript.SetConnectionMenuMode(ConnectionMenu.ConnectionMenuMode.NORMAL);
-        customizationMenuScript.SetCustomizationMenuMode(CustomizationMenu.CustomizationMenuMode.NORMAL);
-        levelSelectMenuScript.SetLevelSelectMenuMode(LevelSelectMenu.LevelSelectMenuMode.NORMAL);
     }
     private bool AddClient(ulong id) {
         if (connectedClients == 2) {
@@ -609,28 +609,28 @@ public class GameInstance : MonoBehaviour
         if (networkManagerScript.ConnectedClients.Count == 0) {
             player1 = Instantiate(loadedAssets["Player"].Result);
             player1.name = "Player1";
-            //player1.SetActive(false);
             player1Script = player1.GetComponent<Player>();
             player1Script.Initialize();
             player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
             player1Script.SetHUDReference(HUDScript);
+            player1Script.DeactivateNetworkedEntity();
             player1NetworkObject = player1.GetComponent<NetworkObject>();
             player1NetworkObject.SpawnWithOwnership(id);
 
             //Adds RpcManager as well
             rpcManager = Instantiate(loadedAssets["RpcManager"].Result);
-            rpcManagerScript = rpcManager.GetComponent<RpcManager>(); //Need this when im not host!
+            rpcManagerScript = rpcManager.GetComponent<RpcManager>();
             rpcManagerScript.Initialize();
             rpcManager.GetComponent<NetworkObject>().Spawn();
         } 
         else if (networkManagerScript.ConnectedClients.Count == 1) {
             player2 = Instantiate(loadedAssets["Player"].Result);
             player2.name = "Player2";
-            //player2.SetActive(false); //This breaks it - causes mismatching
             player2Script = player2.GetComponent<Player>();
             player2Script.Initialize();
             player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
             player2Script.SetHUDReference(HUDScript);
+            player2Script.DeactivateNetworkedEntity();
             player2NetworkObject = player2.GetComponent<NetworkObject>();
             player2NetworkObject.SpawnWithOwnership(id);
         }
@@ -646,9 +646,17 @@ public class GameInstance : MonoBehaviour
     private void ClientDisconnectedCallback(ulong id) {
         Debug.Log("Client has disconnected! Returning to main menu");
 
-        StopNetworking();
-        UnloadCurrentLevel();
-        SetGameState(GameState.MAIN_MENU);
+        //This whole thing will happen at GameEnd(); so double level unloading!
+
+        QuitMatch();
+        if (!matchDirectorScript.HasMatchStarted()) {
+            Debug.Log("GAME QUIT! - through Client Disconnection!");
+            
+
+            //StopNetworking();
+            //UnloadCurrentLevel(); //Here - 
+            //SetGameState(GameState.MAIN_MENU);
+        }
     }
     private void ClientApprovalCallback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response) {
         if (!networkManagerScript.IsHost)
@@ -675,11 +683,8 @@ public class GameInstance : MonoBehaviour
                 clientRpcParams.Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { player2NetworkObject.OwnerClientId } };
                 rpcManagerScript.RelayPlayerReferenceClientRpc(player1, Player.PlayerType.PLAYER_1, clientRpcParams);
                 rpcManagerScript.RelayPlayerReferenceClientRpc(player2, Player.PlayerType.PLAYER_2, clientRpcParams);
-                //HIDE SPRITES?
-
-
                 rpcManagerScript.ProccedToCustomizationMenuClientRpc();
-                Debug.Log("All players connected.");
+                Debug.Log("All players connected. \n Proceeding to CustomizationMenu.");
             }
         }
     }
@@ -696,7 +701,6 @@ public class GameInstance : MonoBehaviour
             return;
         }
 
-
         if (type == Player.PlayerType.PLAYER_1) {
             player1 = reference;
             player1.name = "Player1";
@@ -705,7 +709,7 @@ public class GameInstance : MonoBehaviour
             player1Script.Initialize();
             player1Script.SetPlayerType(Player.PlayerType.PLAYER_1);
             player1Script.SetHUDReference(HUDScript);
-            //HIDE SPRITE?
+            player1Script.DeactivateNetworkedEntity();
         } else if (type == Player.PlayerType.PLAYER_2) {
             player2 = reference;
             player2.name = "Player2";
@@ -714,7 +718,7 @@ public class GameInstance : MonoBehaviour
             player2Script.Initialize();
             player2Script.SetPlayerType(Player.PlayerType.PLAYER_2);
             player2Script.SetHUDReference(HUDScript);
-            //HIDE SPRITE?
+            player2Script.DeactivateNetworkedEntity();
         }
     }
     //
@@ -737,6 +741,8 @@ public class GameInstance : MonoBehaviour
             levelSelectMenuScript.SetLevelSelectMenuMode(LevelSelectMenu.LevelSelectMenuMode.ONLINE);
         }
     }
+
+    //I think its this that breaks the player character selection synchronization! Network sets it then this does it too!
     public void SetCharacterSelection(Player.PlayerType type, PlayerCharacterData data, Color color) {
         if (type == Player.PlayerType.NONE)
             return;
@@ -753,7 +759,6 @@ public class GameInstance : MonoBehaviour
 
 
 
-    //FIX INIFINITE RELOADING OF ASSETS IN CASE OF ERROR! initialization loop
     public void SetGameState(GameState state) {
         switch (state) {
             case GameState.MAIN_MENU: {
@@ -807,7 +812,7 @@ public class GameInstance : MonoBehaviour
         currentGameState = GameState.SETTINGS_MENU;
     }
     private void SetupGameModeMenuState() {
-        HideAllMenus(); //hmm, with transition,,,
+        HideAllMenus();
         EnableMouseCursor();
         gameModeMenu.SetActive(true);
         currentGameState = GameState.GAMEMODE_MENU;
@@ -822,12 +827,14 @@ public class GameInstance : MonoBehaviour
     private void SetupCustomizationMenuState() {
         HideAllMenus();
         EnableMouseCursor();
+        customizationMenuScript.SetupStartState();
         customizationMenu.SetActive(true);
         currentGameState = GameState.CUSTOMIZATION_MENU;
     }
     private void SetupLevelSelectMenuState() {
         HideAllMenus();
         EnableMouseCursor();
+        levelSelectMenuScript.SetupStartState();
         levelSelectMenu.SetActive(true);
         currentGameState = GameState.LEVEL_SELECT_MENU;
         if (currentGameMode == GameMode.LAN && networkManagerScript.IsHost)
@@ -841,15 +848,12 @@ public class GameInstance : MonoBehaviour
     }
     private void SetupResultsMenuState() {
         //No idea about online here yet!
-        //Director should call this when it detects a win!
         HideAllMenus();
         EnableMouseCursor();
-        resultsMenuScript.StartReturnTimer(12.0f); //Move to some value. Maybe in the menu itself! prefab serializedfield
+        resultsMenuScript.StartReturnTimer();
         resultsMenuScript.SetWinner(matchDirectorScript.GetWinner());
         resultsMenuScript.SetPlayerPortrait(Player.PlayerType.PLAYER_1, player1Script.GetPlayerData().portraitSprite);
         resultsMenuScript.SetPlayerPortrait(Player.PlayerType.PLAYER_2, player2Script.GetPlayerData().portraitSprite);
-
-        //NOTE: On return to main menu, host kicks client! Delete players!
 
         resultsMenu.SetActive(true);
         currentGameState = GameState.RESULTS_MENU;
@@ -888,7 +892,7 @@ public class GameInstance : MonoBehaviour
             Time.timeScale = 1.0f;
     }
 
-    //API for quiting matches instead of setgamestate to mainmenu - Put check in setgamestate in case match was running?
+
 
     //Called by match director to dictate the state of the game
     //StartMatch is the very start of a match
@@ -896,7 +900,9 @@ public class GameInstance : MonoBehaviour
     //EndMatch is when match is finished and we going to results
     //QuitMatch is when the match is interrupted by disconnection or quiting through pause menu
 
-    //This is the start
+
+
+    //This is the start - GameInstance stars match in director, director finishes match and calls EndMatch. (GameInstance calls QuitMatch on director in other cases!)
     private void SetupPlayState() {
         HideAllMenus();
         DisableMouseCursor();
@@ -971,37 +977,49 @@ public class GameInstance : MonoBehaviour
     //EndMatch is called by director when match has concluded
     //QuitMatch is called by game instance when disconnected or quit through pause menu. It calls director to quit game too.
     private void StartMatch() {
-
         Debug.Log("Match started!");
         matchDirectorScript.StartMatch();
         StartRound();
     }
     public void EndMatch() {
 
-        matchDirector.SetActive(false); // I THINK?
+        //Game mode specific
+        if (currentGameMode == GameMode.COOP) {
+            player1.SetActive(false);
+            player2.SetActive(false);
+        }
+        else if (currentGameMode == GameMode.LAN) {
+            player1Script.DeactivateNetworkedEntity();
+            player2Script.DeactivateNetworkedEntity();
+        }
 
+        //Across all game modes
+        matchDirector.SetActive(false);
+        HUD.SetActive(false);
+        
         player1Script.DisableInput();
         player2Script.DisableInput();
 
-        //Online stuff!
-        player1.SetActive(false);
-        player2.SetActive(false);
+        //MatchEnd/MatchQuit differences
+        //Level is unloaded on transition to ResultsScreen, in MatchQuit, its straight to the main menu.
 
-        HUD.SetActive(false);
-
-        //FINAL NOTES ON THIS MATCH STUFF
-        //It works but there are minor stuff that needs fixing like timer starting on countdown start and it being visible during start countdown!
-        //BUG: Player 1 got points when player 1 was the one who died! And the score was correct! at the results menu! Something is reversed!
-
-        UnloadCurrentLevel(); //this is here! and in quit!
+        UnloadCurrentLevel();
         SetGameState(GameState.RESULTS_MENU);
-        //ToResults menu!
-        //Stops all match related code
     }
     public void QuitMatch() {
 
+        //Called by on client disconnect in case of a client disconnection and game is running!
+        //GameInstance calls this and calls the one in the MatchDirector!
+
         matchDirectorScript.QuitMatch(); //Mandatory
         matchDirector.SetActive(false); // I THINK?
+        HUD.SetActive(false);
+        UnloadCurrentLevel();
+
+        RestartGameState();
+        Debug.Log("GAME QUIT!");
+
+        //Input assertion fail, test it on quit!
 
         //General
         //SetStateToMainMenu
@@ -1020,15 +1038,71 @@ public class GameInstance : MonoBehaviour
         //To main menu!
     }
 
+    /// <summary>
+    /// Restarts the game to its initial state on startup
+    /// </summary>
+    public void RestartGameState() {
+
+        //GameMode specific
+        if (currentGameMode == GameMode.COOP) {
+            Destroy(player1);
+            Destroy(player2);
+
+            //Stop networking does this
+            player1 = null;
+            player2 = null;
+            player1Script = null;
+            player2Script = null;
+            player1NetworkObject = null;
+            player2NetworkObject = null;
+        } 
+        else if (currentGameMode == GameMode.LAN)
+            StopNetworking();
+
+
+        Debug.Log("FULL GAME RESET!");
+        //StopNetworking(); //Should disable networking, clean up networked gameobjects and reset connection status!
+
+        //Not necessarily needed since every menu state gets reset on SetupStartingState() call but it would be cleaner to reset them all on game full reset!
+        connectionMenuScript.SetConnectionMenuMode(ConnectionMenu.ConnectionMenuMode.NORMAL);
+        customizationMenuScript.SetCustomizationMenuMode(CustomizationMenu.CustomizationMenuMode.NORMAL);
+        levelSelectMenuScript.SetLevelSelectMenuMode(LevelSelectMenu.LevelSelectMenuMode.NORMAL);
+
+        currentGameMode = GameMode.NONE;
+        SetGameState(GameState.MAIN_MENU);
+    }
+
+
+    //GameEnding User Cases
+
+    //Quit game during match through pause menu.
+        //Coop - Unload Level, Delete Players, Reset Gamemode, Go back to main menu
+        //Online
+            //Client - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
+            //Host - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
+
+    //Match finished after reaching results screen. (Unload level at that point!)
+        //Coop - Delete players, Reset Gamemode, Go back to main menu
+        //Online
+            //Client - Stop Networking, Reset gamemode, Go back to main menu.
+            //Host - Stop Networking, Reset gamemode, Go back to main menu.
+
+    //One player disconnected
+        //Online
+            //Client - Stop Networking, Reset gamemode, Go back to main menu.
+            //Host - Stop Networking, Reset gamemode, Go back to main menu.
+
+
 
     public void RegisterPlayerDeath(Player.PlayerType type) {
         if (type == Player.PlayerType.NONE)
             return;
 
-
+        if (type == Player.PlayerType.PLAYER_1)
+            matchDirectorScript.ScorePoint(Player.PlayerType.PLAYER_2);
+        if (type == Player.PlayerType.PLAYER_2)
+            matchDirectorScript.ScorePoint(Player.PlayerType.PLAYER_1);
         //IMPORTANT NOTE: Its possible to trigger multiple death registries somehow! this could end the match immediately! FIX THIS!
-
-        matchDirectorScript.ScorePoint(type);
     }
 
 
@@ -1056,6 +1130,7 @@ public class GameInstance : MonoBehaviour
         loadingScreen.SetActive(false);
         connectionMenu.SetActive(false);
         pauseMenu.SetActive(false);
+        resultsMenu.SetActive(false);
     }
     private void EnableMouseCursor()
     {

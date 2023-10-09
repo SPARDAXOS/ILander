@@ -73,7 +73,7 @@ public class CustomizationMenu : MonoBehaviour
 
         playerCharactersBundle = GetInstance().GetPlayerCharactersBundle();
         SetupReferences();
-        ApplyStartState();
+        SetupStartState();
         ApplyCurrentMenuMode();
         initialized = true;
     }
@@ -227,7 +227,7 @@ public class CustomizationMenu : MonoBehaviour
     }
 
 
-    public void ApplyStartState() {
+    public void SetupStartState() {
         //Outdated now with new modes and gos
 
         player1TargetColor = Color.white;
@@ -297,6 +297,8 @@ public class CustomizationMenu : MonoBehaviour
     private void CheckPlayersStatus() {
         if (player1ReadyCheck && player2ReadyCheck) {
             var instance = GetInstance();
+
+            //This here! client/host mismatch!
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
             instance.SetGameState(GameState.LEVEL_SELECT_MENU);
@@ -315,8 +317,6 @@ public class CustomizationMenu : MonoBehaviour
             //
             
             //BUG: Do something in case the transtion animation breaks. Like set all their positions to the defaults the moment an anim ends!.
-
-            ApplyStartState();
         }
     }
 

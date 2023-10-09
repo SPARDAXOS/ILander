@@ -37,3 +37,7 @@ MonoBehaviour:
     shipSprite: {fileID: 21300000, guid: 0309b80c76629e04f827725caca49f62, type: 3}
     portraitSprite: {fileID: 21300000, guid: 911785f7df536ca49b536e397057871d, type: 3}
     statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}
+  - name: Donkey
+    shipSprite: {fileID: 21300000, guid: 7f167f6bd494f6648a132f5ab7837527, type: 3}
+    portraitSprite: {fileID: 21300000, guid: bc5d0deb501e78b4a962b630490cf475, type: 3}
+    statsData: {fileID: 11400000, guid: 090caf4e3205367499c60971a680a06f, type: 2}

@@ -35,6 +35,7 @@ public class LevelSelectMenu : MonoBehaviour
 
         levelsBundle = GetInstance().GetLevelsBundle();
         SetupReferences();
+        SetupStartState();
         UpdateLevelPreview();
         ApplyCurrentMenuMode();
         initialized = true;
@@ -66,12 +67,11 @@ public class LevelSelectMenu : MonoBehaviour
         
     }
 
-    //Isnt set game mode kinda the same?
+
     public void SetupStartState() {
-
+        currentLevelIndex = 0;
+        UpdateLevelPreview();
     }
-
-
     public void SetLevelSelectMenuMode(LevelSelectMenuMode mode) {
         currentMenuMode = mode;
         ApplyCurrentMenuMode();
@@ -98,10 +98,7 @@ public class LevelSelectMenu : MonoBehaviour
 
 
     public void ReceiveLevelSelectionRpc(int index) {
-        var instance = GetInstance();
-        instance.StartLevel((uint)index);
-
-        //Reset or do it from gameinstance! do it from game instance
+        GetInstance().StartLevel((uint)index);
     }
     public void ReceiveSelectedLevelPreviewRpc(int index) {
         currentLevelIndex = index;
@@ -144,9 +141,6 @@ public class LevelSelectMenu : MonoBehaviour
 
         if (currentMenuMode == LevelSelectMenuMode.ONLINE)
             instance.GetRpcManagerScript().UpdateSelectedLevelIndexServerRpc(instance.GetClientID(), currentLevelIndex);
-
-
-        //TODO: Reset state or make gameinstance do it! THE SCOND THING
     }
 }
 

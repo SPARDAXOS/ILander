@@ -9,6 +9,7 @@ public class PauseMenu : MonoBehaviour
         GetInstance().UnpauseGame();
     }
     public void QuitButton() {
+        Debug.Log("GAME QUIT! - through Quit button!");
         GetInstance().QuitMatch();
     }
 }
