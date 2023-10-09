@@ -1,11 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using ILanderUtility;
 using static GameInstance;
 using TMPro;
 using UnityEngine.UI;
-using System.Xml.Serialization;
 
 public class ResultsMenu : MonoBehaviour
 {
@@ -91,7 +88,7 @@ public class ResultsMenu : MonoBehaviour
     }
 
 
-
+    //Use match results instead of just player type since i need draw !
     public void SetWinner(Player.PlayerType type) {
         //^^
         if (type == Player.PlayerType.NONE) {
@@ -134,7 +131,7 @@ public class ResultsMenu : MonoBehaviour
             notificationText.text = "Returning to main menu in " + (int)returnTimer + " ..";
             if (returnTimer <= 0.0f) {
                 returnTimer = 0.0f;
-                GetInstance().SetGameState(GameState.MAIN_MENU); //Questionable! calls special func cause some stuff needs to happen!
+                GetInstance().SetGameState(GameState.MAIN_MENU); //Questionable! calls special func cause some stuff needs to happen! THIS! Destroy players if offline, other wise do network stuff!
             }
         }
     }

@@ -378,9 +378,7 @@ public class Player : NetworkBehaviour
         rigidbodyComp.gravityScale = 0.0f;
         boxCollider2DComp.enabled = false;
         SetSpriteVisibility(false);
-        explosionSpawnerScript.PlayAnimation("PlayerDead", DeadAnimationCallback);
-    }
-    public void DeadAnimationCallback() {
+        explosionSpawnerScript.PlayAnimation("PlayerDead", null);
         GetInstance().RegisterPlayerDeath(currentPlayerType);
     }
 

@@ -14,6 +14,7 @@ public class MatchDirector : MonoBehaviour
 
     private bool initialized = false;
     public bool matchStarted = false;
+    private bool isRoundTimerRunning = false;
 
     public uint player1Score = 0;
     public uint player2Score = 0;
@@ -33,6 +34,7 @@ public class MatchDirector : MonoBehaviour
 
 
         SetupReferences();
+        SetRoundTimerState(false);
         initialized = true;
     }
     public void Tick() {
@@ -43,8 +45,8 @@ public class MatchDirector : MonoBehaviour
         if (!matchStarted)
             return;
 
-
-        UpdateRoundTimer();
+        if (isRoundTimerRunning)
+            UpdateRoundTimer();
     }
     private void SetupReferences() {
 
@@ -75,9 +77,14 @@ public class MatchDirector : MonoBehaviour
     }
 
 
-    //This class will start the match when the game instance wants to? and WILL end it on its own.
-    //This func is meant for restarting the timer
-    public void StartRoundTimer() {
+
+    //NOTE: Consider registering death at the start of the anim since timer could run out during the running of the anim before it registers death!
+    //Turning it off is managed by this class while turning it on is managed by GameInstance cause of countdown and setup by GameInstance
+    public void SetRoundTimerState(bool state) {
+        isRoundTimerRunning = state;
+        roundTimerText.gameObject.SetActive(state);
+    }
+    public void ResetRoundTimer() {
         roundTimer = roundTimeLimit;
         UpdateRoundTimerText();
     }
@@ -101,7 +108,12 @@ public class MatchDirector : MonoBehaviour
             ScorePoint(Player.PlayerType.PLAYER_1);
         else if (player1.GetCurrentHealth() < player2.GetCurrentHealth())
             ScorePoint(Player.PlayerType.PLAYER_2);
+        else
+            ScoreDrawPoints();
 
+        Debug.Log("Timeout!");
+
+        //ADD INVINCIBILITY DURING THIS TO PLAYERS TO NOT SCORE TWICE!
         //Or draw!
     }
     private void UpdateRoundTimerText() {
@@ -146,55 +158,70 @@ public class MatchDirector : MonoBehaviour
         //Reenable stuff on countdown callback!
 
         //SetRoundTimerVisibility(false); //here?
+
+
         GetInstance().StartNewRound();
-        StartRoundTimer();
+        ResetRoundTimer();
     }
     public void StartMatch() {
         ResetMatchData();
         matchStarted = true;
-        StartRoundTimer();
-        SetRoundTimerVisibility(true);
+        ResetRoundTimer();
     }
     public void EndMatch() {
-        SetRoundTimerVisibility(false);
+        
         matchStarted = false;
+        SetRoundTimerState(false);
         GetInstance().EndMatch();
     }
     public void QuitMatch() {
-
+        matchStarted = false;
+        SetRoundTimerState(false);
     }
 
-    public void SetRoundTimerVisibility(bool state) {
-        roundTimerText.gameObject.SetActive(state);
-    }
+
 
 
     private void ResetMatchData() {
         player1Score = 0;
         player2Score = 0;
-        ScoreUpdateRefresh(); //Per match reset
-
+        ScoreUpdateRefresh(); //Per match reset - will update to 0 - 0
         winner = Player.PlayerType.NONE;
         roundTimer = 0.0f;
     }
 
 
+    private void ScoreDrawPoints() {
 
+        player1Score++;
+        player2Score++;
+
+        if (player1Score == pointsToWin && player2Score == pointsToWin)
+            winner = Player.PlayerType.NONE;
+        else if (player1Score == pointsToWin)
+            winner = Player.PlayerType.PLAYER_1;
+        else if (player2Score == pointsToWin)
+            winner = Player.PlayerType.PLAYER_2;
+
+        SetRoundTimerState(false);
+        StartScoreUpdate(); //Triggers score update at each score point!
+    }
     public void ScorePoint(Player.PlayerType type) {
         if (type == Player.PlayerType.NONE || winner != Player.PlayerType.NONE)
             return;
 
         if (type == Player.PlayerType.PLAYER_1) {
-            player1Score++;
-            if (player1Score == pointsToWin)
-                winner = Player.PlayerType.PLAYER_1;
-        }
-        else if (type == Player.PlayerType.PLAYER_2) {
             player2Score++;
             if (player2Score == pointsToWin)
                 winner = Player.PlayerType.PLAYER_2;
         }
+        else if (type == Player.PlayerType.PLAYER_2) {
+            player1Score++;
+            if (player1Score == pointsToWin)
+                winner = Player.PlayerType.PLAYER_1;
+        }
 
+        SetRoundTimerState(false);
         StartScoreUpdate(); //Triggers score update at each score point!
     }
     private bool IsWinnerDecided() {
@@ -208,5 +235,4 @@ public class MatchDirector : MonoBehaviour
     public bool HasMatchStarted() {
         return matchStarted;
     }
-
 }

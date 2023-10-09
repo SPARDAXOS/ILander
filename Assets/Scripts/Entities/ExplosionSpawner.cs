@@ -42,6 +42,7 @@ public class ExplosionSpawner : MonoBehaviour
         return true;
     }
     public void ExplosionEvent() {
-        ExplosionCallback.Invoke();
+        if (ExplosionCallback != null)
+            ExplosionCallback.Invoke();
     }
 }

@@ -919,6 +919,8 @@ public class GameInstance : MonoBehaviour
         }
 
         matchDirector.SetActive(true); //Should set to false when match over
+
+
         SetupRoundStartState();
         countdownMenuScript.StartAnimation(StartMatch);
         currentGameState = GameState.PLAYING;
@@ -929,8 +931,6 @@ public class GameInstance : MonoBehaviour
         //This func needs a online version!
 
         //IMPORTANT NOTE: I could reuse those all over the place honsetly and do the online version once!
-
-
 
 
         player1Script.DisableInput(); //Kinda redundant but at least it disables the monitoring of the input by the input system
@@ -955,6 +955,9 @@ public class GameInstance : MonoBehaviour
     }
     public void StartRound() {
         //Need online version!
+
+        matchDirectorScript.SetRoundTimerState(true); //Needed here!
+
         player1Script.EnableInput();
         player2Script.EnableInput();
 
@@ -998,7 +1001,6 @@ public class GameInstance : MonoBehaviour
     public void QuitMatch() {
 
         matchDirectorScript.QuitMatch(); //Mandatory
-
         matchDirector.SetActive(false); // I THINK?
 
         //General
@@ -1022,11 +1024,9 @@ public class GameInstance : MonoBehaviour
     public void RegisterPlayerDeath(Player.PlayerType type) {
         if (type == Player.PlayerType.NONE)
             return;
-        Debug.Log("Death registery by " + type.ToString() + " " + Time.frameCount);
 
 
         //IMPORTANT NOTE: Its possible to trigger multiple death registries somehow! this could end the match immediately! FIX THIS!
-
 
         matchDirectorScript.ScorePoint(type);
     }
