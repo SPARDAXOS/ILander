@@ -429,7 +429,8 @@ public class Player : NetworkBehaviour
     public void ActivateNetworkedEntity() {
         spriteRendererComp.enabled = true;
         boxCollider2DComp.enabled = true;
-        rigidbodyComp.isKinematic = false;
+        //rigidbodyComp.isKinematic = false;
+        rigidbodyComp.gravityScale = 1.0f;
     }
     /// <summary>
     /// Meant for disabling networked entities.
@@ -437,7 +438,8 @@ public class Player : NetworkBehaviour
     public void DeactivateNetworkedEntity() {
         spriteRendererComp.enabled = false;
         boxCollider2DComp.enabled = false;
-        rigidbodyComp.isKinematic = true;
+        //rigidbodyComp.isKinematic = true;
+        rigidbodyComp.gravityScale = 0.0f;
     }
 
     public void EnableInput() {
