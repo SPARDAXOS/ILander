@@ -96,6 +96,7 @@ public class GameInstance : MonoBehaviour
 
     private bool assetsLoaded = false;
     private bool gameInitialized = false;
+    private bool isPaused = false;
 
     public uint connectedClients = 0;
     public long clientID = -1;
@@ -874,11 +875,14 @@ public class GameInstance : MonoBehaviour
         //Careful online disconnection
         player1Script.DisableInput();
         player2Script.DisableInput();
+        isPaused = true;
 
         if (currentGameMode == GameMode.COOP)
             Time.timeScale = 0.0f;
     }
     public void UnpauseGame() {
+        //THIS IS MEANT FOR UNPAUSING AND RESUMING GAME MATCH! WILL NOT WORK ON QUITING!
+
         HideAllMenus();
         DisableMouseCursor();
         currentGameState = GameState.PLAYING;
@@ -887,6 +891,7 @@ public class GameInstance : MonoBehaviour
         //Careful online disconnection
         player1Script.EnableInput();
         player2Script.EnableInput();
+        isPaused = false;
 
         if (currentGameMode == GameMode.COOP)
             Time.timeScale = 1.0f;
@@ -1014,28 +1019,22 @@ public class GameInstance : MonoBehaviour
         matchDirectorScript.QuitMatch(); //Mandatory
         matchDirector.SetActive(false); // I THINK?
         HUD.SetActive(false);
-        UnloadCurrentLevel();
+
+        //If coop? this whole thing is called again on disconnection!
+        UnloadCurrentLevel(); //See if i can do this after transtion since i can see the world dispawn as the transition is going!
+
+        //More gracefull appraoch would be nicer! two modes for pausing and unpasuing. Also Pausing in online doesnt work, it actually pauses the game!
+        if (isPaused) {
+            //pauseMenu.SetActive(false);
+            isPaused = false;
+            if (currentGameMode == GameMode.COOP)
+                Time.timeScale = 1.0f;
+        }
 
         RestartGameState();
         Debug.Log("GAME QUIT!");
 
-        //Input assertion fail, test it on quit!
-
-        //General
-        //SetStateToMainMenu
-        //Reset GameMode
-        //matchStarted = false; ON DISCONNECTION TOO!
-        //Unload Level!
-
-        //COOP
-        //Delete both players
-        //Reset GameMode
-
-        //Online
-        //Stop Networking
-        //
-
-        //To main menu!
+        //Input assertion fail, test it on quit! it crashed!
     }
 
     /// <summary>
@@ -1068,29 +1067,35 @@ public class GameInstance : MonoBehaviour
         customizationMenuScript.SetCustomizationMenuMode(CustomizationMenu.CustomizationMenuMode.NORMAL);
         levelSelectMenuScript.SetLevelSelectMenuMode(LevelSelectMenu.LevelSelectMenuMode.NORMAL);
 
+        //Something for projctiles spawning modes or something! and at the other place if any!
+
         currentGameMode = GameMode.NONE;
         SetGameState(GameState.MAIN_MENU);
     }
 
 
+
+    //Unready text in customization menu needs resetting
+    //Stuff breaks on quit disconnection and i can open pause menu in main menu then then a bunch of crashes related to tick function here!
+
     //GameEnding User Cases
 
     //Quit game during match through pause menu.
-        //Coop - Unload Level, Delete Players, Reset Gamemode, Go back to main menu
-        //Online
-            //Client - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
-            //Host - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
+    //Coop - Unload Level, Delete Players, Reset Gamemode, Go back to main menu
+    //Online
+    //Client - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
+    //Host - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
 
     //Match finished after reaching results screen. (Unload level at that point!)
-        //Coop - Delete players, Reset Gamemode, Go back to main menu
-        //Online
-            //Client - Stop Networking, Reset gamemode, Go back to main menu.
-            //Host - Stop Networking, Reset gamemode, Go back to main menu.
+    //Coop - Delete players, Reset Gamemode, Go back to main menu
+    //Online
+        //Client - Stop Networking, Reset gamemode, Go back to main menu.
+        //Host - Stop Networking, Reset gamemode, Go back to main menu.
 
     //One player disconnected
         //Online
-            //Client - Stop Networking, Reset gamemode, Go back to main menu.
-            //Host - Stop Networking, Reset gamemode, Go back to main menu.
+            //Client - Unload Level, Stop Networking, Reset gamemode, Go back to main menu.
+            //Host - Unload Level, Stop Networking, Reset gamemode, Go back to main menu.
 
 
 
