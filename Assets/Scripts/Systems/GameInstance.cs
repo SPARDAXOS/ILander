@@ -648,7 +648,7 @@ public class GameInstance : MonoBehaviour
         Debug.Log("Client has disconnected! Returning to main menu");
 
         //This whole thing will happen at GameEnd(); so double level unloading!
-
+        //here unfinished
         QuitMatch();
         if (!matchDirectorScript.HasMatchStarted()) {
             Debug.Log("GAME QUIT! - through Client Disconnection!");
@@ -696,7 +696,7 @@ public class GameInstance : MonoBehaviour
         rpcManagerScript = rpcManager.GetComponent<RpcManager>();
         rpcManagerScript.Initialize();
     }
-    public void SetReceivedRpcPlayerRef(NetworkObjectReference reference, Player.PlayerType type) {
+    public void SetReceivedPlayerRefRpc(NetworkObjectReference reference, Player.PlayerType type) {
         if (type == Player.PlayerType.NONE) {
             Debug.LogWarning("Received player reference for type none!");
             return;
@@ -721,6 +721,10 @@ public class GameInstance : MonoBehaviour
             player2Script.SetHUDReference(HUDScript);
             player2Script.DeactivateNetworkedEntity();
         }
+    }
+    public void SetReceivedPlayerSpawnPointRpc(Vector3 position) {
+        Debug.Log("It works!");
+        player1Script.SetSpawnPoint(position);
     }
     //
 
@@ -748,6 +752,7 @@ public class GameInstance : MonoBehaviour
         if (type == Player.PlayerType.NONE)
             return;
 
+        Debug.Log("I received " + type.ToString() + " with data " + data.name);
         if (type == Player.PlayerType.PLAYER_1) {
             player1Script.SetPlayerData(data);
             player1Script.SetPlayerColor(color);
@@ -889,6 +894,7 @@ public class GameInstance : MonoBehaviour
         HUD.gameObject.SetActive(true);
         pauseMenu.SetActive(false);
         //Careful online disconnection
+        //DONT ENABLE PLAYER 2 INPUT IN ONLINE!
         player1Script.EnableInput();
         player2Script.EnableInput();
         isPaused = false;
@@ -909,11 +915,11 @@ public class GameInstance : MonoBehaviour
 
     //This is the start - GameInstance stars match in director, director finishes match and calls EndMatch. (GameInstance calls QuitMatch on director in other cases!)
     private void SetupPlayState() {
+
+        //IMPORTANT - Its weird that there are two ways to reach this state! transition and without!
+
         HideAllMenus();
         DisableMouseCursor();
-        //Call start match? 
-        //It calls start match on director which resets his data, and starts properly
-        //Maybe call transition first using countdown and that calls startmatch
 
         //Note: Spawn points are decided at match start!
         if (currentGameMode == GameMode.COOP) {
@@ -921,13 +927,15 @@ public class GameInstance : MonoBehaviour
             player2Script.SetSpawnPoint(currentLoadedLevelScript.GetPlayer2SpawnPoint());
         }
         else if (currentGameMode == GameMode.LAN) {
+            //Disable second player input? for both!
             if (networkManagerScript.IsHost) {
-                //SendRPC
+                RandomizePlayerSpawnPoints();
             }
             else if (networkManagerScript.IsClient) {
-                //Nothing?
+                //Nothing? you recieve the rpc to set position for your player 1 - Ideally do nothing and wait for host to trigger start game! at previous menu probably!
             }
         }
+        //Host starts and sends start rpc to other player?
 
         matchDirector.SetActive(true); //Should set to false when match over
 
@@ -969,6 +977,7 @@ public class GameInstance : MonoBehaviour
 
         matchDirectorScript.SetRoundTimerState(true); //Needed here!
 
+        //Only first one! if online then only first player input!
         player1Script.EnableInput();
         player2Script.EnableInput();
 
@@ -1003,7 +1012,7 @@ public class GameInstance : MonoBehaviour
         HUD.SetActive(false);
         
         player1Script.DisableInput();
-        player2Script.DisableInput();
+        player2Script.DisableInput(); //In online, disable input of other player!
 
         //MatchEnd/MatchQuit differences
         //Level is unloaded on transition to ResultsScreen, in MatchQuit, its straight to the main menu.
@@ -1112,9 +1121,31 @@ public class GameInstance : MonoBehaviour
 
 
 
+    private void RandomizePlayerSpawnPoints() {
+        int rand = UnityEngine.Random.Range(0, 2);
+        ClientRpcParams clientRpcParams = new ClientRpcParams();
+        clientRpcParams.Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { player2NetworkObject.OwnerClientId } };
 
+        Vector3 player1SpawnPoint = currentLoadedLevelScript.GetPlayer1SpawnPoint();
+        Vector3 player2SpawnPoint = currentLoadedLevelScript.GetPlayer2SpawnPoint();
+
+        //NOTE: Does the rpc matter then? its the server that puts it wherever it wants regardless. But i guess the snapping into place?
+        //I could send both positions then! or only disable sprite and collision? then let it snap into place? weird... The network object comp is not disabled
+        //anyway so why isnt it snapping?
+
+        if (rand == 0) {
+            player1Script.SetSpawnPoint(player1SpawnPoint);
+            player2Script.SetSpawnPoint(player2SpawnPoint);
+            rpcManagerScript.RelayPlayerSpawnPositionClientRpc(player2SpawnPoint, clientRpcParams);
+        }
+        else if (rand == 1) {
+            player1Script.SetSpawnPoint(player2SpawnPoint);
+            player2Script.SetSpawnPoint(player1SpawnPoint);
+            rpcManagerScript.RelayPlayerSpawnPositionClientRpc(player1SpawnPoint, clientRpcParams);
+        }
+    }
     private void RandomizeLevelSelectionChoice() { 
-        int rand = UnityEngine.Random.Range(0, networkManagerScript.ConnectedClients.Count);
+        int rand = UnityEngine.Random.Range(0, 2);
 
         if (rand == 0)
             levelSelectMenuScript.ActivateStartButton();

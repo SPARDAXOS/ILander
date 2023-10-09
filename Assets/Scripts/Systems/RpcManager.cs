@@ -37,25 +37,24 @@ public class RpcManager : NetworkBehaviour
     public void RelayLevelSelectorRoleClientRpc(ClientRpcParams clientRpcParameters = default) {
         levelSelectMenuScript.ActivateStartButton();
     }
-    [ClientRpc]
-    public void RelaySpawnPositionClientRpc(ClientRpcParams clientRpcParameters = default) {
-        //Might not even be needed. Just dont let the client move the player.
-    }
 
 
     //TODO: Avoid the senderID != self check if possible and use params instead to send 1 less packet each time!
     //NOTE: Using senderID != self might be good since then i send my rpcs to all clients instead of hardcoded 1 at the cost of 1 extra packet but idk the cost of params
 
     [ClientRpc]
-    public void RelayRpcManagerReferenceClientRpc(NetworkObjectReference reference)
-    {
+    public void RelayRpcManagerReferenceClientRpc(NetworkObjectReference reference) {
         GetInstance().SetReceivedRpcManagerRef(reference);
     }
     [ClientRpc]
-    public void RelayPlayerReferenceClientRpc(NetworkObjectReference reference, Player.PlayerType player, ClientRpcParams clientRpcParameters = default)
-    {
+    public void RelayPlayerReferenceClientRpc(NetworkObjectReference reference, Player.PlayerType player, ClientRpcParams clientRpcParameters = default) {
         Debug.Log("Received player ref rpc for " + player.ToString());
-        GetInstance().SetReceivedRpcPlayerRef(reference, player);
+        GetInstance().SetReceivedPlayerRefRpc(reference, player);
+    }
+    [ClientRpc]
+    public void RelayPlayerSpawnPositionClientRpc(Vector3 spawnPoint, ClientRpcParams clientRpcParameters = default) {
+        Debug.LogError("Received player spawn point rpc for " + GetInstance().GetClientID());
+        GetInstance().SetReceivedPlayerSpawnPointRpc(spawnPoint);
     }
 
 

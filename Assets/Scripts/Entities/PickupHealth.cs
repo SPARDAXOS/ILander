@@ -12,6 +12,6 @@ public class PickupHealth : Pickup
         Activate(script);
         SetActive(false);
         gameObject.SetActive(false);
-        levelScript.RegisterPickupDispawn(spawnPointIndex);
+        levelScript.RegisterPickupDispawn(spawnPointIndex); //GOT INDEX OUT OF BOUNDS HERE IN ONLINE TESTING!
     }
 }

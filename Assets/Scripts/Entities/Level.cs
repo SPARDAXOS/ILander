@@ -80,8 +80,13 @@ public class Level : MonoBehaviour
         if (currentLevelState == LevelState.LOADING_ASSETS)
             CheckAssetsLoadingStatus();
         else if (currentLevelState == LevelState.ACTIVE && assetsLoaded) {
-            UpdateRespawnTimer();
-            UpdatePickupsSpawns();
+            if (IsSpawningPossible()) {
+                UpdateRespawnTimer();
+                UpdatePickupsSpawns();
+            }
+            else {
+                currentRespawnTimer = pickupRespawnTimer; //Otherwise reset it?
+            }
             foreach (var pool in projectilePools)
                 pool.Value.Tick();
         }
@@ -394,7 +399,7 @@ public class Level : MonoBehaviour
 
 
         for (int i = 0; i < pickupsSpawnPoints.Length; i++) {
-            var pickup = GetUnactivePickup();
+            var pickup = GetRandomUnactivePickup();
             if (!pickup)
                 break;
 
@@ -421,7 +426,7 @@ public class Level : MonoBehaviour
             return;
         }
 
-        var pickup = GetUnactivePickup();
+        var pickup = GetRandomUnactivePickup();
         if (!pickup) {
             currentRespawnTimer = pickupRespawnRetryTimer;
             return;
@@ -440,6 +445,28 @@ public class Level : MonoBehaviour
         }
 
         return null;
+    }
+    private Pickup GetRandomUnactivePickup() {
+        List<Pickup> unactivePickups = new List<Pickup>();
+        foreach(var entry in pickupsPool) {
+            Pickup script = entry.GetComponent<Pickup>();
+            if (!script.IsActive())
+                unactivePickups.Add(script);
+        }
+
+        if (unactivePickups.Count == 0)
+            return null;
+
+        int rand = UnityEngine.Random.Range(0, unactivePickups.Count);
+        return unactivePickups[rand];
+    }
+    private bool IsSpawningPossible() {
+        bool results = false;
+        foreach (var entry in occupiedPickupsSpawnPoints) {
+            if (!entry)
+                results = true;
+        }
+        return results;
     }
 
     public void RegisterPickupDispawn(int spawnPointIndex) {
