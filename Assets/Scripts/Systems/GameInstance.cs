@@ -1179,7 +1179,9 @@ public class GameInstance : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-
+    public GameMode GetCurrentGameMode() {
+        return currentGameMode;
+    }
     public GameSettings GetGameSettings() {
         return gameSettings;
     }

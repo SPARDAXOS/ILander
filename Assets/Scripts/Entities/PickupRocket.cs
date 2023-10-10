@@ -12,8 +12,8 @@ public class PickupRocket : Pickup
 
     public override bool Activate(Player user) {
         if (levelScript.SpawnProjectile(user, associatedProjectileType)) {
-            SetActive(false);
-            levelScript.RegisterPickupDispawn(spawnPointIndex);
+            //SetActive(false); //wot?
+            //levelScript.RegisterPickupDispawn(spawnPointIndex); //wot?
             return true;
         }
         return false;

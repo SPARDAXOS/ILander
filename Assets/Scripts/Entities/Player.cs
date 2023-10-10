@@ -8,6 +8,7 @@ using Unity.Netcode;
 using Unity.Multiplayer;
 using static GameInstance;
 using System;
+using UnityEngine.InputSystem;
 
 public class Player : NetworkBehaviour
 {
@@ -27,7 +28,7 @@ public class Player : NetworkBehaviour
 
     public bool initialized = false;
     private PlayerCharacterData playerCharacterData; //Add Check to validate if player has data before doing any updates!
-    private PlayerType currentPlayerType = PlayerType.NONE;
+    public PlayerType currentPlayerType = PlayerType.NONE;
     private Color defaultColor = Color.white;
     private Vector3 spawnPoint = Vector3.zero;
 
@@ -102,8 +103,12 @@ public class Player : NetworkBehaviour
 
         UpdateGravity();
         UpdateDrag();
-        if (isMoving)
-            UpdateMovement();
+        if (isMoving) {
+            if (GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2 && networkObjectComp.IsOwner) //bad quick solution for testing!
+                UpdateNetworkedMovement();
+            else
+                UpdateMovement();
+        }
     }
     private void SetupReferences() {
 
@@ -277,13 +282,8 @@ public class Player : NetworkBehaviour
     }
     private void UpdateMovement() {
 
-
-
-        //NOTE: Mechanic: the moment 2 players bump into each other, the one with the higher velocity pushes the other one away! 
-        //So when there are no pickups, pushing each other is the game!
-
+        Debug.Log("Network movement!");
         //NOTE IMPORTANT: WTF IS THIS LITERALS!½
-
         float inputValue = activeControlScheme.movementInput.ReadValue<float>();
         //Break doesnt work its weird and abusable
         if (inputValue < 0.0f) {
@@ -304,7 +304,34 @@ public class Player : NetworkBehaviour
             rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
         }
     }
+    private void UpdateNetworkedMovement() {
+        Debug.Log("Network movement!");
+        float inputValue = activeControlScheme.movementInput.ReadValue<float>();
+        if (inputValue > 0.0f | inputValue < 0.0f)
+            GetInstance().GetRpcManagerScript().UpdatePlayer2PositionServerRpc(inputValue); //You are always player 2 to the host
+    }
+    //Called by game instance or rpc manager
+    public void ProccessReceivedMovementRpc(float input) {
+        //If in network mode?
+        //SAME AS UPDATE MOVEMENT BASICALLY!
+        if (input < 0.0f) {
+            if (rigidbodyComp.velocity.y > 0.0f)
+                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x, rigidbodyComp.velocity.y - 0.01f);
+            if (rigidbodyComp.velocity.x > 0.0f)
+                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x - 0.01f, rigidbodyComp.velocity.y);
+        }
+        else if (input > 0.0f) {
 
+            Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
+            Vector2 velocity = rigidbodyComp.velocity + force;
+            if (velocity.x > playerCharacterData.statsData.maxVelocity)
+                velocity.x = playerCharacterData.statsData.maxVelocity;
+            if (velocity.y > playerCharacterData.statsData.maxVelocity)
+                velocity.y = playerCharacterData.statsData.maxVelocity;
+
+            rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
+        }
+    }
 
 
 
@@ -423,14 +450,15 @@ public class Player : NetworkBehaviour
         spriteRendererComp.enabled = state;
     }
 
+
+
     /// <summary>
     /// Meant for enabling networked entities.
     /// </summary>
     public void ActivateNetworkedEntity() {
         spriteRendererComp.enabled = true;
         boxCollider2DComp.enabled = true;
-        //rigidbodyComp.isKinematic = false;
-        rigidbodyComp.gravityScale = 1.0f;
+        rigidbodyComp.isKinematic = false;
     }
     /// <summary>
     /// Meant for disabling networked entities.
@@ -438,8 +466,7 @@ public class Player : NetworkBehaviour
     public void DeactivateNetworkedEntity() {
         spriteRendererComp.enabled = false;
         boxCollider2DComp.enabled = false;
-        //rigidbodyComp.isKinematic = true;
-        rigidbodyComp.gravityScale = 0.0f;
+        rigidbodyComp.isKinematic = true;
     }
 
     public void EnableInput() {

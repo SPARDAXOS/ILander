@@ -48,12 +48,10 @@ public class RpcManager : NetworkBehaviour
     }
     [ClientRpc]
     public void RelayPlayerReferenceClientRpc(NetworkObjectReference reference, Player.PlayerType player, ClientRpcParams clientRpcParameters = default) {
-        Debug.Log("Received player ref rpc for " + player.ToString());
         GetInstance().SetReceivedPlayerRefRpc(reference, player);
     }
     [ClientRpc]
     public void RelayPlayerSpawnPositionClientRpc(Vector3 spawnPoint, ClientRpcParams clientRpcParameters = default) {
-        Debug.LogError("Received player spawn point rpc for " + GetInstance().GetClientID());
         GetInstance().SetReceivedPlayerSpawnPointRpc(spawnPoint);
     }
 
@@ -126,6 +124,9 @@ public class RpcManager : NetworkBehaviour
     }
 
 
-
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdatePlayer2PositionServerRpc(float input) { 
+        GetInstance().GetPlayer2Script().ProccessReceivedMovementRpc(input);
+    }
 
 }
