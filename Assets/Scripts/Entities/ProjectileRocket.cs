@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using static GameInstance;
 
 public class ProjectileRocket : Projectile
 {
@@ -20,9 +21,15 @@ public class ProjectileRocket : Projectile
         boxCollider2DComp.enabled = false;
     }
 
+    public override void SetActive(bool state) {
+        base.SetActive(state);
+        if (currentGameMode == GameMode.LAN)
+            animatorComp.enabled = state;
+    }
 
-    public override void Initialize() {
-        base.Initialize();
+
+    public override void Initialize(GameMode mode) {
+        base.Initialize(mode);
 
         type = ProjectileType.ROCKET;
         animatorComp = GetComponent<Animator>();
@@ -50,5 +57,4 @@ public class ProjectileRocket : Projectile
         else
             DefaultHitReaction();
     }
-
 }

@@ -41,9 +41,9 @@ public class ConnectionMenu : MonoBehaviour
         hostMode   = transform.Find("HostMode").gameObject;
         clientMode = transform.Find("ClientMode").gameObject;
 
-        Utility.Validate(normalMode, "Failed to find reference for NormalMode - ConnectionMenu");
-        Utility.Validate(hostMode, "Failed to find reference for HostMode - ConnectionMenu");
-        Utility.Validate(clientMode, "Failed to find reference for ClientMode - ConnectionMenu");
+        Utility.Validate(normalMode, "Failed to find reference for NormalMode - ConnectionMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(hostMode, "Failed to find reference for HostMode - ConnectionMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(clientMode, "Failed to find reference for ClientMode - ConnectionMenu", Utility.ValidationLevel.ERROR, true);
     }
 
 

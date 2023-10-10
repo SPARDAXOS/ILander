@@ -23,7 +23,7 @@ public class ExplosionSpawner : MonoBehaviour
     }
     private void SetupReferences() {
         animatorComp = GetComponent<Animator>();
-        Utility.Validate(animatorComp, "Failed to get reference to Animator component - ExplosionSpawner", true);
+        Utility.Validate(animatorComp, "Failed to get reference to Animator component - ExplosionSpawner", Utility.ValidationLevel.ERROR, true);
 
 
     }

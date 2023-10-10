@@ -44,27 +44,26 @@ public class LevelSelectMenu : MonoBehaviour
     private void SetupReferences() {
 
         Transform previewWindowTransform = transform.Find("PreviewWindow");
-        Utility.Validate(previewWindowTransform, "Failed to find reference to PreviewWindow - LevelSelectMenu");
+        Utility.Validate(previewWindowTransform, "Failed to find reference to PreviewWindow - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
 
         Transform levelPreviewTransform = previewWindowTransform.Find("LevelPreview");
-        Utility.Validate(levelPreviewTransform, "Failed to find reference to LevelPreview - LevelSelectMenu");
+        Utility.Validate(levelPreviewTransform, "Failed to find reference to LevelPreview - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
 
         levelPreview = levelPreviewTransform.GetComponent<Image>();
-        Utility.Validate(levelPreview, "Failed to find component Image on LevelPreview - LevelSelectMenu");
+        Utility.Validate(levelPreview, "Failed to find component Image on LevelPreview - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
 
         Transform levelSelectorTransform = previewWindowTransform.Find("LevelSelector");
-        Utility.Validate(levelSelectorTransform, "Failed to find reference to LevelSelector - LevelSelectMenu");
+        Utility.Validate(levelSelectorTransform, "Failed to find reference to LevelSelector - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
         levelSelectorGameObject = levelSelectorTransform.gameObject;
 
         levelName = levelSelectorTransform.GetComponent<TextMeshProUGUI>();
-        Utility.Validate(levelPreview, "Failed to find component Text on LevelSelector - LevelSelectMenu");
+        Utility.Validate(levelPreview, "Failed to find component Text on LevelSelector - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
 
         startButtonGameObject = previewWindowTransform.Find("StartButton").gameObject;
-        Utility.Validate(startButtonGameObject, "Failed to find reference to StartButton - LevelSelectMenu");
+        Utility.Validate(startButtonGameObject, "Failed to find reference to StartButton - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
 
         hostChoiceGameObject = transform.Find("HostChoice").gameObject;
-        Utility.Validate(hostChoiceGameObject, "Failed to find reference to HostChoice - LevelSelectMenu");
-        
+        Utility.Validate(hostChoiceGameObject, "Failed to find reference to HostChoice - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
     }
 
 

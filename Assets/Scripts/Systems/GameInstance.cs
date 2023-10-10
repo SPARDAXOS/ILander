@@ -718,7 +718,6 @@ public class GameInstance : MonoBehaviour
         }
     }
     public void SetReceivedPlayerSpawnPointRpc(Vector3 position) {
-        Debug.Log("It works!");
         player1Script.SetSpawnPoint(position);
     }
     //
@@ -952,12 +951,18 @@ public class GameInstance : MonoBehaviour
             else if (networkManagerScript.IsClient) {
                 player1Script.SetActiveControlScheme(Player.PlayerType.PLAYER_2);
                 player2Script.SetActiveControlScheme(Player.PlayerType.PLAYER_1);
-                //Nothing? you recieve the rpc to set position for your player 1 - Ideally do nothing and wait for host to trigger start game! at previous menu probably!
-                //Return here then the receiveRpc func will call the rest of this function?
+                return;
             }
         }
         //Host starts and sends start rpc to other player?
-
+        //Is the rpc even needed? - Not really but i guess?
+        rpcManagerScript.ProccedToMatchStartClientRpc(GetClientID());
+        matchDirector.SetActive(true);
+        SetupRoundStartState();
+        countdownMenuScript.StartAnimation(StartMatch);
+        currentGameState = GameState.PLAYING;
+    }
+    public void ProccedToMatchStartRpc() {
         matchDirector.SetActive(true);
         SetupRoundStartState();
         countdownMenuScript.StartAnimation(StartMatch);
@@ -988,6 +993,7 @@ public class GameInstance : MonoBehaviour
     }
     public void StartNewRound() {
         SetupRoundStartState();
+        currentLoadedLevelScript.RefreshAllPickupSpawns();
         countdownMenuScript.StartAnimation(StartRound);
     }
     public void StartRound() {
@@ -1015,13 +1021,10 @@ public class GameInstance : MonoBehaviour
     //EndMatch is called by director when match has concluded
     //QuitMatch is called by game instance when disconnected or quit through pause menu. It calls director to quit game too.
     private void StartMatch() {
-        Debug.Log("Match started!");
         matchDirectorScript.StartMatch();
         StartRound();
     }
     public void EndMatch() {
-
-        //Game mode specific
         if (currentGameMode == GameMode.COOP) {
             player1.SetActive(false);
             player2.SetActive(false);
@@ -1031,16 +1034,12 @@ public class GameInstance : MonoBehaviour
             player2Script.DeactivateNetworkedEntity();
         }
 
-        //Across all game modes
         matchDirector.SetActive(false);
         HUD.SetActive(false);
         
         //In online, its fine to disable both, but can only turn on player 1 for host and player 2 for client! best way to put it!
         player1Script.DisableInput();
         player2Script.DisableInput(); //In online, disable input of other player!
-
-        //MatchEnd/MatchQuit differences
-        //Level is unloaded on transition to ResultsScreen, in MatchQuit, its straight to the main menu.
 
         UnloadCurrentLevel();
         SetGameState(GameState.RESULTS_MENU);
@@ -1141,9 +1140,6 @@ public class GameInstance : MonoBehaviour
             matchDirectorScript.ScorePoint(Player.PlayerType.PLAYER_1);
         //IMPORTANT NOTE: Its possible to trigger multiple death registries somehow! this could end the match immediately! FIX THIS!
     }
-
-
-
     private void RandomizePlayerSpawnPoints() {
         int rand = UnityEngine.Random.Range(0, 2);
         ClientRpcParams clientRpcParams = new ClientRpcParams();
@@ -1191,13 +1187,11 @@ public class GameInstance : MonoBehaviour
         pauseMenu.SetActive(false);
         resultsMenu.SetActive(false);
     }
-    private void EnableMouseCursor()
-    {
+    private void EnableMouseCursor() {
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
-    private void DisableMouseCursor()
-    {
+    private void DisableMouseCursor() {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -1211,6 +1205,9 @@ public class GameInstance : MonoBehaviour
     public RpcManager GetRpcManagerScript() {
         return rpcManagerScript;
     }
+    public NetworkManager GetNetworkManagerScript() {
+        return networkManagerScript;
+    }
     public CustomizationMenu GetCustomizationMenuScript() {
         return customizationMenuScript;
     }
@@ -1223,7 +1220,7 @@ public class GameInstance : MonoBehaviour
     public Player GetPlayer2Script() {
         return player2Script;  
     }
-
+    
 
     public PlayerCharactersBundle GetPlayerCharactersBundle() {
         return playerCharactersBundle;
@@ -1238,7 +1235,7 @@ public class GameInstance : MonoBehaviour
             Debug.Log("Loaded level " + handle.Result.ToString() + " successfully");
             currentLoadedLevel = Instantiate(handle.Result);
             currentLoadedLevelScript = currentLoadedLevel.GetComponent<Level>();
-            currentLoadedLevelScript.Initialize();
+            currentLoadedLevelScript.Initialize(currentGameMode);
             CompleteLoadingScreenProcess(LoadingScreenProcess.LOADING_LEVEL);
             SetupPlayState(); //Direct call to avoid transition.
         }

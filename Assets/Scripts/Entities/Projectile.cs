@@ -1,13 +1,15 @@
+using Unity.Netcode;
 using UnityEngine;
+using static GameInstance;
 
-public class Projectile : MonoBehaviour
+public class Projectile : NetworkBehaviour
 {
+    //Primarily to make it easier to select associated projectiles in pickups entries.
     public enum ProjectileType {
         NONE = 0,
         ROCKET,
         ICE_BOMB
     }
-
 
     [SerializeField] protected float damage = 0.1f;
     [SerializeField] protected float speed = 10.0f;
@@ -15,6 +17,7 @@ public class Projectile : MonoBehaviour
 
     
     protected ProjectileType type = ProjectileType.NONE;
+    protected GameMode currentGameMode = GameMode.NONE;
     protected bool active = false;
     protected Player ownerScript = null;
 
@@ -25,12 +28,17 @@ public class Projectile : MonoBehaviour
 
     protected BoxCollider2D boxCollider2DComp;
     protected SpriteRenderer spriteRendererComp;
+    protected NetworkObject networkObjectComp;
 
 
-
-    public void SetActive(bool state) {
+    virtual public void SetActive(bool state) {
         active = state;
-        gameObject.SetActive(state);
+        if (currentGameMode == GameMode.COOP)
+            gameObject.SetActive(state);
+        else if (currentGameMode == GameMode.LAN) {
+            boxCollider2DComp.enabled = state;
+            spriteRendererComp.enabled = state;
+        }
     }
     public bool IsActive() {
         return active;
@@ -40,8 +48,10 @@ public class Projectile : MonoBehaviour
     }
 
 
-    virtual public void Initialize() {
+    virtual public void Initialize(GameMode mode) {
         type = ProjectileType.NONE;
+        currentGameMode = mode;
+        networkObjectComp = GetComponent<NetworkObject>();
         spriteRendererComp = GetComponent<SpriteRenderer>();
         boxCollider2DComp = GetComponent<BoxCollider2D>();
         boxCollider2DComp.enabled = false;
@@ -81,7 +91,6 @@ public class Projectile : MonoBehaviour
     virtual public void Tick() {
 
 
-
         if (moving)
             UpdateMovement();
     }
@@ -94,13 +103,11 @@ public class Projectile : MonoBehaviour
         if (script == ownerScript)
             return;
 
-        Debug.Log("I HIT SOMEONE!");
         Dispawn();
     }
 
 
     private void OnTriggerEnter2D(Collider2D collision) {
-
         OnCollision(collision);
     }
 }

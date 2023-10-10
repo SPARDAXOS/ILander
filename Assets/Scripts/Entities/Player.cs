@@ -117,28 +117,28 @@ public class Player : NetworkBehaviour
     private void SetupReferences() {
 
         Transform explosionSpawnerTransform = transform.Find("ExplosionSpawner");
-        Utility.Validate(explosionSpawnerTransform, "Failed to get reference to ExplosionSpawner gameobject - Player", true);
+        Utility.Validate(explosionSpawnerTransform, "Failed to get reference to ExplosionSpawner gameobject - Player", Utility.ValidationLevel.ERROR, true);
 
         explosionSpawnerScript = explosionSpawnerTransform.GetComponent<ExplosionSpawner>();
-        Utility.Validate(explosionSpawnerScript, "Failed to get reference to DeathExplosionSpawner component - Player", true);
+        Utility.Validate(explosionSpawnerScript, "Failed to get reference to DeathExplosionSpawner component - Player", Utility.ValidationLevel.ERROR, true);
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
-        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", true);
+        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", Utility.ValidationLevel.ERROR, true);
 
         rigidbodyComp = GetComponent<Rigidbody2D>();
-        Utility.Validate(rigidbodyComp, "Failed to get reference to Rigidbody2D component - Player", true);
+        Utility.Validate(rigidbodyComp, "Failed to get reference to Rigidbody2D component - Player", Utility.ValidationLevel.ERROR, true);
 
         boxCollider2DComp = GetComponent<BoxCollider2D>();
-        Utility.Validate(boxCollider2DComp, "Failed to get reference to BoxCollider2D component - Player", true);
+        Utility.Validate(boxCollider2DComp, "Failed to get reference to BoxCollider2D component - Player", Utility.ValidationLevel.ERROR, true);
 
         networkObjectComp = GetComponent<NetworkObject>();
-        Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", true);
+        Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", Utility.ValidationLevel.ERROR, true);
 
         Transform muzzleFlashSpawnerTransformn = transform.Find("MuzzleFlashSpawner");
-        Utility.Validate(muzzleFlashSpawnerTransformn, "Failed to get reference to MuzzleFlashSpawner - Player", true);
+        Utility.Validate(muzzleFlashSpawnerTransformn, "Failed to get reference to MuzzleFlashSpawner - Player", Utility.ValidationLevel.ERROR, true);
 
         muzzleFlashSpawnerScript = muzzleFlashSpawnerTransformn.GetComponent<MuzzleFlashSpawner>();
-        Utility.Validate(muzzleFlashSpawnerScript, "Failed to get reference to MuzzleFlashSpawner component - Player", true);
+        Utility.Validate(muzzleFlashSpawnerScript, "Failed to get reference to MuzzleFlashSpawner component - Player", Utility.ValidationLevel.ERROR, true);
     }
     public void SetupStartState() {
         currentHealth = playerCharacterData.statsData.healthCap;
@@ -207,6 +207,9 @@ public class Player : NetworkBehaviour
     }
 
     private void CheckInput() {
+        if (!activeControlScheme)
+            return;
+
         isMoving = activeControlScheme.movementInput.IsPressed();
         isRotating = activeControlScheme.rotationInput.IsPressed();
     }
@@ -490,6 +493,8 @@ public class Player : NetworkBehaviour
     }
 
     public void EnableInput() {
+        if (!activeControlScheme)
+            return;
         activeControlScheme.movementInput.Enable();
         activeControlScheme.rotationInput.Enable();
         activeControlScheme.boostInput.Enable();
@@ -497,6 +502,8 @@ public class Player : NetworkBehaviour
         activeControlScheme.usePickupInput.Enable();
     }
     public void DisableInput() {
+        if (!activeControlScheme)
+            return;
         activeControlScheme.movementInput.Disable();
         activeControlScheme.rotationInput.Disable();
         activeControlScheme.boostInput.Disable();

@@ -58,29 +58,29 @@ public class MatchDirector : MonoBehaviour
     private void SetupReferences() {
 
         animationComp = GetComponent<Animation>();
-        Utility.Validate(animationComp, "Failed to get component Animation - MatchDirector", true);
+        Utility.Validate(animationComp, "Failed to get component Animation - MatchDirector", Utility.ValidationLevel.ERROR, true);
 
         Transform HUDTransform = transform.Find("HUD");
-        Utility.Validate(HUDTransform, "Failed to get reference to HUD - MatchDirector", true);
+        Utility.Validate(HUDTransform, "Failed to get reference to HUD - MatchDirector", Utility.ValidationLevel.ERROR, true);
 
         Transform roundTimerTransform = HUDTransform.Find("RoundTimer");
-        Utility.Validate(roundTimerTransform, "Failed to get reference to RoundTimer - MatchDirector", true);
+        Utility.Validate(roundTimerTransform, "Failed to get reference to RoundTimer - MatchDirector", Utility.ValidationLevel.ERROR, true);
 
         roundTimerText = roundTimerTransform.GetComponent<TextMeshProUGUI>();
-        Utility.Validate(roundTimerText, "Failed to get component TextMeshProUGUI in RoundTimer - MatchDirector", true);
+        Utility.Validate(roundTimerText, "Failed to get component TextMeshProUGUI in RoundTimer - MatchDirector", Utility.ValidationLevel.ERROR, true);
 
         var ScoreTransform = HUDTransform.Find("Score");
-        Utility.Validate(ScoreTransform, "Failed to get reference to Score - MatchDirector", true);
+        Utility.Validate(ScoreTransform, "Failed to get reference to Score - MatchDirector", Utility.ValidationLevel.ERROR, true);
 
         var player1ScoreTextTransform = ScoreTransform.Find("Player1Score");
         var player2ScoreTextTransform = ScoreTransform.Find("Player2Score");
-        Utility.Validate(player1ScoreTextTransform, "Failed to get reference to Player1Score - MatchDirector", true);
-        Utility.Validate(player2ScoreTextTransform, "Failed to get reference to Player2Score - MatchDirector", true);
+        Utility.Validate(player1ScoreTextTransform, "Failed to get reference to Player1Score - MatchDirector", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player2ScoreTextTransform, "Failed to get reference to Player2Score - MatchDirector", Utility.ValidationLevel.ERROR, true);
 
         player1ScoreText = player1ScoreTextTransform.GetComponent<TextMeshProUGUI>();
         player2ScoreText = player2ScoreTextTransform.GetComponent<TextMeshProUGUI>();
-        Utility.Validate(player1ScoreText, "Failed to get component TextMeshProUGUI in player1ScoreText - MatchDirector", true);
-        Utility.Validate(player2ScoreText, "Failed to get component TextMeshProUGUI in player2ScoreText - MatchDirector", true);
+        Utility.Validate(player1ScoreText, "Failed to get component TextMeshProUGUI in player1ScoreText - MatchDirector", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player2ScoreText, "Failed to get component TextMeshProUGUI in player2ScoreText - MatchDirector", Utility.ValidationLevel.ERROR, true);
     }
 
 

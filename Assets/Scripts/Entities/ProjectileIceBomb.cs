@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static GameInstance;
 
 public class ProjectileIceBomb : Projectile
 {
@@ -21,9 +22,13 @@ public class ProjectileIceBomb : Projectile
         boxCollider2DComp.enabled = false;
     }
 
-    public override void Initialize() {
-        base.Initialize();
-
+    public override void SetActive(bool state) {
+        base.SetActive(state);
+        if (currentGameMode == GameMode.LAN)
+            animatorComp.enabled = state;
+    }
+    public override void Initialize(GameMode mode) {
+        base.Initialize(mode);
         type = ProjectileType.ICE_BOMB;
         animatorComp = GetComponent<Animator>();
     }
@@ -36,9 +41,6 @@ public class ProjectileIceBomb : Projectile
     }
 
     protected override void OnCollision(Collider2D collision) {
-
-        //Add got damaged effect for players!
-
         var tag = collision.tag;
         if (tag == "Pickup")
             return;
@@ -52,7 +54,5 @@ public class ProjectileIceBomb : Projectile
         }
         else
             DefaultHitReaction();
-
-
     }
 }

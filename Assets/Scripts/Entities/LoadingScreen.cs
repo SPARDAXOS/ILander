@@ -22,10 +22,10 @@ public class LoadingScreen : MonoBehaviour
 
     private void SetupReferences() {
         Transform loadingBarFillTransform = transform.Find("LoadingBarFill");
-        Utility.Validate(loadingBarFillTransform, "Failed to find reference to LoadingBarFill - LoadingScreen");
+        Utility.Validate(loadingBarFillTransform, "Failed to find reference to LoadingBarFill - LoadingScreen", Utility.ValidationLevel.ERROR, true);
 
         loadingBarFill = loadingBarFillTransform.GetComponent<Image>();
-        Utility.Validate(loadingBarFill, "Failed to find component Image on LoadingBarFill - LoadingScreen");
+        Utility.Validate(loadingBarFill, "Failed to find component Image on LoadingBarFill - LoadingScreen", Utility.ValidationLevel.ERROR, true);
     }
     public void SetLoadingBarValue(float value) {
         loadingBarFill.fillAmount = value;

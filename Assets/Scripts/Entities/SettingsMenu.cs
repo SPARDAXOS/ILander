@@ -91,11 +91,11 @@ public class SettingsMenu : MonoBehaviour {
     private void SetupReferences() {
 
         gameSettings = GameInstance.GetInstance().GetGameSettings();
-        Utility.Validate(gameSettings, "Failed to retrieve GameSettings from GameInstance - SettingsMenu", true);
+        Utility.Validate(gameSettings, "Failed to retrieve GameSettings from GameInstance - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //Presets
         Transform presetsTransform = transform.Find("Presets");
-        Utility.Validate(presetsTransform, "Failed to find reference to Presets - SettingsMenu", true);
+        Utility.Validate(presetsTransform, "Failed to find reference to Presets - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         Transform lowPresetTransform    = presetsTransform.Find("LowButton");
         Transform mediumPresetTransform = presetsTransform.Find("MediumButton");
@@ -103,11 +103,11 @@ public class SettingsMenu : MonoBehaviour {
         Transform ultraPresetTransform  = presetsTransform.Find("UltraButton");
         Transform customPresetTransform = presetsTransform.Find("CustomButton");
 
-        Utility.Validate(lowPresetTransform, "Failed to find reference to LowButton - SettingsMenu", true);
-        Utility.Validate(mediumPresetTransform, "Failed to find reference to MediumButton - SettingsMenu", true);
-        Utility.Validate(highPresetTransform, "Failed to find reference to HighButton - SettingsMenu", true);
-        Utility.Validate(ultraPresetTransform, "Failed to find reference to UltraButton - SettingsMenu", true);
-        Utility.Validate(customPresetTransform, "Failed to find reference to CustomButton - SettingsMenu", true);
+        Utility.Validate(lowPresetTransform, "Failed to find reference to LowButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(mediumPresetTransform, "Failed to find reference to MediumButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(highPresetTransform, "Failed to find reference to HighButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(ultraPresetTransform, "Failed to find reference to UltraButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(customPresetTransform, "Failed to find reference to CustomButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         lowPresetButton    = lowPresetTransform.GetComponent<Button>();
         mediumPresetButton = mediumPresetTransform.GetComponent<Button>();
@@ -115,11 +115,11 @@ public class SettingsMenu : MonoBehaviour {
         ultraPresetButton  = ultraPresetTransform.GetComponent<Button>();
         customPresetButton = customPresetTransform.GetComponent<Button>();
 
-        Utility.Validate(lowPresetButton, "Failed to find component Button in lowPresetTransform - SettingsMenu", true);
-        Utility.Validate(mediumPresetButton, "Failed to find component Button in mediumPresetButton - SettingsMenu", true);
-        Utility.Validate(highPresetButton, "Failed to find component Button in highPresetButton - SettingsMenu", true);
-        Utility.Validate(ultraPresetButton, "Failed to find component Button in ultraPresetButton - SettingsMenu", true);
-        Utility.Validate(customPresetButton, "Failed to find component Button in customPresetButton - SettingsMenu", true);
+        Utility.Validate(lowPresetButton, "Failed to find component Button in lowPresetTransform - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(mediumPresetButton, "Failed to find component Button in mediumPresetButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(highPresetButton, "Failed to find component Button in highPresetButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(ultraPresetButton, "Failed to find component Button in ultraPresetButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(customPresetButton, "Failed to find component Button in customPresetButton - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //If any of the buttons has unique values for these then they will be set to customPresetButton's values upon clearing!
         defaultPresetNormalColor = customPresetButton.colors.normalColor;
@@ -128,45 +128,45 @@ public class SettingsMenu : MonoBehaviour {
 
         //Resolution
         Transform resolutionDropDownTransform = transform.Find("ResolutionDropdown");
-        Utility.Validate(resolutionDropDownTransform, "Failed to find reference to ResolutionDropdown - SettingsMenu", true);
+        Utility.Validate(resolutionDropDownTransform, "Failed to find reference to ResolutionDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         resolutionDropdown = resolutionDropDownTransform.GetComponent<TMP_Dropdown>();
-        Utility.Validate(resolutionDropdown, "Failed to find component TMP_Dropdown for resolutionDropdown - SettingsMenu", true);
+        Utility.Validate(resolutionDropdown, "Failed to find component TMP_Dropdown for resolutionDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //WindowMode
         Transform windowModeDropDownTransform = transform.Find("WindowModeDropdown");
-        Utility.Validate(windowModeDropDownTransform, "Failed to find reference to WindowModeDropdown - SettingsMenu", true);
+        Utility.Validate(windowModeDropDownTransform, "Failed to find reference to WindowModeDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         windowModeDropdown = windowModeDropDownTransform.GetComponent<TMP_Dropdown>();
-        Utility.Validate(windowModeDropdown, "Failed to find component TMP_Dropdown for windowModeDropdown - SettingsMenu", true);
+        Utility.Validate(windowModeDropdown, "Failed to find component TMP_Dropdown for windowModeDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //Vsync
         Transform vsyncDropDownTransform = transform.Find("VsyncDropdown");
-        Utility.Validate(vsyncDropDownTransform, "Failed to find reference to VsyncDropdown - SettingsMenu", true);
+        Utility.Validate(vsyncDropDownTransform, "Failed to find reference to VsyncDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         vsyncDropdown = vsyncDropDownTransform.GetComponent<TMP_Dropdown>();
-        Utility.Validate(vsyncDropdown, "Failed to find component TMP_Dropdown for VsyncDropdown - SettingsMenu", true);
+        Utility.Validate(vsyncDropdown, "Failed to find component TMP_Dropdown for VsyncDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //FpsLimit
         Transform fpsLimitDropDownTransform = transform.Find("FpsLimitDropdown");
-        Utility.Validate(fpsLimitDropDownTransform, "Failed to find reference to FpsLimitDropdown - SettingsMenu", true);
+        Utility.Validate(fpsLimitDropDownTransform, "Failed to find reference to FpsLimitDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         fpsLimitDropdown = fpsLimitDropDownTransform.GetComponent<TMP_Dropdown>();
-        Utility.Validate(fpsLimitDropdown, "Failed to find component TMP_Dropdown for fpsLimitDropdown - SettingsMenu", true);
+        Utility.Validate(fpsLimitDropdown, "Failed to find component TMP_Dropdown for fpsLimitDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //Anti Aliasing
         Transform antiAliasingDropDownTransform = transform.Find("AntiAliasingDropdown");
-        Utility.Validate(antiAliasingDropDownTransform, "Failed to find reference to AntiAliasingDropdown - SettingsMenu", true);
+        Utility.Validate(antiAliasingDropDownTransform, "Failed to find reference to AntiAliasingDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         antiAliasingDropdown = antiAliasingDropDownTransform.GetComponent<TMP_Dropdown>();
-        Utility.Validate(antiAliasingDropdown, "Failed to find component TMP_Dropdown for antiAliasingDropdown - SettingsMenu", true);
+        Utility.Validate(antiAliasingDropdown, "Failed to find component TMP_Dropdown for antiAliasingDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //Texture Quality
         Transform textureQualityDropDownTransform = transform.Find("TextureQualityDropdown");
-        Utility.Validate(textureQualityDropDownTransform, "Failed to find reference to TextureQualityDropdown - SettingsMenu", true);
+        Utility.Validate(textureQualityDropDownTransform, "Failed to find reference to TextureQualityDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         textureQualityDropdown = textureQualityDropDownTransform.GetComponent<TMP_Dropdown>();
-        Utility.Validate(textureQualityDropdown, "Failed to find component TMP_Dropdown for textureQualityDropdown - SettingsMenu", true);
+        Utility.Validate(textureQualityDropdown, "Failed to find component TMP_Dropdown for textureQualityDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //AnisotropicFiltering
         Transform AFilteringDropDownTransform = transform.Find("AnisotropicFilteringDropdown");
-        Utility.Validate(AFilteringDropDownTransform, "Failed to find reference to AnisotropicFilteringDropdown - SettingsMenu", true);
+        Utility.Validate(AFilteringDropDownTransform, "Failed to find reference to AnisotropicFilteringDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         anisotropicFilteringDropdown = AFilteringDropDownTransform.GetComponent<TMP_Dropdown>();
-        Utility.Validate(anisotropicFilteringDropdown, "Failed to find component TMP_Dropdown for anisotropicFilteringDropdown - SettingsMenu", true);
+        Utility.Validate(anisotropicFilteringDropdown, "Failed to find component TMP_Dropdown for anisotropicFilteringDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
 
     }

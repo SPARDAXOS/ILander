@@ -4,10 +4,7 @@ using static GameInstance;
 using ILanderUtility;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static UnityEngine.EventSystems.EventTrigger;
-using UnityEngine.InputSystem;
-using System;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
+using Unity.Netcode;
 
 public class Level : MonoBehaviour
 {
@@ -24,6 +21,7 @@ public class Level : MonoBehaviour
     [SerializeField] private float pickupRespawnRetryTimer = 4.0f;
 
     private LevelState currentLevelState = LevelState.NONE;
+    private GameMode currentGameMode = GameMode.NONE;
     private bool initialized = false;
     private bool assetsLoaded = false;
 
@@ -56,12 +54,16 @@ public class Level : MonoBehaviour
     //3. On callback, get pool for it and initialize it with first value.
 
 
-    public void Initialize() {
+    public void Initialize(GameMode mode) {
         if (initialized)
             return;
 
-
-
+        //Hmmmm so client doesnt create any sort of pools? requests stuff from server pool? 
+        currentGameMode = mode;
+        if (currentGameMode == GameMode.LAN && !GetInstance().GetNetworkManagerScript().IsHost) {
+            initialized = true;
+            return;
+        }
         SetupReferences();
         if (pickupsBundle)
             LoadAssets();
@@ -94,28 +96,32 @@ public class Level : MonoBehaviour
     private void SetupReferences() {
 
         Transform player1SpawnPositionTransform = transform.Find("Player1SpawnPoint");
-        if (!Utility.Validate(player1SpawnPositionTransform, "No Player1SpawnPoint was found in level " + gameObject.name, false))
+        if (!Utility.Validate(player1SpawnPositionTransform, "No Player1SpawnPoint was found in " + gameObject.name, Utility.ValidationLevel.WARNING, false))
             player1SpawnPoint = Vector3.zero;
         else
             player1SpawnPoint = player1SpawnPositionTransform.position;
 
         Transform player2SpawnPositionTransform = transform.Find("Player2SpawnPoint");
-        if (!Utility.Validate(player2SpawnPositionTransform, "No Player2SpawnPoint was found in level " + gameObject.name, false))
+        if (!Utility.Validate(player2SpawnPositionTransform, "No Player2SpawnPoint was found in " + gameObject.name, Utility.ValidationLevel.WARNING, false))
             player2SpawnPoint = Vector3.zero;
         else
             player2SpawnPoint = player2SpawnPositionTransform.position;
 
 
-        //PickupPoints - Use amount to figure out Pickup Instansiations
         Transform PickupsSpawnPointsTransform = transform.Find("PickupSpawnPoints");
+        if (!Utility.Validate(PickupsSpawnPointsTransform, "No pickups spawn points were found in " + gameObject.name, Utility.ValidationLevel.WARNING, false))
+            return;
+
         pickupsSpawnPointsCount = (uint)PickupsSpawnPointsTransform.childCount;
         pickupsSpawnPoints = new Transform[pickupsSpawnPointsCount];
         occupiedPickupsSpawnPoints = new bool[pickupsSpawnPointsCount];
         for (uint i = 0; i < PickupsSpawnPointsTransform.childCount; i++)
             pickupsSpawnPoints[i] = PickupsSpawnPointsTransform.GetChild((int)i).transform;
-
     }
     public void ReleaseResources() {
+        if (!assetsLoaded)
+            return;
+
         foreach (var entry in pickupsPool)
             Destroy(entry.gameObject);
         foreach (var entry in loadedPickupAssets)
@@ -151,7 +157,7 @@ public class Level : MonoBehaviour
             if (queuedProjectileElements.ContainsKey(pickupEntry.associatedProjectile))
                 queuedProjectileElements[pickupEntry.associatedProjectile] += 2; //One for each player!
             else
-                queuedProjectileElements.Add(pickupEntry.associatedProjectile, 2);
+                queuedProjectileElements.Add(pickupEntry.associatedProjectile, 2); //One for each player!
 
             //Start loading asset if it has no entry
             if (!loadedProjectileAssets.ContainsKey(pickupEntry.associatedProjectile)) {
@@ -239,10 +245,15 @@ public class Level : MonoBehaviour
             projectilePools.Add(queue.Key, projectilesPool);
 
             for (int i = 0; i < queue.Value; i++) {
+
+                //HERE 
                 var gameObject = Instantiate(GetProjectileAsset(queue.Key));
                 Projectile projectile = gameObject.GetComponent<Projectile>();
+                projectile.Initialize(currentGameMode);
+                NetworkObject networkObject = gameObject.GetComponent<NetworkObject>();
+                networkObject.SpawnWithOwnership(GetInstance().GetClientID());
                 projectile.SetActive(false);
-                projectile.Initialize();
+
 
                 if (i == 0)
                     projectilesPool.Initialize(projectile);
@@ -293,7 +304,6 @@ public class Level : MonoBehaviour
             Debug.Log("Level Finished Loading Assets!");
             RefreshAllPickupSpawns();
             SetupProjectilePools();
-            //Clear queued elements dictionary? or it could be used as a book keeper for types and counts!
             currentLevelState = LevelState.ACTIVE;
             assetsLoaded = true;
         }
@@ -311,45 +321,16 @@ public class Level : MonoBehaviour
         else
             Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
     }
-    private void ProjectileAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
-        if (handle.Status == AsyncOperationStatus.Succeeded) {
-            Debug.Log("Successfully loaded " + handle.Result.ToString());
 
-            ////Create First Element
-            //var gameObject = Instantiate(handle.Result);
-            //Projectile projectile = gameObject.GetComponent<Projectile>();
-            //projectile.SetActive(false);
-            //
-            ////Create Pool
-            //var type = projectile.GetProjectileType();
-            //if (type == Projectile.ProjectileType.NONE) {
-            //    Debug.Log("Projectile " + gameObject.name + " had the projectile type NONE - Make sure to set it to the correct value!");
-            //    return;
-            //}
-            //ProjectilesPool<Projectile> projectilesPool = new ProjectilesPool<Projectile>();
-            //projectilesPool.Initialize(projectile);
-            //projectilePools.Add(type, projectilesPool);
-            //
-            ////Add Queued Elements
-            //if (bufferedProjectileElements.ContainsKey(type)) {
-            //    uint count = bufferedProjectileElements[type];
-            //    if (count == 0)
-            //        return;
-            //
-            //    for (uint i = 0; i < count; i++) {
-            //        var element = Instantiate(handle.Result);
-            //        Projectile script = element.GetComponent<Projectile>();
-            //        script.SetActive(false);
-            //        projectilePools[type].AddNewElement(script);
-            //    }
-            //    bufferedProjectileElements[type] = 0;
-            //}
-        }
+    //CAN BE REMOVED!
+    private void ProjectileAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded)
+            Debug.Log("Successfully loaded " + handle.Result.ToString());
         else
             Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
-
     }
 
+    //?=??
     private bool DoesPoolExist(Projectile.ProjectileType type) {
         if (projectilePools.Count == 0)
             return false;
@@ -376,6 +357,8 @@ public class Level : MonoBehaviour
     
 
     public bool SpawnProjectile(Player owner, Projectile.ProjectileType type) {
+        //Needs online version!
+
         if (type == Projectile.ProjectileType.NONE) {
             Debug.LogWarning("Received NONE as type in SpawnProjectile");
             return false;
@@ -388,7 +371,7 @@ public class Level : MonoBehaviour
         return projectilePools[type].SpawnProjectile(owner);
     }
 
-    private void RefreshAllPickupSpawns() {
+    public void RefreshAllPickupSpawns() {
         if (pickupsPool.Count == 0)
             return;
 
@@ -396,7 +379,6 @@ public class Level : MonoBehaviour
             var script = pickup.GetComponent<Pickup>();
             script.SetActive(false);
         }
-
 
         for (int i = 0; i < pickupsSpawnPoints.Length; i++) {
             var pickup = GetRandomUnactivePickup();

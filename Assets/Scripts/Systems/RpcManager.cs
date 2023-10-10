@@ -6,8 +6,7 @@ using Unity.Networking;
 using UnityEngine;
 using static GameInstance;
 
-public class RpcManager : NetworkBehaviour
-{
+public class RpcManager : NetworkBehaviour {
     private CustomizationMenu customizationMenuScript = null;
     private LevelSelectMenu levelSelectMenuScript = null;
 
@@ -34,13 +33,18 @@ public class RpcManager : NetworkBehaviour
         GetInstance().SetGameState(GameState.CUSTOMIZATION_MENU);
     }
     [ClientRpc]
+    public void ProccedToMatchStartClientRpc(ulong senderID) {
+        if (GetInstance().GetClientID() == senderID)
+            return;
+
+        GetInstance().ProccedToMatchStartRpc();
+    }
+
+    [ClientRpc]
     public void RelayLevelSelectorRoleClientRpc(ClientRpcParams clientRpcParameters = default) {
         levelSelectMenuScript.ActivateStartButton();
     }
 
-
-    //TODO: Avoid the senderID != self check if possible and use params instead to send 1 less packet each time!
-    //NOTE: Using senderID != self might be good since then i send my rpcs to all clients instead of hardcoded 1 at the cost of 1 extra packet but idk the cost of params
 
     [ClientRpc]
     public void RelayRpcManagerReferenceClientRpc(NetworkObjectReference reference) {

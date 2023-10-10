@@ -25,10 +25,10 @@ public class MuzzleFlashSpawner : MonoBehaviour
     }
     private void SetupReferences() {
         animatorComp = GetComponent<Animator>();
-        Utility.Validate(animatorComp, "Failed to get reference to Animator component - MuzzleFlashSpawner", true);
+        Utility.Validate(animatorComp, "Failed to get reference to Animator component - MuzzleFlashSpawner", Utility.ValidationLevel.ERROR, true);
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
-        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - MuzzleFlashSpawner", true);
+        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - MuzzleFlashSpawner", Utility.ValidationLevel.ERROR, true);
     }
 
 
