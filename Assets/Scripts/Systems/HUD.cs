@@ -5,6 +5,12 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
+struct HUDDataSet {
+    public float health;
+    public float fuel;
+    public Sprite pickupIcon; //Is this even needed?
+}
+
 public class HUD : MonoBehaviour
 {
     private bool initialized = false;

@@ -185,6 +185,9 @@ public class Player : NetworkBehaviour
     public PlayerCharacterData GetPlayerData() {
         return playerCharacterData;
     }
+    public PlayerType GetPlayerType() {
+        return currentPlayerType;
+    }
     public float GetCurrentHealth() {
         return currentHealth;
     }

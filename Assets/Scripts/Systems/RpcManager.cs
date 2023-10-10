@@ -24,7 +24,7 @@ public class RpcManager : NetworkBehaviour {
 
         customizationMenuScript = GetInstance().GetCustomizationMenuScript();
         levelSelectMenuScript = GetInstance().GetLevelSelectMenuScript();
-
+        //I COULD CACHE MORE HERE OTHERWISE ITS WEIRD!
     }
 
 
@@ -57,6 +57,39 @@ public class RpcManager : NetworkBehaviour {
     [ClientRpc]
     public void RelayPlayerSpawnPositionClientRpc(Vector3 spawnPoint, ClientRpcParams clientRpcParameters = default) {
         GetInstance().SetReceivedPlayerSpawnPointRpc(spawnPoint);
+    }
+
+    [ServerRpc (RequireOwnership = false)]
+    public void UpdateProjectileSpawnRequestServerRpc(ulong senderID, Player.PlayerType playerType, Projectile.ProjectileType projectileType) {
+        RelayProjectileSpawnRequestClientRpc(senderID, playerType, projectileType);
+    }
+    [ClientRpc]
+    public void RelayProjectileSpawnRequestClientRpc(ulong senderID, Player.PlayerType playerType, Projectile.ProjectileType projectileType) {
+        if (GetInstance().GetClientID() == senderID)
+                return;
+
+        //BUG: Can still shoot and boost while input disabled!
+
+        var script = GetInstance().GetCurrentLevelScript();
+        if (!script) {
+            Debug.LogWarning("Received projectile spawn request while level was null");
+            return;
+        }
+
+        Debug.Log("I received shoot request for " + playerType);
+        script.ReceiveProjectileSpawnRequest(playerType, projectileType);
+    }
+
+    [ServerRpc (RequireOwnership = true)]
+    public void UpdateRoundTimerServerRpc(ulong senderID, float value) {
+        RelayRoundTimerClientRpc(senderID, value);
+    }
+    [ClientRpc]
+    public void RelayRoundTimerClientRpc(ulong senderID, float value) {
+        if (senderID == GetInstance().GetClientID())
+            return;
+
+        GetInstance().GetMatchDirector().ReceiveRoundTimerRpc(value);
     }
 
 

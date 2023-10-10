@@ -953,10 +953,12 @@ public class GameInstance : MonoBehaviour
                 player2Script.SetActiveControlScheme(Player.PlayerType.PLAYER_1);
                 return;
             }
+
+            rpcManagerScript.ProccedToMatchStartClientRpc(GetClientID());
         }
         //Host starts and sends start rpc to other player?
         //Is the rpc even needed? - Not really but i guess?
-        rpcManagerScript.ProccedToMatchStartClientRpc(GetClientID());
+
         matchDirector.SetActive(true);
         SetupRoundStartState();
         countdownMenuScript.StartAnimation(StartMatch);
@@ -1205,6 +1207,9 @@ public class GameInstance : MonoBehaviour
     public RpcManager GetRpcManagerScript() {
         return rpcManagerScript;
     }
+    public MatchDirector GetMatchDirector() {
+        return matchDirectorScript;
+    }
     public NetworkManager GetNetworkManagerScript() {
         return networkManagerScript;
     }
@@ -1219,6 +1224,9 @@ public class GameInstance : MonoBehaviour
     }
     public Player GetPlayer2Script() {
         return player2Script;  
+    }
+    public Level GetCurrentLevelScript() {
+        return currentLoadedLevelScript;
     }
     
 

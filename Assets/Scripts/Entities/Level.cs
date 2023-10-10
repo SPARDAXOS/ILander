@@ -58,12 +58,7 @@ public class Level : MonoBehaviour
         if (initialized)
             return;
 
-        //Hmmmm so client doesnt create any sort of pools? requests stuff from server pool? 
         currentGameMode = mode;
-        if (currentGameMode == GameMode.LAN && !GetInstance().GetNetworkManagerScript().IsHost) {
-            initialized = true;
-            return;
-        }
         SetupReferences();
         if (pickupsBundle)
             LoadAssets();
@@ -82,6 +77,13 @@ public class Level : MonoBehaviour
         if (currentLevelState == LevelState.LOADING_ASSETS)
             CheckAssetsLoadingStatus();
         else if (currentLevelState == LevelState.ACTIVE && assetsLoaded) {
+
+            //CONSIDER MAKING FUNCTIONS FOR CHECKING HOST AND CLIENT VALUES AND SUCH! WÍTH OUT GETTING THE FULL THING!
+            if(currentGameMode == GameMode.LAN && GetInstance().GetNetworkManagerScript().IsHost) {
+
+            }
+
+
             if (IsSpawningPossible()) {
                 UpdateRespawnTimer();
                 UpdatePickupsSpawns();
@@ -89,6 +91,8 @@ public class Level : MonoBehaviour
             else {
                 currentRespawnTimer = pickupRespawnTimer; //Otherwise reset it?
             }
+
+
             foreach (var pool in projectilePools)
                 pool.Value.Tick();
         }
@@ -245,15 +249,10 @@ public class Level : MonoBehaviour
             projectilePools.Add(queue.Key, projectilesPool);
 
             for (int i = 0; i < queue.Value; i++) {
-
-                //HERE 
                 var gameObject = Instantiate(GetProjectileAsset(queue.Key));
                 Projectile projectile = gameObject.GetComponent<Projectile>();
-                projectile.Initialize(currentGameMode);
-                NetworkObject networkObject = gameObject.GetComponent<NetworkObject>();
-                networkObject.SpawnWithOwnership(GetInstance().GetClientID());
+                projectile.Initialize();
                 projectile.SetActive(false);
-
 
                 if (i == 0)
                     projectilesPool.Initialize(projectile);
@@ -279,7 +278,6 @@ public class Level : MonoBehaviour
 
     private void CheckAssetsLoadingStatus() {
         bool checkResults = true;
-        //HERE!
         //Also clean the dictionary of counts after everything is done
 
         foreach (var entry in loadedPickupAssets) {
@@ -369,6 +367,16 @@ public class Level : MonoBehaviour
         }
 
         return projectilePools[type].SpawnProjectile(owner);
+    }
+    public void ReceiveProjectileSpawnRequest(Player.PlayerType owner, Projectile.ProjectileType type) {
+        //Spwan projectile with owner
+        if (owner == Player.PlayerType.NONE)
+            return;
+
+        if (owner == Player.PlayerType.PLAYER_1)
+            SpawnProjectile(GetInstance().GetPlayer1Script(), type);
+        else if (owner == Player.PlayerType.PLAYER_2)
+            SpawnProjectile(GetInstance().GetPlayer2Script(), type);
     }
 
     public void RefreshAllPickupSpawns() {

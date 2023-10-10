@@ -20,6 +20,7 @@ public class MatchDirector : MonoBehaviour
     [SerializeField] uint roundTimeLimit = 2;
 
     private bool initialized = false;
+    private GameMode currentGameMode = GameMode.NONE;
     public bool matchStarted = false;
     private bool isRoundTimerRunning = false;
 
@@ -39,7 +40,6 @@ public class MatchDirector : MonoBehaviour
         if (initialized)
             return;
 
-
         SetupReferences();
         SetRoundTimerState(false);
         initialized = true;
@@ -52,8 +52,15 @@ public class MatchDirector : MonoBehaviour
         if (!matchStarted)
             return;
 
-        if (isRoundTimerRunning)
-            UpdateRoundTimer();
+        currentGameMode = GetInstance().GetCurrentGameMode();
+        if (isRoundTimerRunning) {
+            if (currentGameMode == GameMode.COOP)
+                UpdateRoundTimer();
+            else if (currentGameMode == GameMode.LAN) {
+                if (GetInstance().GetNetworkManagerScript().IsHost)
+                    UpdateRoundTimer();
+            }
+        }
     }
     private void SetupReferences() {
 
@@ -84,8 +91,20 @@ public class MatchDirector : MonoBehaviour
     }
 
 
+    //Either it also checks or i send flag to procced and set points? 
+    public void ReceiveRoundTimerRpc(float value) {
+        roundTimer = value;
+        UpdateRoundTimerText();
+        //For now, it checks too.
+        if (roundTimer < 0.0f) {
+            roundTimer = 0.0f;
+            Timeout();
+        }
+    }
+
 
     //NOTE: Consider registering death at the start of the anim since timer could run out during the running of the anim before it registers death!
+
     //Turning it off is managed by this class while turning it on is managed by GameInstance cause of countdown and setup by GameInstance
     public void SetRoundTimerState(bool state) {
         isRoundTimerRunning = state;
@@ -99,6 +118,9 @@ public class MatchDirector : MonoBehaviour
         if (roundTimer > 0.0f) {
             roundTimer -= Time.deltaTime;
             UpdateRoundTimerText();
+            if (currentGameMode == GameMode.LAN && GetInstance().GetNetworkManagerScript().IsHost)
+                GetInstance().GetRpcManagerScript().UpdateRoundTimerServerRpc(GetInstance().GetClientID(), roundTimer);
+
             if (roundTimer < 0.0f) {
                 roundTimer = 0.0f;
                 Timeout();

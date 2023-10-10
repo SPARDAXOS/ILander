@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using static GameInstance;
 
-public class Projectile : NetworkBehaviour
+public class Projectile : MonoBehaviour
 {
     //Primarily to make it easier to select associated projectiles in pickups entries.
     public enum ProjectileType {
@@ -17,7 +17,6 @@ public class Projectile : NetworkBehaviour
 
     
     protected ProjectileType type = ProjectileType.NONE;
-    protected GameMode currentGameMode = GameMode.NONE;
     protected bool active = false;
     protected Player ownerScript = null;
 
@@ -33,12 +32,7 @@ public class Projectile : NetworkBehaviour
 
     virtual public void SetActive(bool state) {
         active = state;
-        if (currentGameMode == GameMode.COOP)
-            gameObject.SetActive(state);
-        else if (currentGameMode == GameMode.LAN) {
-            boxCollider2DComp.enabled = state;
-            spriteRendererComp.enabled = state;
-        }
+        gameObject.SetActive(state);
     }
     public bool IsActive() {
         return active;
@@ -48,9 +42,8 @@ public class Projectile : NetworkBehaviour
     }
 
 
-    virtual public void Initialize(GameMode mode) {
+    virtual public void Initialize() {
         type = ProjectileType.NONE;
-        currentGameMode = mode;
         networkObjectComp = GetComponent<NetworkObject>();
         spriteRendererComp = GetComponent<SpriteRenderer>();
         boxCollider2DComp = GetComponent<BoxCollider2D>();

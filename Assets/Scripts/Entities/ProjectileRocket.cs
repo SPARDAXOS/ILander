@@ -21,15 +21,10 @@ public class ProjectileRocket : Projectile
         boxCollider2DComp.enabled = false;
     }
 
-    public override void SetActive(bool state) {
-        base.SetActive(state);
-        if (currentGameMode == GameMode.LAN)
-            animatorComp.enabled = state;
-    }
 
 
-    public override void Initialize(GameMode mode) {
-        base.Initialize(mode);
+    public override void Initialize() {
+        base.Initialize();
 
         type = ProjectileType.ROCKET;
         animatorComp = GetComponent<Animator>();

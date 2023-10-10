@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 460911660874065750}
   - component: {fileID: 7641772048022472048}
   - component: {fileID: -4846503114566520768}
-  - component: {fileID: 8289140317506890572}
+  - component: {fileID: -1256454727893126638}
   m_Layer: 0
   m_Name: ProjectileRocket
   m_TagString: Untagged
@@ -149,7 +149,7 @@ MonoBehaviour:
   damage: 0.34
   speed: 12
   spawnOffset: {x: 0.5, y: 0.5}
---- !u!114 &8289140317506890572
+--- !u!114 &-1256454727893126638
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
