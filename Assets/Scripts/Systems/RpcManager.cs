@@ -128,5 +128,9 @@ public class RpcManager : NetworkBehaviour
     public void UpdatePlayer2PositionServerRpc(float input) { 
         GetInstance().GetPlayer2Script().ProccessReceivedMovementRpc(input);
     }
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdatePlayer2RotationServerRpc(float input) {
+        GetInstance().GetPlayer2Script().ProccessReceivedRotationRpc(input);
+    }
 
 }

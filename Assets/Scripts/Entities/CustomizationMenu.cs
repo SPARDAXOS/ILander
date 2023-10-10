@@ -228,8 +228,6 @@ public class CustomizationMenu : MonoBehaviour
 
 
     public void SetupStartState() {
-        //Outdated now with new modes and gos
-
         player1TargetColor = Color.white;
         player2TargetColor = Color.white;
         playerCharacterIndex1 = 0;
@@ -243,7 +241,7 @@ public class CustomizationMenu : MonoBehaviour
         player1SpriteSwitchRight.SetActive(true);
         player1ColorPickerButton.gameObject.SetActive(true);
 
-
+        readyButtonText.text = "Ready";
         player1ReadyCheck = false;
         player2ReadyCheck = false;
 
@@ -297,24 +295,10 @@ public class CustomizationMenu : MonoBehaviour
     private void CheckPlayersStatus() {
         if (player1ReadyCheck && player2ReadyCheck) {
             var instance = GetInstance();
-
-            //This here! client/host mismatch!
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
             instance.SetGameState(GameState.LEVEL_SELECT_MENU);
-
-            //TODO: Rework the reseting of stuff to either happen by the GameInstance in SetupCustomizationMenuState or do it more elegantly here
-            //-currently you can see them snap as the transition is playing out!
-
-            //TODO: Color also does not carry over when you are picking it. Make an rpc for that.
-
-            //TODO: You do not set the color to the player sprite yet. Do that!
-
-            //BUG: There is a bug when you disconnect after you were in game and the level doesnt get unloaded so you cant start again!
-
-            //BUG: Bug with selecting which player is which. Color and sprite mismatch. Although remember that server is authoritative so if it decides you are player
-            //2 then you are going there!
-            //
+            
             
             //BUG: Do something in case the transtion animation breaks. Like set all their positions to the defaults the moment an anim ends!.
         }

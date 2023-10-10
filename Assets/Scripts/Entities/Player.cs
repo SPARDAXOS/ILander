@@ -48,7 +48,7 @@ public class Player : NetworkBehaviour
 
     public Pickup equippedPickup                            = null;
     private HUD HUDScript                                   = null;
-    private PlayerControlScheme activeControlScheme         = null;
+    public PlayerControlScheme activeControlScheme         = null;
     private MuzzleFlashSpawner muzzleFlashSpawnerScript     = null;
     private ExplosionSpawner explosionSpawnerScript         = null;
     private SpriteRenderer spriteRendererComp               = null;
@@ -88,9 +88,6 @@ public class Player : NetworkBehaviour
             UpdateHitEffectTimer();
 
         CheckInput();
-        
-        if (isRotating)
-            UpdateRotation(); //idk if should be in fixed input!
     }
     public void FixedTick() {
         if (!initialized) {
@@ -103,11 +100,18 @@ public class Player : NetworkBehaviour
 
         UpdateGravity();
         UpdateDrag();
+        //Move online check to function!
         if (isMoving) {
-            if (GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2 && networkObjectComp.IsOwner) //bad quick solution for testing!
+            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
                 UpdateNetworkedMovement();
             else
                 UpdateMovement();
+        }
+        if (isRotating) {
+            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
+                UpdateRotationMovement();
+            else
+                UpdateRotation(); //idk if should be in fixed input!
         }
     }
     private void SetupReferences() {
@@ -140,7 +144,12 @@ public class Player : NetworkBehaviour
         currentHealth = playerCharacterData.statsData.healthCap;
         currentFuel = playerCharacterData.statsData.fuelCap;
         equippedPickup = null;
-        RemoveFreeze();
+
+        //Function also enables input which is undesired!
+        freezeTimer = 0.0f;
+        isFrozen = false;
+        spriteRendererComp.color = defaultColor;
+
         RemoveHitEffect();
         UpdateAllHUDData();
 
@@ -149,8 +158,7 @@ public class Player : NetworkBehaviour
         //Timers and color effects
         boxCollider2DComp.enabled = true;
         isDead = false;
-        SetSpriteVisibility(true); //Questionable whether gameinstance does this or this
-        //Remember own spawn location? SetSpawnPoint()?
+        SetSpriteVisibility(true); //Questionable whether gameinstance does this or this - I DONT THINK THIS IS NEEDED ANYMORE AFTER THE NETWORK DEACTIVATION STUFF!
     }
 
     public void SetSpawnPoint(Vector3 position) {
@@ -161,6 +169,8 @@ public class Player : NetworkBehaviour
     }
     public void SetPlayerType(PlayerType type) {
         currentPlayerType = type;
+    }
+    public void SetActiveControlScheme(PlayerType type) {
         if (type == PlayerType.PLAYER_1)
             activeControlScheme = player1ControlScheme;
         else if (type == PlayerType.PLAYER_2)
@@ -224,8 +234,8 @@ public class Player : NetworkBehaviour
     private void RemoveFreeze() {
         freezeTimer = 0.0f;
         isFrozen = false;
-        EnableInput();
         spriteRendererComp.color = defaultColor;
+        EnableInput();
     }
     public void ApplyFreeze(float duration) {
         if (isDead)
@@ -233,8 +243,8 @@ public class Player : NetworkBehaviour
 
         freezeTimer = duration;
         isFrozen = true;
-        DisableInput();
         spriteRendererComp.color = frozenColor;
+        DisableInput();
     }
 
 
@@ -272,17 +282,32 @@ public class Player : NetworkBehaviour
         else
             rigidbodyComp.gravityScale = 0.0f;
     }
+
+
+
+    //Refactor those into being more reusable!
     private void UpdateRotation() {
         float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
         float Speed = playerCharacterData.statsData.turnRate; //Delta
         if (inputValue < 0.0f)
             Speed *= -1;
 
-        transform.Rotate(new Vector3(0.0f, 0.0f, Speed));
+        transform.Rotate(new Vector3(0.0f, 0.0f, Speed * Time.fixedDeltaTime));
+    }
+    private void UpdateRotationMovement() {
+        Debug.Log("Network Rotation!");
+        float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
+        if (inputValue == 0.0f)
+            return;
+
+        float Speed = playerCharacterData.statsData.turnRate; //Delta
+        if (inputValue < 0.0f)
+            Speed *= -1;
+
+        GetInstance().GetRpcManagerScript().UpdatePlayer2RotationServerRpc(Speed * Time.fixedDeltaTime); //You are always player 2 to the host
     }
     private void UpdateMovement() {
 
-        Debug.Log("Network movement!");
         //NOTE IMPORTANT: WTF IS THIS LITERALS!½
         float inputValue = activeControlScheme.movementInput.ReadValue<float>();
         //Break doesnt work its weird and abusable
@@ -293,7 +318,6 @@ public class Player : NetworkBehaviour
                 rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x - 0.01f, rigidbodyComp.velocity.y);
         } 
         else if (inputValue > 0.0f) {
-
             Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
             Vector2 velocity = rigidbodyComp.velocity + force;
             if (velocity.x > playerCharacterData.statsData.maxVelocity)
@@ -332,7 +356,11 @@ public class Player : NetworkBehaviour
             rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
         }
     }
-
+    public void ProccessReceivedRotationRpc(float input) {
+        //If in network mode?
+        //SAME AS ROTATION MOVEMENT BASICALLY!
+        transform.Rotate(new Vector3(0.0f, 0.0f, input)); //FIXED TIME OR JUST TIME REALLY!
+    }
 
 
 
@@ -343,7 +371,6 @@ public class Player : NetworkBehaviour
         if (currentFuel >= playerCharacterData.statsData.boostCost) {
             UseFuel(playerCharacterData.statsData.boostCost);
             rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
-            Debug.Log("BOOST!");
         }
     }
 
@@ -356,9 +383,6 @@ public class Player : NetworkBehaviour
         if (!equippedPickup || isDead)
             return;
 
-        //BUG: Shooting a projectile will also disable the pickup if it was respawned! 
-
-        //This also makes it reset and deactivate itself so no worries
         if (equippedPickup.Activate(this)) {
             equippedPickup = null; //? is this good enough? no resets of any kind?
             HUDScript.SetPickupIcon(currentPlayerType, null);
@@ -377,7 +401,6 @@ public class Player : NetworkBehaviour
         if (currentHealth > playerCharacterData.statsData.healthCap)
             currentHealth = playerCharacterData.statsData.healthCap;
 
-        Debug.Log("Health Pickup Used!");
         HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
     }
     public void TakeDamage(float amount) {
@@ -390,13 +413,11 @@ public class Player : NetworkBehaviour
         currentHealth -= amount;
         if (currentHealth <= 0.0f) {
             currentHealth = 0.0f;
-            Debug.Log("Player " + gameObject.name + " is dead!");
             Dead();
         }
 
         ApplyHitEffect();
         HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
-        Debug.Log("Damage Taken!");
     }
     private void Dead() {
         isDead = true;
@@ -420,7 +441,6 @@ public class Player : NetworkBehaviour
         if (currentFuel > playerCharacterData.statsData.fuelCap)
             currentFuel = playerCharacterData.statsData.fuelCap;
 
-        Debug.Log("Fuel Pickup Used!");
         HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
     }
     public void UseFuel(float amount) {

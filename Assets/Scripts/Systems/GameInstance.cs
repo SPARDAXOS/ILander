@@ -1,9 +1,6 @@
-using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using Unity.Netcode;
-using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -11,7 +8,6 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class GameInstance : MonoBehaviour
 {
-
 
     //NOTE: Break this into ApplicationStatus and GameStatus
     //NOTE: Instead create a initialization steps?`state? not sure
@@ -162,7 +158,6 @@ public class GameInstance : MonoBehaviour
             return;
 
         //DESTROY FIRST THEN RELEASE!
-
 
         foreach (var entry in loadedAssets)
             Addressables.Release(entry.Value);
@@ -747,19 +742,32 @@ public class GameInstance : MonoBehaviour
         }
     }
 
-    //I think its this that breaks the player character selection synchronization! Network sets it then this does it too!
+
     public void SetCharacterSelection(Player.PlayerType type, PlayerCharacterData data, Color color) {
         if (type == Player.PlayerType.NONE)
             return;
 
-        Debug.Log("I received " + type.ToString() + " with data " + data.name);
-        if (type == Player.PlayerType.PLAYER_1) {
-            player1Script.SetPlayerData(data);
-            player1Script.SetPlayerColor(color);
+        //The visuals on te customization menu is inverted on the client to show client as player 1 in their own game.
+        if (currentGameMode == GameMode.COOP || networkManagerScript.IsHost) {
+            if (type == Player.PlayerType.PLAYER_1) {
+                player1Script.SetPlayerData(data);
+                player1Script.SetPlayerColor(color);
+            }
+            else if (type == Player.PlayerType.PLAYER_2) {
+                player2Script.SetPlayerData(data);
+                player2Script.SetPlayerColor(color);
+            }
         }
-        else if (type == Player.PlayerType.PLAYER_2) {
-            player2Script.SetPlayerData(data);
-            player2Script.SetPlayerColor(color);
+        else if (networkManagerScript.IsClient) {
+            if (type == Player.PlayerType.PLAYER_1) {
+                player2Script.SetPlayerData(data);
+                player2Script.SetPlayerColor(color);
+            }
+            else if (type == Player.PlayerType.PLAYER_2) {
+                player1Script.SetPlayerData(data);
+                player1Script.SetPlayerColor(color);
+            }
+            Debug.Log("Im client in selection set");
         }
     }
 
@@ -887,7 +895,7 @@ public class GameInstance : MonoBehaviour
     }
     public void UnpauseGame() {
         //THIS IS MEANT FOR UNPAUSING AND RESUMING GAME MATCH! WILL NOT WORK ON QUITING!
-
+        //Many bugs - BUG: Host can control both players!
         HideAllMenus();
         DisableMouseCursor();
         currentGameState = GameState.PLAYING;
@@ -917,54 +925,64 @@ public class GameInstance : MonoBehaviour
     private void SetupPlayState() {
 
         //IMPORTANT - Its weird that there are two ways to reach this state! transition and without!
+        //For last day: Starting from here, i do client only stuff and host only stuff. Actually go back to customization menu, thats the start
 
         HideAllMenus();
         DisableMouseCursor();
 
+        //I decided, spawn poistion, control schemes and which player to move?
+
+        //BUG: When one player dies in multiplayer, i can move through walls and leave map!
+
+        //Need to set both control schemes cause it calls both later on whether its client or host!
         //Note: Spawn points are decided at match start!
         if (currentGameMode == GameMode.COOP) {
+            player1Script.SetActiveControlScheme(Player.PlayerType.PLAYER_1);
+            player2Script.SetActiveControlScheme(Player.PlayerType.PLAYER_2);
             player1Script.SetSpawnPoint(currentLoadedLevelScript.GetPlayer1SpawnPoint());
             player2Script.SetSpawnPoint(currentLoadedLevelScript.GetPlayer2SpawnPoint());
         }
         else if (currentGameMode == GameMode.LAN) {
             //Disable second player input? for both!
             if (networkManagerScript.IsHost) {
+                player1Script.SetActiveControlScheme(Player.PlayerType.PLAYER_1);
+                player2Script.SetActiveControlScheme(Player.PlayerType.PLAYER_2);
                 RandomizePlayerSpawnPoints();
             }
             else if (networkManagerScript.IsClient) {
+                player1Script.SetActiveControlScheme(Player.PlayerType.PLAYER_2);
+                player2Script.SetActiveControlScheme(Player.PlayerType.PLAYER_1);
                 //Nothing? you recieve the rpc to set position for your player 1 - Ideally do nothing and wait for host to trigger start game! at previous menu probably!
+                //Return here then the receiveRpc func will call the rest of this function?
             }
         }
         //Host starts and sends start rpc to other player?
 
-        matchDirector.SetActive(true); //Should set to false when match over
-
-
+        matchDirector.SetActive(true);
         SetupRoundStartState();
         countdownMenuScript.StartAnimation(StartMatch);
         currentGameState = GameState.PLAYING;
     }
 
-    //These two are a lot simpler to look at now!!! 
+
     private void SetupRoundStartState() {
-        //This func needs a online version!
-
         //IMPORTANT NOTE: I could reuse those all over the place honsetly and do the online version once!
+        //Either break input activation to client host or keep it like now
+        if (currentGameMode == GameMode.COOP) {
+            player1.SetActive(false);
+            player2.SetActive(false);
+        }
+        else if (currentGameMode == GameMode.LAN) {
+            player1Script.DeactivateNetworkedEntity();
+            player2Script.DeactivateNetworkedEntity();
+        }
 
-
-        player1Script.DisableInput(); //Kinda redundant but at least it disables the monitoring of the input by the input system
+        player1Script.DisableInput();
         player2Script.DisableInput();
-
-        //This part needs online version probably with disabling sprites instead. But physics tho? Disable rigidbody too then? seems to be what online solutions say!
-        player1.SetActive(false);
-        player2.SetActive(false);
-
         player1Script.SetupStartState(); //This also sets sprite visibility internally! should be used to reset after death!
         player2Script.SetupStartState();
 
-        HUD.SetActive(false); //?? semeed messing from the grouo dowon there
-
-        //Disable round timer either here or before this is called! im just worried since this one is used all over the place later!
+        HUD.SetActive(false);
 
         //ResetLevelSpawners and ResetPlayers (Pickups, health, speed, direction, etc)
     }
@@ -973,17 +991,23 @@ public class GameInstance : MonoBehaviour
         countdownMenuScript.StartAnimation(StartRound);
     }
     public void StartRound() {
-        //Need online version!
+        //Either break input activation to client host or keep it like now
+        if (currentGameMode == GameMode.COOP) {
+            player1.SetActive(true);
+            player2.SetActive(true);
+            player1Script.EnableInput();
+            player2Script.EnableInput();
+        }
+        else if (currentGameMode == GameMode.LAN) {
+            player1Script.ActivateNetworkedEntity();
+            player2Script.ActivateNetworkedEntity();
+            if (networkManagerScript.IsHost)
+                player1Script.EnableInput();
+            else if (networkManagerScript.IsClient)
+                player2Script.EnableInput();
+        }
 
-        matchDirectorScript.SetRoundTimerState(true); //Needed here!
-
-        //Only first one! if online then only first player input!
-        player1Script.EnableInput();
-        player2Script.EnableInput();
-
-        player1.SetActive(true);
-        player2.SetActive(true);
-
+        matchDirectorScript.SetRoundTimerState(true);
         HUD.SetActive(true);
     }
 
@@ -1011,6 +1035,7 @@ public class GameInstance : MonoBehaviour
         matchDirector.SetActive(false);
         HUD.SetActive(false);
         
+        //In online, its fine to disable both, but can only turn on player 1 for host and player 2 for client! best way to put it!
         player1Script.DisableInput();
         player2Script.DisableInput(); //In online, disable input of other player!
 
@@ -1043,7 +1068,7 @@ public class GameInstance : MonoBehaviour
         RestartGameState();
         Debug.Log("GAME QUIT!");
 
-        //Input assertion fail, test it on quit! it crashed!
+        //CRASH: Input assertion fail, test it on quit! it crashed!
     }
 
     /// <summary>
@@ -1083,8 +1108,6 @@ public class GameInstance : MonoBehaviour
     }
 
 
-
-    //Unready text in customization menu needs resetting
     //Stuff breaks on quit disconnection and i can open pause menu in main menu then then a bunch of crashes related to tick function here!
 
     //GameEnding User Cases

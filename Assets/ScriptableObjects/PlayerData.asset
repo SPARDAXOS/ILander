@@ -22,7 +22,7 @@ MonoBehaviour:
   maxVelocity: 100
   accelerationRate: 343
   boostStrength: 400
-  turnRate: 1
+  turnRate: 100
   gravityScale: 0.2
   movingDragRate: 1.2
   stoppedDragRate: 0.8
