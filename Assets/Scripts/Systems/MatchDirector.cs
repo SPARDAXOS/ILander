@@ -52,12 +52,12 @@ public class MatchDirector : MonoBehaviour
         if (!matchStarted)
             return;
 
-        currentGameMode = GetInstance().GetCurrentGameMode();
+        currentGameMode = GetGameInstance().GetCurrentGameMode();
         if (isRoundTimerRunning) {
             if (currentGameMode == GameMode.COOP)
                 UpdateRoundTimer();
             else if (currentGameMode == GameMode.LAN) {
-                if (GetInstance().GetNetworkManagerScript().IsHost)
+                if (GetGameInstance().GetNetworkManagerScript().IsHost)
                     UpdateRoundTimer();
             }
         }
@@ -118,8 +118,8 @@ public class MatchDirector : MonoBehaviour
         if (roundTimer > 0.0f) {
             roundTimer -= Time.deltaTime;
             UpdateRoundTimerText();
-            if (currentGameMode == GameMode.LAN && GetInstance().GetNetworkManagerScript().IsHost)
-                GetInstance().GetRpcManagerScript().UpdateRoundTimerServerRpc(GetInstance().GetClientID(), roundTimer);
+            if (currentGameMode == GameMode.LAN && GetGameInstance().GetNetworkManagerScript().IsHost)
+                GetGameInstance().GetRpcManagerScript().UpdateRoundTimerServerRpc(GetGameInstance().GetClientID(), roundTimer);
 
             if (roundTimer < 0.0f) {
                 roundTimer = 0.0f;
@@ -130,8 +130,8 @@ public class MatchDirector : MonoBehaviour
             Timeout();
     }
     private void Timeout() {
-        var player1 = GetInstance().GetPlayer1Script();
-        var player2 = GetInstance().GetPlayer2Script();
+        var player1 = GetGameInstance().GetPlayer1Script();
+        var player2 = GetGameInstance().GetPlayer2Script();
 
         if (player1.GetCurrentHealth() > player2.GetCurrentHealth())
             ScorePoint(Player.PlayerType.PLAYER_1);
@@ -140,10 +140,8 @@ public class MatchDirector : MonoBehaviour
         else
             ScoreDrawPoints();
 
-        Debug.Log("Timeout!");
-
-        //ADD INVINCIBILITY DURING THIS TO PLAYERS TO NOT SCORE TWICE!
-        //Or draw!
+        GetGameInstance().GetPlayer1Script().SetInvincible(true);
+        GetGameInstance().GetPlayer2Script().SetInvincible(true);
     }
     private void UpdateRoundTimerText() {
         roundTimerText.text = ((int)roundTimer).ToString();
@@ -178,7 +176,7 @@ public class MatchDirector : MonoBehaviour
     //QutMatch is to be called by game instance in case of disconnection or quitting.
 
     private void StartNewRound() {
-        GetInstance().StartNewRound();
+        GetGameInstance().StartNewRound();
         ResetRoundTimer();
     }
     public void StartMatch() {
@@ -189,7 +187,7 @@ public class MatchDirector : MonoBehaviour
     public void EndMatch() {
         matchStarted = false;
         SetRoundTimerState(false);
-        GetInstance().EndMatch();
+        GetGameInstance().EndMatch();
     }
     public void QuitMatch() {
         matchStarted = false;

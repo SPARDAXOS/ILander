@@ -6,6 +6,15 @@ using static GameInstance;
 
 
 public class RpcManager : NetworkBehaviour {
+    public enum PlayerHealthProcess {
+        ADDITION,
+        SUBTRACTION
+    }
+    public enum PlayerFuelProcess {
+        ADDITION,
+        SUBTRACTION
+    }
+
     private CustomizationMenu customizationMenuScript = null;
     private LevelSelectMenu levelSelectMenuScript = null;
 
@@ -21,22 +30,106 @@ public class RpcManager : NetworkBehaviour {
     }
     private void SetupReferences() {
 
-        customizationMenuScript = GetInstance().GetCustomizationMenuScript();
-        levelSelectMenuScript = GetInstance().GetLevelSelectMenuScript();
+        customizationMenuScript = GetGameInstance().GetCustomizationMenuScript();
+        levelSelectMenuScript = GetGameInstance().GetLevelSelectMenuScript();
         //I COULD CACHE MORE HERE OTHERWISE ITS WEIRD!
     }
 
 
+
+
+    [ServerRpc (RequireOwnership = false)]
+    public void ExecutePlayerHealthProcessServerRpc(PlayerHealthProcess process, Player.PlayerType player, float amount) {
+        if (player == Player.PlayerType.NONE)
+            return;
+
+        Player script = null;
+        PlayerCharacterData data = new PlayerCharacterData();
+
+        if (player == Player.PlayerType.PLAYER_1) {
+            script = GetGameInstance().GetPlayer1Script();
+            data = script.GetPlayerData();
+        }
+        else if (player == Player.PlayerType.PLAYER_2) {
+            script = GetGameInstance().GetPlayer2Script();
+            data = script.GetPlayerData();
+        }
+
+        float currentHealth = script.GetCurrentHealth();
+        float healthCap = data.statsData.healthCap;
+        if (process == PlayerHealthProcess.ADDITION) {
+            currentHealth += amount;
+            if (currentHealth > healthCap)
+                currentHealth = healthCap;
+        }
+        else if (process == PlayerHealthProcess.SUBTRACTION) {
+            currentHealth -= amount;
+            if (currentHealth <= 0.0f)
+                currentHealth = 0.0f;
+        }
+
+        RelayPlayerHealthResultsClientRpc(player, currentHealth, currentHealth / healthCap);
+    }
+    [ClientRpc]
+    public void RelayPlayerHealthResultsClientRpc(Player.PlayerType player, float health, float percentage) {
+
+        GetGameInstance().GetPlayer1Script().ReceivePlayerHealthProcessRpc(player, health, percentage);
+        GetGameInstance().GetPlayer2Script().ReceivePlayerHealthProcessRpc(player, health, percentage);
+    }
+
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ExecutePlayerFuelProcessServerRpc(PlayerFuelProcess process, Player.PlayerType player, float amount) {
+        if (player == Player.PlayerType.NONE)
+            return;
+
+        Player script = null;
+        PlayerCharacterData data = new PlayerCharacterData();
+
+        if (player == Player.PlayerType.PLAYER_1) {
+            script = GetGameInstance().GetPlayer1Script();
+            data = script.GetPlayerData();
+        }
+        else if (player == Player.PlayerType.PLAYER_2) {
+            script = GetGameInstance().GetPlayer2Script();
+            data = script.GetPlayerData();
+        }
+
+        float currentFuel = script.GetCurrentFuel();
+        float fuelCap = data.statsData.fuelCap;
+        if (process == PlayerFuelProcess.ADDITION) {
+            currentFuel += amount;
+            if (currentFuel > fuelCap)
+                currentFuel = fuelCap;
+        }
+        else if (process == PlayerFuelProcess.SUBTRACTION) {
+            currentFuel -= amount;
+            if (currentFuel <= 0.0f)
+                currentFuel = 0.0f;
+        }
+
+        RelayPlayerFuelResultsClientRpc(player, currentFuel, currentFuel / fuelCap);
+    }
+    [ClientRpc]
+    public void RelayPlayerFuelResultsClientRpc(Player.PlayerType player, float fuel, float percentage) {
+
+        GetGameInstance().GetPlayer1Script().ReceivePlayerFuelProcessRpc(player, fuel, percentage);
+        GetGameInstance().GetPlayer2Script().ReceivePlayerFuelProcessRpc(player, fuel, percentage);
+    }
+
+
+
+
     [ClientRpc]
     public void ProccedToCustomizationMenuClientRpc() {
-        GetInstance().SetGameState(GameState.CUSTOMIZATION_MENU);
+        GetGameInstance().SetGameState(GameState.CUSTOMIZATION_MENU);
     }
     [ClientRpc]
     public void ProccedToMatchStartClientRpc(ulong senderID) {
-        if (GetInstance().GetClientID() == senderID)
+        if (GetGameInstance().GetClientID() == senderID)
             return;
 
-        GetInstance().ProccedToMatchStartRpc();
+        GetGameInstance().ProccedToMatchStartRpc();
     }
 
     [ClientRpc]
@@ -47,16 +140,19 @@ public class RpcManager : NetworkBehaviour {
 
     [ClientRpc]
     public void RelayRpcManagerReferenceClientRpc(NetworkObjectReference reference) {
-        GetInstance().SetReceivedRpcManagerRef(reference);
+        GetGameInstance().SetReceivedRpcManagerRef(reference);
     }
     [ClientRpc]
     public void RelayPlayerReferenceClientRpc(NetworkObjectReference reference, Player.PlayerType player, ClientRpcParams clientRpcParameters = default) {
-        GetInstance().SetReceivedPlayerRefRpc(reference, player);
+        GetGameInstance().SetReceivedPlayerRefRpc(reference, player);
     }
     [ClientRpc]
     public void RelayPlayerSpawnPositionClientRpc(Vector3 spawnPoint, ClientRpcParams clientRpcParameters = default) {
-        GetInstance().SetReceivedPlayerSpawnPointRpc(spawnPoint);
+        GetGameInstance().SetReceivedPlayerSpawnPointRpc(spawnPoint);
     }
+
+
+
 
     [ServerRpc (RequireOwnership = false)]
     public void UpdateProjectileSpawnRequestServerRpc(ulong senderID, Player.PlayerType playerType, Projectile.ProjectileType projectileType) {
@@ -64,12 +160,12 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelayProjectileSpawnRequestClientRpc(ulong senderID, Player.PlayerType playerType, Projectile.ProjectileType projectileType) {
-        if (GetInstance().GetClientID() == senderID)
+        if (GetGameInstance().GetClientID() == senderID || playerType == Player.PlayerType.NONE)
                 return;
 
         //BUG: Can still shoot and boost while input disabled!
 
-        var script = GetInstance().GetCurrentLevelScript();
+        var script = GetGameInstance().GetCurrentLevelScript();
         if (!script) {
             Debug.LogWarning("Received projectile spawn request while level was null");
             return;
@@ -77,9 +173,16 @@ public class RpcManager : NetworkBehaviour {
 
         //Try to play muzzle flash from here!
         //if(playerType == Player.PlayerType.PLAYER_1)
-            //GetInstance().GetPlayer1Script().PlayMuzzleFlashAnim(projectileType.ToString())
+        //GetInstance().GetPlayer1Script().PlayMuzzleFlashAnim(projectileType.ToString())
 
-        script.ReceiveProjectileSpawnRequest(playerType, projectileType);
+        //ReceivePickupUsageConfirmationRpc This to confirm pickup usage and clear portrait and ref!
+
+        if (script.ReceiveProjectileSpawnRequest(playerType, projectileType)) {
+            if (playerType == Player.PlayerType.PLAYER_1)
+                GetGameInstance().GetPlayer1Script().ReceivePickupUsageConfirmationRpc();
+            else if (playerType == Player.PlayerType.PLAYER_2)
+                GetGameInstance().GetPlayer2Script().ReceivePickupUsageConfirmationRpc();
+        }
     }
 
     [ServerRpc (RequireOwnership = true)]
@@ -88,30 +191,10 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelayRoundTimerClientRpc(ulong senderID, float value) {
-        if (senderID == GetInstance().GetClientID())
+        if (senderID == GetGameInstance().GetClientID())
             return;
 
-        GetInstance().GetMatchDirector().ReceiveRoundTimerRpc(value);
-    }
-
-
-
-    [ServerRpc(RequireOwnership = true)]
-    public void UpdatePickupIDsServerRpc(ulong senderID, int[] data) {
-        RelayPickupIDsClientRpc(senderID, data);
-    }
-    [ClientRpc]
-    public void RelayPickupIDsClientRpc(ulong senderID, int[] data) {
-        if (senderID == GetInstance().GetClientID())
-            return;
-
-        var script = GetInstance().GetCurrentLevelScript();
-        if (!script) {
-            Debug.LogWarning("Received pickup IDs while level was null"); //Message out dated!
-            return;
-        }
-
-        script.ReceivePickupIDsRpc(data);
+        GetGameInstance().GetMatchDirector().ReceiveRoundTimerRpc(value);
     }
 
 
@@ -121,10 +204,10 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelayDeactivatePickupSpawnsClientRpc(ulong senderID) {
-        if (senderID == GetInstance().GetClientID())
+        if (senderID == GetGameInstance().GetClientID())
             return;
 
-        var level = GetInstance().GetCurrentLevelScript();
+        var level = GetGameInstance().GetCurrentLevelScript();
         if (level == null)
             return;
 
@@ -139,10 +222,10 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelayPickupSpawnRequestClientRpc(ulong senderID, int ID, int spawnIndex) {
-        if (senderID == GetInstance().GetClientID())
+        if (senderID == GetGameInstance().GetClientID())
             return;
 
-        var level = GetInstance().GetCurrentLevelScript();
+        var level = GetGameInstance().GetCurrentLevelScript();
         if (level == null)
             return;
 
@@ -157,7 +240,7 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc] 
     public void RelayPlayer2SelectionClientRpc(ulong senderID, int index) {
-        if (senderID == GetInstance().GetClientID())
+        if (senderID == GetGameInstance().GetClientID())
             return;
 
         customizationMenuScript.ReceivePlayer2CharacterIndexRpc(index);
@@ -171,7 +254,7 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelayPlayer2ColorSelectionClientRpc(ulong senderID, Color color) {
-        if (senderID == GetInstance().GetClientID())
+        if (senderID == GetGameInstance().GetClientID())
             return;
 
         customizationMenuScript.ReceivePlayer2ColorSelectionRpc(color);
@@ -184,7 +267,7 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelayPlayer2ReadyCheckClientRpc(ulong senderID, bool ready) {
-        if (senderID == GetInstance().GetClientID())
+        if (senderID == GetGameInstance().GetClientID())
             return;
 
         customizationMenuScript.ReceivePlayer2ReadyCheckRpc(ready);
@@ -197,7 +280,7 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelaySelectedLevelPreviewClientRpc(ulong senderID, int index) {
-        if (senderID == (ulong)GetInstance().GetClientID())
+        if (senderID == (ulong)GetGameInstance().GetClientID())
             return;
 
         levelSelectMenuScript.ReceiveSelectedLevelPreviewRpc(index);
@@ -210,7 +293,7 @@ public class RpcManager : NetworkBehaviour {
     }
     [ClientRpc]
     public void RelaySelectedLevelIndexClientRpc(ulong senderID, int index) {
-        if (senderID == (ulong)GetInstance().GetClientID())
+        if (senderID == (ulong)GetGameInstance().GetClientID())
             return;
 
         levelSelectMenuScript.ReceiveLevelSelectionRpc(index);
@@ -219,11 +302,11 @@ public class RpcManager : NetworkBehaviour {
 
     [ServerRpc(RequireOwnership = false)]
     public void UpdatePlayer2PositionServerRpc(float input) { 
-        GetInstance().GetPlayer2Script().ProccessReceivedMovementRpc(input);
+        GetGameInstance().GetPlayer2Script().ProccessReceivedMovementRpc(input);
     }
     [ServerRpc(RequireOwnership = false)]
     public void UpdatePlayer2RotationServerRpc(float input) {
-        GetInstance().GetPlayer2Script().ProccessReceivedRotationRpc(input);
+        GetGameInstance().GetPlayer2Script().ProccessReceivedRotationRpc(input);
     }
 
 }

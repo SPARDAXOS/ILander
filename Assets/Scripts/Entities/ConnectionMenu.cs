@@ -68,12 +68,12 @@ public class ConnectionMenu : MonoBehaviour
     }
 
     public void HostButton() {
-        GameInstance.GetInstance().StartAsHost();
+        GameInstance.GetGameInstance().StartAsHost();
         SetConnectionMenuMode(ConnectionMenuMode.HOST);
         //Transition? or rework menu mode
     }
     public void JoinButton() {
-        GameInstance.GetInstance().StartAsClient();
+        GameInstance.GetGameInstance().StartAsClient();
         SetConnectionMenuMode(ConnectionMenuMode.CLIENT);
         //Transition? or rework menu mode
     }

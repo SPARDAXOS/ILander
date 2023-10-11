@@ -185,7 +185,7 @@ public class GameInstance : MonoBehaviour
     }
 
 
-    public static GameInstance GetInstance() {
+    public static GameInstance GetGameInstance() {
         return instance;
     }
     public void Abort(string errorMessage) {
@@ -1029,8 +1029,8 @@ public class GameInstance : MonoBehaviour
     //QuitMatch is called by game instance when disconnected or quit through pause menu. It calls director to quit game too.
     private void StartMatch() {
         matchDirectorScript.StartMatch();
-        if (IsHost())
-            currentLoadedLevelScript.RelayPickupIDsRpc(); //? ?? here?=P
+        //if (IsHost())
+            //currentLoadedLevelScript.RelayPickupIDsRpc(); //? ?? here?=P
         StartRound();
     }
     public void EndMatch() {

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Geometry : MonoBehaviour
 {
-
+    [SerializeField] private float contactDamage = 0.05f;
 
 
 
@@ -16,7 +16,7 @@ public class Geometry : MonoBehaviour
         var script = collision.gameObject.GetComponent<Player>();
         if (script) {
 
-            Debug.Log("HIT!");
+            script.TakeDamage(contactDamage);
 
 
         }

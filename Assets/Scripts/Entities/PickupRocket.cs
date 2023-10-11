@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using static GameInstance;
 
@@ -16,8 +14,8 @@ public class PickupRocket : Pickup
     }
     public override bool Activate(Player user) {
         if (levelScript.SpawnProjectile(user, associatedProjectileType)) {
-            if (GetInstance().GetCurrentGameMode() == GameMode.LAN)
-                GetInstance().GetRpcManagerScript().UpdateProjectileSpawnRequestServerRpc(GetInstance().GetClientID(), user.GetPlayerType(), associatedProjectileType);
+            if (GetGameInstance().GetCurrentGameMode() == GameMode.LAN)
+                GetGameInstance().GetRpcManagerScript().UpdateProjectileSpawnRequestServerRpc(GetGameInstance().GetClientID(), user.GetPlayerType(), associatedProjectileType);
             return true;
         }
         return false;

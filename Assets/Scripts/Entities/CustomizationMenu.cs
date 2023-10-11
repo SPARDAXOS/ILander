@@ -71,7 +71,7 @@ public class CustomizationMenu : MonoBehaviour
         if (initialized)
             return;
 
-        playerCharactersBundle = GetInstance().GetPlayerCharactersBundle();
+        playerCharactersBundle = GetGameInstance().GetPlayerCharactersBundle();
         SetupReferences();
         SetupStartState();
         ApplyCurrentMenuMode();
@@ -294,7 +294,7 @@ public class CustomizationMenu : MonoBehaviour
 
     private void CheckPlayersStatus() {
         if (player1ReadyCheck && player2ReadyCheck) {
-            var instance = GetInstance();
+            var instance = GetGameInstance();
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
             instance.SetGameState(GameState.LEVEL_SELECT_MENU);
@@ -309,8 +309,8 @@ public class CustomizationMenu : MonoBehaviour
         else
             player1ReadyCheckGameObject.SetActive(false);
 
-        var rpcManger = GetInstance().GetRpcManagerScript();
-        rpcManger.UpdatePlayer2ReadyCheckServerRpc((ulong)GetInstance().GetClientID(), player1ReadyCheck);
+        var rpcManger = GetGameInstance().GetRpcManagerScript();
+        rpcManger.UpdatePlayer2ReadyCheckServerRpc((ulong)GetGameInstance().GetClientID(), player1ReadyCheck);
         CheckPlayersStatus();
     }
     private void UpdatePlayer2ReadyCheck() {
@@ -374,8 +374,8 @@ public class CustomizationMenu : MonoBehaviour
                 playerCharacterIndex1 = playerCharactersBundle.playerCharacters.Length - 1;
             UpdatePlayer1ShipSprite();
             if (currentMenuMode == CustomizationMenuMode.ONLINE) {
-                var rpcManger = GetInstance().GetRpcManagerScript();
-                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
+                var rpcManger = GetGameInstance().GetRpcManagerScript();
+                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetGameInstance().GetClientID(), playerCharacterIndex1);
             }
         }
         else if (playerIndex == 2) {
@@ -394,8 +394,8 @@ public class CustomizationMenu : MonoBehaviour
                 playerCharacterIndex1 = 0;
             UpdatePlayer1ShipSprite();
             if (currentMenuMode == CustomizationMenuMode.ONLINE) {
-                var rpcManger = GetInstance().GetRpcManagerScript();
-                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
+                var rpcManger = GetGameInstance().GetRpcManagerScript();
+                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetGameInstance().GetClientID(), playerCharacterIndex1);
             }
         }
         else if (playerIndex == 2) {
@@ -411,7 +411,7 @@ public class CustomizationMenu : MonoBehaviour
 
 
     public void StartButton() {
-        var instance = GetInstance();
+        var instance = GetGameInstance();
         instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
         instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
         instance.SetGameState(GameState.LEVEL_SELECT_MENU);
@@ -457,7 +457,7 @@ public class CustomizationMenu : MonoBehaviour
         spectrumButtonExit = false;
 
         if (currentMenuMode == CustomizationMenuMode.ONLINE)
-            GetInstance().GetRpcManagerScript().UpdatePlayer2ColorSelectionServerRpc(GetInstance().GetClientID(), player1TargetColor);
+            GetGameInstance().GetRpcManagerScript().UpdatePlayer2ColorSelectionServerRpc(GetGameInstance().GetClientID(), player1TargetColor);
 
     }
     public void SpectrumButtonExit() {

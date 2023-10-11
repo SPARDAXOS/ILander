@@ -1,14 +1,8 @@
-using Initialization;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 using ILanderUtility;
 using Unity.Netcode;
-using Unity.Multiplayer;
 using static GameInstance;
 using System;
-using UnityEngine.InputSystem;
 
 public class Player : NetworkBehaviour
 {
@@ -26,29 +20,31 @@ public class Player : NetworkBehaviour
     [SerializeField] private Color hitEffectColor = Color.red;
     [SerializeField] private float hitEffectDuration = 1.0f;
 
-    public bool initialized = false;
-    private PlayerCharacterData playerCharacterData; //Add Check to validate if player has data before doing any updates!
-    public PlayerType currentPlayerType = PlayerType.NONE;
+    private bool initialized = false;
+    private PlayerCharacterData playerCharacterData;
+    private PlayerType currentPlayerType = PlayerType.NONE;
+    private GameMode currentGameMode = GameMode.NONE;
     private Color defaultColor = Color.white;
     private Vector3 spawnPoint = Vector3.zero;
 
 
-    public float currentHealth = 0.0f;
-    public float currentFuel = 0.0f;
+    private float currentHealth = 0.0f;
+    private float currentFuel = 0.0f;
 
     private bool isMoving       = false;
     private bool isRotating     = false;
     private bool isFrozen       = false;
     private bool isDead         = false;
+    private bool isInvincible   = false;
 
     private bool hitEffectOn = false;
 
     private float freezeTimer = 0.0f;
     private float hitEffectTimer = 0.0f;
 
-    public Pickup equippedPickup                            = null;
+    private Pickup equippedPickup                           = null;
     private HUD HUDScript                                   = null;
-    public PlayerControlScheme activeControlScheme         = null;
+    private PlayerControlScheme activeControlScheme         = null;
     private MuzzleFlashSpawner muzzleFlashSpawnerScript     = null;
     private ExplosionSpawner explosionSpawnerScript         = null;
     private SpriteRenderer spriteRendererComp               = null;
@@ -77,6 +73,9 @@ public class Player : NetworkBehaviour
             return;
         }
 
+        //Use is owner!!!"!!!!!!!!!!!!!!
+
+        currentGameMode = GetGameInstance().GetCurrentGameMode();
         if (isDead)
             return;
 
@@ -97,18 +96,20 @@ public class Player : NetworkBehaviour
         if (isDead)
             return;
 
+        //Use is owner!!!"!!!!!!!!!!!!!!
+
 
         UpdateGravity();
         UpdateDrag();
         //Move online check to function!
         if (isMoving) {
-            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
+            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetGameInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
                 UpdateNetworkedMovement();
             else
                 UpdateMovement();
         }
         if (isRotating) {
-            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
+            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetGameInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
                 UpdateRotationMovement();
             else
                 UpdateRotation(); //idk if should be in fixed input!
@@ -145,6 +146,7 @@ public class Player : NetworkBehaviour
         currentFuel = playerCharacterData.statsData.fuelCap;
         equippedPickup = null;
 
+        SetInvincible(false);
         //Function also enables input which is undesired!
         freezeTimer = 0.0f;
         isFrozen = false;
@@ -181,7 +183,7 @@ public class Player : NetworkBehaviour
         activeControlScheme.pauseInput.started += PauseInputCallback;
     }
 
-    //Maybe overkill to get all data..
+
     public PlayerCharacterData GetPlayerData() {
         return playerCharacterData;
     }
@@ -190,6 +192,9 @@ public class Player : NetworkBehaviour
     }
     public float GetCurrentHealth() {
         return currentHealth;
+    }
+    public float GetCurrentFuel() {
+        return currentFuel;
     }
 
 
@@ -209,6 +214,7 @@ public class Player : NetworkBehaviour
         HUDScript.SetCharacterPortrait(currentPlayerType, playerCharacterData.portraitSprite);
     }
 
+
     private void CheckInput() {
         if (!activeControlScheme)
             return;
@@ -216,9 +222,8 @@ public class Player : NetworkBehaviour
         isMoving = activeControlScheme.movementInput.IsPressed();
         isRotating = activeControlScheme.rotationInput.IsPressed();
     }
-
     private void PauseInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
-        GetInstance().PauseGame();
+        GetGameInstance().PauseGame();
     }
     private void BoostInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
         Boost();
@@ -301,7 +306,6 @@ public class Player : NetworkBehaviour
         transform.Rotate(new Vector3(0.0f, 0.0f, Speed * Time.fixedDeltaTime));
     }
     private void UpdateRotationMovement() {
-        Debug.Log("Network Rotation!");
         float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
         if (inputValue == 0.0f)
             return;
@@ -310,7 +314,7 @@ public class Player : NetworkBehaviour
         if (inputValue < 0.0f)
             Speed *= -1;
 
-        GetInstance().GetRpcManagerScript().UpdatePlayer2RotationServerRpc(Speed * Time.fixedDeltaTime); //You are always player 2 to the host
+        GetGameInstance().GetRpcManagerScript().UpdatePlayer2RotationServerRpc(Speed * Time.fixedDeltaTime); //You are always player 2 to the host
     }
     private void UpdateMovement() {
 
@@ -318,6 +322,7 @@ public class Player : NetworkBehaviour
         float inputValue = activeControlScheme.movementInput.ReadValue<float>();
         //Break doesnt work its weird and abusable
         if (inputValue < 0.0f) {
+            //This is break. Either do something or remove it!
             if (rigidbodyComp.velocity.y > 0.0f)
                 rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x, rigidbodyComp.velocity.y - 0.01f);
             if (rigidbodyComp.velocity.x > 0.0f)
@@ -335,10 +340,9 @@ public class Player : NetworkBehaviour
         }
     }
     private void UpdateNetworkedMovement() {
-        Debug.Log("Network movement!");
         float inputValue = activeControlScheme.movementInput.ReadValue<float>();
         if (inputValue > 0.0f | inputValue < 0.0f)
-            GetInstance().GetRpcManagerScript().UpdatePlayer2PositionServerRpc(inputValue); //You are always player 2 to the host
+            GetGameInstance().GetRpcManagerScript().UpdatePlayer2PositionServerRpc(inputValue); //You are always player 2 to the host
     }
     //Called by game instance or rpc manager
     public void ProccessReceivedMovementRpc(float input) {
@@ -369,14 +373,16 @@ public class Player : NetworkBehaviour
     }
 
 
-
+    public void SetInvincible(bool state) {
+        isInvincible = state;
+    }
     private void Boost() {
         if (isDead)
             return;
 
         if (currentFuel >= playerCharacterData.statsData.boostCost) {
             UseFuel(playerCharacterData.statsData.boostCost);
-            rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
+            rigidbodyComp.AddForce(playerCharacterData.statsData.boostStrength * Time.fixedDeltaTime * transform.up, ForceMode2D.Impulse);
         }
     }
 
@@ -390,9 +396,14 @@ public class Player : NetworkBehaviour
             return;
 
         if (equippedPickup.Activate(this)) {
-            equippedPickup = null; //? is this good enough? no resets of any kind?
+            equippedPickup = null;
             HUDScript.SetPickupIcon(currentPlayerType, null);
         }
+    }
+    public void ReceivePickupUsageConfirmationRpc() {
+        Debug.LogWarning("The equipped ref was " + equippedPickup); //Last test to see if i should even manage this one. 
+        equippedPickup = null;
+        HUDScript.SetPickupIcon(currentPlayerType, null);
     }
 
 
@@ -403,29 +414,69 @@ public class Player : NetworkBehaviour
         if (amount < 0.0f)
             amount *= -1;
 
-        currentHealth += amount;
-        if (currentHealth > playerCharacterData.statsData.healthCap)
-            currentHealth = playerCharacterData.statsData.healthCap;
+        if (currentGameMode == GameMode.COOP) {
+            currentHealth += amount;
+            if (currentHealth > playerCharacterData.statsData.healthCap)
+                currentHealth = playerCharacterData.statsData.healthCap;
 
-        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+            HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+        }
+        else if (currentGameMode == GameMode.LAN && IsOwner)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerHealthProcessServerRpc(RpcManager.PlayerHealthProcess.ADDITION, currentPlayerType, amount);
     }
     public void TakeDamage(float amount) {
-        if (isDead)
+        if (isDead || isInvincible)
             return;
 
         if (amount < 0.0f)
             amount *= -1;
 
-        currentHealth -= amount;
-        if (currentHealth <= 0.0f) {
-            currentHealth = 0.0f;
-            Dead();
-        }
+        if (currentGameMode == GameMode.COOP) {
+            currentHealth -= amount;
+            if (currentHealth <= 0.0f) {
+                currentHealth = 0.0f;
+                Kill();
+            }
 
-        ApplyHitEffect();
-        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+            HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+        }
+        else if (currentGameMode == GameMode.LAN && IsOwner)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerHealthProcessServerRpc(RpcManager.PlayerHealthProcess.SUBTRACTION, currentPlayerType, amount);
     }
-    private void Dead() {
+
+    public void ReceivePlayerHealthProcessRpc(PlayerType player, float health, float percentage) {
+        if (player == PlayerType.NONE)
+            return;
+
+        if (player == currentPlayerType) {
+            if (currentHealth < health)
+                ApplyHitEffect();
+
+            currentHealth = health;
+            if (currentHealth == 0.0f)
+                Kill(); //Works as rpc for kills too! since both players get it.
+
+            HUDScript.UpdateHealth(currentPlayerType, percentage);
+        }
+        else {
+            //I could use this here to player death anim even though it looked fine.
+
+            HUDScript.UpdateHealth(player, percentage);
+        }
+    }
+    public void ReceivePlayerFuelProcessRpc(PlayerType player, float fuel, float percentage) {
+        if (player == PlayerType.NONE)
+            return;
+
+        if (player == currentPlayerType) {
+            currentFuel = fuel;
+            HUDScript.UpdateFuel(currentPlayerType, percentage);
+        }
+        else
+            HUDScript.UpdateFuel(player, percentage);
+    }
+    
+    private void Kill() {
         isDead = true;
         DisableInput();
         rigidbodyComp.velocity = Vector3.zero;
@@ -433,7 +484,7 @@ public class Player : NetworkBehaviour
         boxCollider2DComp.enabled = false;
         SetSpriteVisibility(false);
         explosionSpawnerScript.PlayAnimation("PlayerDead", null);
-        GetInstance().RegisterPlayerDeath(currentPlayerType);
+        GetGameInstance().RegisterPlayerDeath(currentPlayerType);
     }
 
     public void AddFuel(float amount) {
@@ -443,11 +494,15 @@ public class Player : NetworkBehaviour
         if (amount < 0.0f)
             amount *= -1;
 
-        currentFuel += amount;
-        if (currentFuel > playerCharacterData.statsData.fuelCap)
-            currentFuel = playerCharacterData.statsData.fuelCap;
+        if (currentGameMode == GameMode.COOP && IsOwner) {
+            currentFuel += amount;
+            if (currentFuel > playerCharacterData.statsData.fuelCap)
+                currentFuel = playerCharacterData.statsData.fuelCap;
 
-        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+            HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+        }
+        else if (currentGameMode == GameMode.LAN)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerFuelProcessServerRpc(RpcManager.PlayerFuelProcess.ADDITION, currentPlayerType, amount);
     }
     public void UseFuel(float amount) {
         if (isDead)
@@ -456,13 +511,18 @@ public class Player : NetworkBehaviour
         if (amount < 0.0f)
             amount *= -1;
 
-        currentFuel -= amount;
-        if (currentFuel <= 0.0f) {
-            currentFuel = 0.0f;
-            //Out of fuel?
+        if (currentGameMode == GameMode.COOP && IsOwner) {
+            currentFuel -= amount;
+            if (currentFuel <= 0.0f)
+                currentFuel = 0.0f;
+
+            HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
         }
-        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+        else if (currentGameMode == GameMode.LAN)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerFuelProcessServerRpc(RpcManager.PlayerFuelProcess.SUBTRACTION, currentPlayerType, amount);
     }
+
+
 
     public bool PlayMuzzleFlashAnim(string name, Action callback, Vector3 customSize) {
         return muzzleFlashSpawnerScript.PlayAnimation(name, callback, customSize);
@@ -472,6 +532,7 @@ public class Player : NetworkBehaviour
     }
 
 
+    //???
     public void SetSpriteVisibility(bool state) {
         spriteRendererComp.enabled = state;
     }
@@ -493,11 +554,13 @@ public class Player : NetworkBehaviour
         spriteRendererComp.enabled = false;
         boxCollider2DComp.enabled = false;
         rigidbodyComp.isKinematic = true;
+        rigidbodyComp.velocity = Vector3.zero;
     }
 
     public void EnableInput() {
         if (!activeControlScheme)
             return;
+
         activeControlScheme.movementInput.Enable();
         activeControlScheme.rotationInput.Enable();
         activeControlScheme.boostInput.Enable();
@@ -507,6 +570,7 @@ public class Player : NetworkBehaviour
     public void DisableInput() {
         if (!activeControlScheme)
             return;
+
         activeControlScheme.movementInput.Disable();
         activeControlScheme.rotationInput.Disable();
         activeControlScheme.boostInput.Disable();
@@ -518,6 +582,11 @@ public class Player : NetworkBehaviour
     public Vector2 GetVelocity() {
         return rigidbodyComp.velocity;
     }
+
+
+
+
+    //This whole thing!
     public void ApplyImpulse(Vector2 direction, float force) {
         if (isDead)
             return;

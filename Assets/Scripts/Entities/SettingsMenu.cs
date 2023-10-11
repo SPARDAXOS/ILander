@@ -90,7 +90,7 @@ public class SettingsMenu : MonoBehaviour {
     }
     private void SetupReferences() {
 
-        gameSettings = GameInstance.GetInstance().GetGameSettings();
+        gameSettings = GameInstance.GetGameInstance().GetGameSettings();
         Utility.Validate(gameSettings, "Failed to retrieve GameSettings from GameInstance - SettingsMenu", Utility.ValidationLevel.ERROR, true);
 
         //Presets
@@ -494,6 +494,6 @@ public class SettingsMenu : MonoBehaviour {
 
 
     public void ReturnButton() {
-        GameInstance.GetInstance().SetGameState(GameInstance.GameState.MAIN_MENU);
+        GameInstance.GetGameInstance().SetGameState(GameInstance.GameState.MAIN_MENU);
     }
 }

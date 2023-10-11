@@ -133,7 +133,7 @@ public class ResultsMenu : MonoBehaviour
             notificationText.text = "Returning to main menu in " + (int)returnTimer + " ..";
             if (returnTimer <= 0.0f) {
                 returnTimer = 0.0f;
-                GetInstance().RestartGameState();
+                GetGameInstance().RestartGameState();
             }
         }
     }

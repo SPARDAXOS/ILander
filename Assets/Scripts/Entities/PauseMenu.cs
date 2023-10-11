@@ -6,10 +6,10 @@ using static GameInstance;
 public class PauseMenu : MonoBehaviour
 {
     public void ResumeButton() {
-        GetInstance().UnpauseGame();
+        GetGameInstance().UnpauseGame();
     }
     public void QuitButton() {
         Debug.Log("GAME QUIT! - through Quit button!");
-        GetInstance().QuitMatch();
+        GetGameInstance().QuitMatch();
     }
 }

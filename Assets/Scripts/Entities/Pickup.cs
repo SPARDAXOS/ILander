@@ -66,6 +66,8 @@ public abstract class Pickup : MonoBehaviour
         script.RegisterPickup(this);
         SetActive(false);
         levelScript.RegisterPickupDispawn(spawnPointIndex);
+
+
     }
 
 

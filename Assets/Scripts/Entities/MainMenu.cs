@@ -25,10 +25,10 @@ public class MainMenu : MonoBehaviour
 
 
     public void StartButton() {
-        GameInstance.GetInstance().SetGameState(GameInstance.GameState.GAMEMODE_MENU);
+        GameInstance.GetGameInstance().SetGameState(GameInstance.GameState.GAMEMODE_MENU);
     }
     public void SettingsButton() {
-        GameInstance.GetInstance().SetGameState(GameInstance.GameState.SETTINGS_MENU);
+        GameInstance.GetGameInstance().SetGameState(GameInstance.GameState.SETTINGS_MENU);
     }
     public void QuitButton() {
 #if UNITY_EDITOR

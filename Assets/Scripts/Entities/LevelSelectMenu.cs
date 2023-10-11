@@ -33,7 +33,7 @@ public class LevelSelectMenu : MonoBehaviour
         if (initialized)
             return;
 
-        levelsBundle = GetInstance().GetLevelsBundle();
+        levelsBundle = GetGameInstance().GetLevelsBundle();
         SetupReferences();
         SetupStartState();
         UpdateLevelPreview();
@@ -97,7 +97,7 @@ public class LevelSelectMenu : MonoBehaviour
 
 
     public void ReceiveLevelSelectionRpc(int index) {
-        GetInstance().StartLevel((uint)index);
+        GetGameInstance().StartLevel((uint)index);
     }
     public void ReceiveSelectedLevelPreviewRpc(int index) {
         currentLevelIndex = index;
@@ -120,7 +120,7 @@ public class LevelSelectMenu : MonoBehaviour
             currentLevelIndex = levelsBundle.levels.Length - 1;
 
         if (currentMenuMode == LevelSelectMenuMode.ONLINE)
-            GetInstance().GetRpcManagerScript().UpdateSelectedLevelPreviewServerRpc(GetInstance().GetClientID(), currentLevelIndex);
+            GetGameInstance().GetRpcManagerScript().UpdateSelectedLevelPreviewServerRpc(GetGameInstance().GetClientID(), currentLevelIndex);
 
         UpdateLevelPreview();
     }
@@ -130,12 +130,12 @@ public class LevelSelectMenu : MonoBehaviour
             currentLevelIndex = 0;
 
         if (currentMenuMode == LevelSelectMenuMode.ONLINE)
-            GetInstance().GetRpcManagerScript().UpdateSelectedLevelPreviewServerRpc(GetInstance().GetClientID(), currentLevelIndex);
+            GetGameInstance().GetRpcManagerScript().UpdateSelectedLevelPreviewServerRpc(GetGameInstance().GetClientID(), currentLevelIndex);
 
         UpdateLevelPreview();
     }
     public void StartButton() {
-        var instance = GetInstance();
+        var instance = GetGameInstance();
         instance.StartLevel((uint)currentLevelIndex);
 
         if (currentMenuMode == LevelSelectMenuMode.ONLINE)

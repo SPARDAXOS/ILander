@@ -29,7 +29,7 @@ namespace ILanderUtility {
                     Debug.LogError(message);
 
                 if (abortOnFail)
-                    GameInstance.GetInstance().Abort(message);
+                    GameInstance.GetGameInstance().Abort(message);
                 return false;
             }
             return true;

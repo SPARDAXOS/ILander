@@ -19,6 +19,5 @@ public class PickupFuel : Pickup
         SetActive(false);
         gameObject.SetActive(false);
         levelScript.RegisterPickupDispawn(spawnPointIndex);
-        Debug.Log("Pickup spawn point index is " +  spawnPointIndex);
     }
 }
