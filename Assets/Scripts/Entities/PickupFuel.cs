@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class PickupFuel : Pickup
 {
+
+    public override void Initialize() {
+        type = PickupType.FUEL;
+        initialized = true;
+    }
+
     public override bool Activate(Player user) {
         user.AddFuel(Potency);
         return true;
@@ -13,5 +19,6 @@ public class PickupFuel : Pickup
         SetActive(false);
         gameObject.SetActive(false);
         levelScript.RegisterPickupDispawn(spawnPointIndex);
+        Debug.Log("Pickup spawn point index is " +  spawnPointIndex);
     }
 }

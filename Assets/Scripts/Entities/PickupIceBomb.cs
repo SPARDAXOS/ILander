@@ -10,7 +10,10 @@ public class PickupIceBomb : Pickup
 
 
 
-
+    public override void Initialize() {
+        type = PickupType.ICE_BOMB;
+        initialized = true;
+    }
     public override bool Activate(Player user) {
         if (levelScript.SpawnProjectile(user, associatedProjectileType)) {
             if (GetInstance().GetCurrentGameMode() == GameMode.LAN)

@@ -12,29 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69688d3a41d79e041ae7e8f94b4c9494, type: 3}
   m_Name: PickupsBundle
   m_EditorClassIdentifier: 
-  pickups:
-  - name: Fuel
-    assetReference:
-      m_AssetGUID: 509137ce41b75cd4cba03fa0dce1986d
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0
-    associatedProjectile: 0
-  - name: Health
+  entries:
+  - type: 1
     assetReference:
       m_AssetGUID: 9d712c622a9252944b1f913408495deb
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
     associatedProjectile: 0
-  - name: Rocket
+  - type: 2
+    assetReference:
+      m_AssetGUID: 509137ce41b75cd4cba03fa0dce1986d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    associatedProjectile: 0
+  - type: 3
     assetReference:
       m_AssetGUID: 3385c6d4c1620bf449c45e2a84bbe7db
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
     associatedProjectile: 1
-  - name: IceBomb
+  - type: 4
     assetReference:
       m_AssetGUID: c75a5475f26318943bf70d629e6e435d
       m_SubObjectName: 

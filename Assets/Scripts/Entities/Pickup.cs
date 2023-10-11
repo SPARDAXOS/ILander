@@ -1,14 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Projectile;
 
 public abstract class Pickup : MonoBehaviour
 {
+    //Primarily for book keeping purposes and association with projectiles.
+    public enum PickupType {
+        NONE = 0,
+        HEALTH,
+        FUEL,
+        ROCKET,
+        ICE_BOMB
+    }
+
+
     [SerializeField] protected float Potency = 0.0f;
 
     protected bool active = false;
+    protected bool initialized = false;
+    protected PickupType type = PickupType.NONE;
+
     protected Level levelScript;
     protected int spawnPointIndex = -1;
+    public int ID = -1;
 
     public void SetActive(bool state) {
         active = state;
@@ -18,8 +33,28 @@ public abstract class Pickup : MonoBehaviour
         return active;
     }
 
+    public void SetPickupID(int id) {
+        ID = id;
+    }
+    public int GetPickupID() {
+        return ID;
+    }
+    public PickupType GetPickupType() {
+        return type;
+    }
+
+
+    virtual public void Initialize() {
+        type = PickupType.NONE;
+        initialized = true;
+    }
+
+
     public void SetSpawnPointIndex(int index) {
         spawnPointIndex = index;
+    }
+    public int GetSpawnPointIndex() {
+        return spawnPointIndex;
     }
     public void SetLevelScript(Level script) {
         levelScript = script;

@@ -18,6 +18,7 @@ public class Projectile : MonoBehaviour
     
     protected ProjectileType type = ProjectileType.NONE;
     protected bool active = false;
+    protected bool initialized = false;
     protected Player ownerScript = null;
 
     protected bool moving = false;
@@ -48,6 +49,7 @@ public class Projectile : MonoBehaviour
         spriteRendererComp = GetComponent<SpriteRenderer>();
         boxCollider2DComp = GetComponent<BoxCollider2D>();
         boxCollider2DComp.enabled = false;
+        initialized = true;
     }
     virtual protected void ResetToStartState() {
         ownerScript = null;
@@ -82,6 +84,10 @@ public class Projectile : MonoBehaviour
 
 
     virtual public void Tick() {
+        if (!initialized) {
+            Debug.LogWarning("Attempted to tick uninitialized entity " + gameObject.name);
+            return;
+        }
 
 
         if (moving)

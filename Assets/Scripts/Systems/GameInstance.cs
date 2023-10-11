@@ -246,8 +246,6 @@ public class GameInstance : MonoBehaviour
 
     private void UpdatePlayingState() {
 
-        //ONLINE HERE
-
         //Questionable
         if (countdownMenuScript.IsAnimationPlaying())
             countdownMenuScript.Tick();
@@ -257,18 +255,19 @@ public class GameInstance : MonoBehaviour
 
         matchDirectorScript.Tick();
 
-        //Crashes in online
-        player1Script.Tick();
-        player2Script.Tick();
+        if (player1Script)
+            player1Script.Tick();
+        if (player2Script)
+            player2Script.Tick();
+
         mainCameraScript.Tick();
     }
     private void UpdatePlayingFixedState() {
 
-        //ONLINE HERE
-
-        //Crashes in online
-        player1Script.FixedTick();
-        player2Script.FixedTick();
+        if (player1Script)
+            player1Script.FixedTick();
+        if (player2Script)
+            player2Script.FixedTick();
     }
 
     private void UpdateLoadingState() {
@@ -685,6 +684,13 @@ public class GameInstance : MonoBehaviour
         }
     }
 
+    public bool IsHost() {
+        return networkManagerScript.IsHost;
+    }
+    public bool IsClient() {
+        return networkManagerScript.IsClient;
+    }
+
 
     public void SetReceivedRpcManagerRef(NetworkObjectReference reference) {
         rpcManager = reference;
@@ -740,8 +746,6 @@ public class GameInstance : MonoBehaviour
             levelSelectMenuScript.SetLevelSelectMenuMode(LevelSelectMenu.LevelSelectMenuMode.ONLINE);
         }
     }
-
-
     public void SetCharacterSelection(Player.PlayerType type, PlayerCharacterData data, Color color) {
         if (type == Player.PlayerType.NONE)
             return;
@@ -766,7 +770,6 @@ public class GameInstance : MonoBehaviour
                 player1Script.SetPlayerData(data);
                 player1Script.SetPlayerColor(color);
             }
-            Debug.Log("Im client in selection set");
         }
     }
 
@@ -991,14 +994,16 @@ public class GameInstance : MonoBehaviour
 
         HUD.SetActive(false);
 
-        //ResetLevelSpawners and ResetPlayers (Pickups, health, speed, direction, etc)
+        //ResetLevelSpawners and ResetPlayers (Pickups,
     }
     public void StartNewRound() {
         SetupRoundStartState();
-        currentLoadedLevelScript.RefreshAllPickupSpawns();
+        //currentLoadedLevelScript.RefreshAllPickupSpawns();
         countdownMenuScript.StartAnimation(StartRound);
     }
     public void StartRound() {
+        if (IsHost())
+            currentLoadedLevelScript.RefreshAllPickupSpawns(); //HERE!
         //Either break input activation to client host or keep it like now
         if (currentGameMode == GameMode.COOP) {
             player1.SetActive(true);
@@ -1024,6 +1029,8 @@ public class GameInstance : MonoBehaviour
     //QuitMatch is called by game instance when disconnected or quit through pause menu. It calls director to quit game too.
     private void StartMatch() {
         matchDirectorScript.StartMatch();
+        if (IsHost())
+            currentLoadedLevelScript.RelayPickupIDsRpc(); //? ?? here?=P
         StartRound();
     }
     public void EndMatch() {

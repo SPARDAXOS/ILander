@@ -1,10 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
-using Unity.Networking.Transport;
-using Unity.Networking;
 using UnityEngine;
 using static GameInstance;
+
+
+
 
 public class RpcManager : NetworkBehaviour {
     private CustomizationMenu customizationMenuScript = null;
@@ -76,7 +75,10 @@ public class RpcManager : NetworkBehaviour {
             return;
         }
 
-        Debug.Log("I received shoot request for " + playerType);
+        //Try to play muzzle flash from here!
+        //if(playerType == Player.PlayerType.PLAYER_1)
+            //GetInstance().GetPlayer1Script().PlayMuzzleFlashAnim(projectileType.ToString())
+
         script.ReceiveProjectileSpawnRequest(playerType, projectileType);
     }
 
@@ -90,6 +92,61 @@ public class RpcManager : NetworkBehaviour {
             return;
 
         GetInstance().GetMatchDirector().ReceiveRoundTimerRpc(value);
+    }
+
+
+
+    [ServerRpc(RequireOwnership = true)]
+    public void UpdatePickupIDsServerRpc(ulong senderID, int[] data) {
+        RelayPickupIDsClientRpc(senderID, data);
+    }
+    [ClientRpc]
+    public void RelayPickupIDsClientRpc(ulong senderID, int[] data) {
+        if (senderID == GetInstance().GetClientID())
+            return;
+
+        var script = GetInstance().GetCurrentLevelScript();
+        if (!script) {
+            Debug.LogWarning("Received pickup IDs while level was null"); //Message out dated!
+            return;
+        }
+
+        script.ReceivePickupIDsRpc(data);
+    }
+
+
+    [ServerRpc(RequireOwnership = true)]
+    public void DeactivatePickupSpawnsServerRpc(ulong senderID) {
+        RelayDeactivatePickupSpawnsClientRpc(senderID);
+    }
+    [ClientRpc]
+    public void RelayDeactivatePickupSpawnsClientRpc(ulong senderID) {
+        if (senderID == GetInstance().GetClientID())
+            return;
+
+        var level = GetInstance().GetCurrentLevelScript();
+        if (level == null)
+            return;
+
+
+        level.DeactivateAllPickups();
+    }
+
+
+    [ServerRpc(RequireOwnership = true)]
+    public void UpdatePickupSpawnsServerRpc(ulong senderID, int ID, int spawnIndex) {
+        RelayPickupSpawnRequestClientRpc(senderID, ID, spawnIndex);
+    }
+    [ClientRpc]
+    public void RelayPickupSpawnRequestClientRpc(ulong senderID, int ID, int spawnIndex) {
+        if (senderID == GetInstance().GetClientID())
+            return;
+
+        var level = GetInstance().GetCurrentLevelScript();
+        if (level == null)
+            return;
+
+        level.ReceivePickupSpawnRequestRpc(ID, spawnIndex);
     }
 
 
@@ -123,7 +180,6 @@ public class RpcManager : NetworkBehaviour {
 
     [ServerRpc(RequireOwnership = false)]
     public void UpdatePlayer2ReadyCheckServerRpc(ulong senderID, bool ready) {
-
         RelayPlayer2ReadyCheckClientRpc(senderID, ready);
     }
     [ClientRpc]

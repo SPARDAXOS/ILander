@@ -8,7 +8,7 @@ using UnityEngine.AddressableAssets;
 [Serializable]
 public struct PickupEntry {
 
-    public string name;
+    public Pickup.PickupType type;
     public AssetReference assetReference;
     public Projectile.ProjectileType associatedProjectile;
 }
@@ -17,7 +17,7 @@ public struct PickupEntry {
 [CreateAssetMenu(fileName = "PickupsBundle", menuName = "Data/PickupsBundle", order = 7)]
 public class PickupsBundle : ScriptableObject
 {
-    public PickupEntry[] pickups;
+    public PickupEntry[] entries;
 
 
 
