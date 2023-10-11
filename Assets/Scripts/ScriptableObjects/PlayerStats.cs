@@ -21,7 +21,7 @@ public class PlayerStats : ScriptableObject
 
     [Space(10.0f)]
     [Header("Movement")]
-    [Range(1.0f, 1000.0f)] public float maxVelocity = 100.0f;
+    [Range(1.0f, 1000.0f)] public Vector2 maxVelocity = new Vector2(100.0f, 100.0f);
     [Range(1.0f, 1000.0f)] public float accelerationRate = 100.0f;
     [Range(1.0f, 1000.0f)] public float boostStrength = 400.0f;
     [Range(1.0f, 1000.0f)] public float turnRate = 150.0f;

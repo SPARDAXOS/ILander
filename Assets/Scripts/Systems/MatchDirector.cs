@@ -42,6 +42,7 @@ public class MatchDirector : MonoBehaviour
 
         SetupReferences();
         SetRoundTimerState(false);
+        SetRoundTimerVisibility(false);
         initialized = true;
     }
     public void Tick() {
@@ -108,6 +109,8 @@ public class MatchDirector : MonoBehaviour
     //Turning it off is managed by this class while turning it on is managed by GameInstance cause of countdown and setup by GameInstance
     public void SetRoundTimerState(bool state) {
         isRoundTimerRunning = state;
+    }
+    public void SetRoundTimerVisibility(bool state) {
         roundTimerText.gameObject.SetActive(state);
     }
     public void ResetRoundTimer() {
@@ -187,11 +190,13 @@ public class MatchDirector : MonoBehaviour
     public void EndMatch() {
         matchStarted = false;
         SetRoundTimerState(false);
+        SetRoundTimerVisibility(false);
         GetGameInstance().EndMatch();
     }
     public void QuitMatch() {
         matchStarted = false;
         SetRoundTimerState(false);
+        SetRoundTimerVisibility(false);
     }
 
 
@@ -218,6 +223,7 @@ public class MatchDirector : MonoBehaviour
             matchResults = MatchResults.PLAYER_2_WINS;
 
         SetRoundTimerState(false);
+        SetRoundTimerVisibility(false);
         StartScoreUpdate(); //Triggers score update at each score point!
     }
     public void ScorePoint(Player.PlayerType type) {
@@ -236,6 +242,7 @@ public class MatchDirector : MonoBehaviour
         }
 
         SetRoundTimerState(false);
+        SetRoundTimerVisibility(false);
         StartScoreUpdate(); //Triggers score update at each score point!
     }
     private bool IsWinnerDecided() {
