@@ -105,7 +105,6 @@ public class GameInstance : MonoBehaviour {
     private Player player2Script;
     private NetworkObject player1NetworkObject;
     private NetworkObject player2NetworkObject;
-    private MainCamera mainCameraScript;
     private MainMenu mainMenuScript; //For consistency's sake
     private SettingsMenu settingsMenuScript;
     private GameModeMenu gameModeMenuScript;
@@ -259,7 +258,6 @@ public class GameInstance : MonoBehaviour {
 
     private void UpdatePlayingState() {
         matchDirectorScript.Tick();
-        mainCameraScript.Tick();
         
         if (countdownMenuScript.IsAnimationPlaying())
             countdownMenuScript.Tick();
@@ -417,9 +415,7 @@ public class GameInstance : MonoBehaviour {
             networkManager.SetActive(false);
 
             mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
-            mainCameraScript = mainCamera.GetComponent<MainCamera>();
             mainCameraComponent = mainCamera.GetComponent<Camera>();
-            mainCameraScript.Initialize();
 
             mainMenu = Instantiate(loadedAssets["MainMenu"].Result);
             mainMenu.SetActive(false);
