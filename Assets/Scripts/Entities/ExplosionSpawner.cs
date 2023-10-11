@@ -1,16 +1,11 @@
-using Initialization;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using ILanderUtility;
 
-public class ExplosionSpawner : MonoBehaviour
-{
+public class ExplosionSpawner : MonoBehaviour {
     private bool initialized = false;
     private Action ExplosionCallback;
     private Animator animatorComp;
-
 
 
     public void Initialize() {

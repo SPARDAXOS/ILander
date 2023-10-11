@@ -1,13 +1,8 @@
-using Microsoft.Win32.SafeHandles;
-using Mono.Cecil;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
-using static UnityEngine.EventSystems.EventTrigger;
 using ILanderUtility;
 
 public class SettingsMenu : MonoBehaviour {
@@ -36,8 +31,6 @@ public class SettingsMenu : MonoBehaviour {
         FORCE_ENABLE = AnisotropicFiltering.ForceEnable
     }
 
-
-
     [SerializeField] private Color selectedPresetColor = new Color(0.06f, 0.6f, 0.77f, 1.0f);
 
     private bool initialized = false;
@@ -64,17 +57,6 @@ public class SettingsMenu : MonoBehaviour {
     private Button highPresetButton   = null;
     private Button ultraPresetButton  = null;
     private Button customPresetButton = null;
-
-
-    //TODO: Reverse the order for the TextureQuality dropdown menu to keep it inline with lowest to highest going down!
-    //Keep in mind that some things depend on the TextureQuality options having the same order as the options in QualitySettings! make sure to keep an eye out!
-
-    //TODO: Unrelated to this class but i could reuse the player data SO to give each character their own values! Maybe add something in Customization window to
-    //indicate this?
-
-    //TODO: Setup the code to set player data from customization screen
-    //SetPlayer1Data(data, sprite?), SetPlayer2Data(data, sprite?)
-
 
 
     public void Initialize() {
@@ -167,8 +149,6 @@ public class SettingsMenu : MonoBehaviour {
         Utility.Validate(AFilteringDropDownTransform, "Failed to find reference to AnisotropicFilteringDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
         anisotropicFilteringDropdown = AFilteringDropDownTransform.GetComponent<TMP_Dropdown>();
         Utility.Validate(anisotropicFilteringDropdown, "Failed to find component TMP_Dropdown for anisotropicFilteringDropdown - SettingsMenu", Utility.ValidationLevel.ERROR, true);
-
-
     }
     private void SetupResolutions() {
         supportedResolutions = Screen.resolutions;
@@ -192,7 +172,7 @@ public class SettingsMenu : MonoBehaviour {
 
 
     private void SetQualityPreset(QualityPreset level) {
-        if (level == currentQualityPreset && initialized) //&& initialized to avoid skipping this if default preset == defualt value for currentQualityPreset
+        if (level == currentQualityPreset && initialized)
             return;
 
         if ((int)level == 0) {

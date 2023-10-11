@@ -6,8 +6,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-public class GameInstance : MonoBehaviour
-{
+public class GameInstance : MonoBehaviour {
     public enum ApplicationState
     {
         STOPPED = 0,
@@ -37,20 +36,14 @@ public class GameInstance : MonoBehaviour
         NONE = 0,
         LOADING_LEVEL
     }
-    public enum ConnectionState
-    {
-        NONE = 0,
-        CLIENT,
-        HOST
-    }
 
 
-    public ApplicationState currentApplicationStatus = ApplicationState.STOPPED;
-    public GameState currentGameState = GameState.NONE;
-    public GameMode currentGameMode = GameMode.NONE;
-    public ConnectionState currentConnectionState = ConnectionState.NONE;
+    private ApplicationState currentApplicationStatus = ApplicationState.STOPPED;
+    private GameState currentGameState = GameState.NONE;
+    private GameMode currentGameMode = GameMode.NONE;
     private LoadingScreenProcess currentLoadingScreenProcess = LoadingScreenProcess.NONE;
 
+    //Labels in addressables.
     private const string assetsBundleKey           = "MainAssetsBundle"; 
     private const string levelsBundleKey           = "MainLevelsBundle";
     private const string gameSettingsLabel         = "MainGameSettings";
@@ -58,24 +51,27 @@ public class GameInstance : MonoBehaviour
 
     private static GameInstance instance;
 
+    private AsyncOperationHandle<LevelsBundle> levelsBundleHandle;
+    private AsyncOperationHandle<AssetsBundle> assetsBundleHandle;
+    private AsyncOperationHandle<GameSettings> gameSettingsHandle;
+    private AsyncOperationHandle<PlayerCharactersBundle> playerCharactersBundleHandle;
+    private AsyncOperationHandle<GameObject> currentLoadedLevelHandle;
+    private Dictionary<string, AsyncOperationHandle<GameObject>> loadedAssets = new Dictionary<string, AsyncOperationHandle<GameObject>>();
+
     private LevelsBundle levelsBundle = null;
     private AssetsBundle assetsBundle = null;
     private GameSettings gameSettings = null;
     private PlayerCharactersBundle playerCharactersBundle = null;
-    private Dictionary<string, AsyncOperationHandle<GameObject>> loadedAssets = new Dictionary<string, AsyncOperationHandle<GameObject>>();
 
-
-    private AsyncOperationHandle<GameObject> currentLoadedLevelHandle;
     private GameObject currentLoadedLevel = null;
     private Level currentLoadedLevelScript = null;
-
-
-    private bool initializationInProgress = false;
 
     private bool assetsBundleIsLoading = false;
     private bool levelsBundleIsLoading = false;
     private bool gameSettingsIsLoading = false;
     private bool playerCharactersBundleIsLoading = false;
+
+    private bool initializationInProgress = false;
     private bool assetsLoadingInProgress = false;
 
     private bool assetsLoaded = false;
@@ -110,7 +106,7 @@ public class GameInstance : MonoBehaviour
     private NetworkObject player1NetworkObject;
     private NetworkObject player2NetworkObject;
     private MainCamera mainCameraScript;
-    private MainMenu mainMenuScript;
+    private MainMenu mainMenuScript; //For consistency's sake
     private SettingsMenu settingsMenuScript;
     private GameModeMenu gameModeMenuScript;
     private ConnectionMenu connectionMenuScript;
@@ -129,8 +125,6 @@ public class GameInstance : MonoBehaviour
     private Camera mainCameraComponent;
 
 
-
-
     private void Awake() {
         if (!instance) {
             instance = this;
@@ -142,20 +136,36 @@ public class GameInstance : MonoBehaviour
         Destroy(gameObject);
     }
     private void OnDestroy() {
-        if (loadedAssets.Count == 0)
-            return;
+        ValidateAndDestroy(player1);
+        ValidateAndDestroy(player2);
+        ValidateAndDestroy(mainCamera);
+        ValidateAndDestroy(mainMenu);
+        ValidateAndDestroy(settingsMenu);
+        ValidateAndDestroy(gameModeMenu);
+        ValidateAndDestroy(connectionMenu);
+        ValidateAndDestroy(customizationMenu);
+        ValidateAndDestroy(levelSelectMenu);
+        ValidateAndDestroy(loadingScreen);
+        ValidateAndDestroy(transitionMenu);
+        ValidateAndDestroy(countdownMenu);
+        ValidateAndDestroy(eventSystem);
+        ValidateAndDestroy(networkManager);
+        ValidateAndDestroy(rpcManager);
+        ValidateAndDestroy(HUD);
+        ValidateAndDestroy(pauseMenu);
+        ValidateAndDestroy(resultsMenu);
+        ValidateAndDestroy(matchDirector);
 
-        //DESTROY FIRST THEN RELEASE!
-
-        
         foreach (var entry in loadedAssets)
             Addressables.Release(entry.Value);
 
         if (currentLoadedLevel)
             UnloadCurrentLevel();
 
-        //Unload Settings file!
-        //Unload characters file!
+        Addressables.Release(levelsBundleHandle);
+        Addressables.Release(gameSettingsHandle);
+        Addressables.Release(playerCharactersBundleHandle);
+        Addressables.Release(assetsBundle);
     }
     void Update() {
         switch (currentApplicationStatus) {
@@ -175,9 +185,20 @@ public class GameInstance : MonoBehaviour
         }
     }
 
+    public void Initialize() {
+        if (gameInitialized) {
+            Debug.Log("Game is already initalized!");
+            return;
+        }
+        if (initializationInProgress) {
+            Debug.Log("Initalization already in progress!");
+            return;
+        }
 
-    public static GameInstance GetGameInstance() {
-        return instance;
+        Debug.Log("Started Initializing Game!");
+        currentApplicationStatus = ApplicationState.INITIALIZING;
+        initializationInProgress = true;
+        LoadEssentialBundles();
     }
     public void Abort(string errorMessage) {
 #if UNITY_EDITOR
@@ -188,7 +209,13 @@ public class GameInstance : MonoBehaviour
 #endif
     }
 
-
+    private void ValidateAndDestroy(GameObject gameObject) {
+        if (gameObject)
+            Destroy(gameObject);
+    }
+    public static GameInstance GetGameInstance() {
+        return instance;
+    }
 
     private void UpdateApplicationInitializingState() {
         if (gameInitialized) {
@@ -230,7 +257,6 @@ public class GameInstance : MonoBehaviour
         }
     }
 
-
     private void UpdatePlayingState() {
         matchDirectorScript.Tick();
         mainCameraScript.Tick();
@@ -260,22 +286,6 @@ public class GameInstance : MonoBehaviour
         loadingScreenScript.SetLoadingBarValue(value);
     }
 
-
-    public void Initialize() {
-        if (gameInitialized) {
-            Debug.Log("Game is already initalized!");
-            return;
-        }
-        if (initializationInProgress) {
-            Debug.Log("Initalization already in progress!");
-            return;
-        }
-
-        Debug.Log("Started Initializing Game!");
-        currentApplicationStatus = ApplicationState.INITIALIZING;
-        initializationInProgress = true;
-        LoadEssentialBundles();
-    }
     private void LoadEssentialBundles() {
         LoadGameSettings();
         LoadPlayerCharactersBundle();
@@ -291,7 +301,8 @@ public class GameInstance : MonoBehaviour
         AssetLabelReference GameSettingsLabel = new AssetLabelReference {
             labelString = gameSettingsLabel
         };
-        Addressables.LoadAssetAsync<GameSettings>(GameSettingsLabel).Completed += GameSettingsLoadingCallback;
+        gameSettingsHandle = Addressables.LoadAssetAsync<GameSettings>(GameSettingsLabel);
+        gameSettingsHandle.Completed += GameSettingsLoadingCallback;
         gameSettingsIsLoading = true;
     }
     private void LoadPlayerCharactersBundle() {
@@ -303,7 +314,8 @@ public class GameInstance : MonoBehaviour
         AssetLabelReference playerCharactersBundleLabel = new AssetLabelReference {
             labelString = playerCharactersBundleKey
         };
-        Addressables.LoadAssetAsync<PlayerCharactersBundle>(playerCharactersBundleLabel).Completed += PlayerCharactersBundleLoadingCallback;
+        playerCharactersBundleHandle = Addressables.LoadAssetAsync<PlayerCharactersBundle>(playerCharactersBundleLabel);
+        playerCharactersBundleHandle.Completed += PlayerCharactersBundleLoadingCallback;
         playerCharactersBundleIsLoading = true;
     }
     private void LoadLevelsBundle() {
@@ -315,7 +327,9 @@ public class GameInstance : MonoBehaviour
         AssetLabelReference LevelsBundleLabel = new AssetLabelReference {
             labelString = levelsBundleKey
         };
-        Addressables.LoadAssetAsync<LevelsBundle>(LevelsBundleLabel).Completed += GameLevelsBundleLoadingCallback;
+
+        levelsBundleHandle = Addressables.LoadAssetAsync<LevelsBundle>(LevelsBundleLabel);
+        levelsBundleHandle.Completed += GameLevelsBundleLoadingCallback;
         levelsBundleIsLoading = true;
     }
     private void LoadAssetsBundle() {
@@ -327,7 +341,8 @@ public class GameInstance : MonoBehaviour
         AssetLabelReference AssetsLabel = new AssetLabelReference {
             labelString = assetsBundleKey
         };
-        Addressables.LoadAssetAsync<AssetsBundle>(AssetsLabel).Completed += GameAssetsBundleLoadingCallback;
+        assetsBundleHandle = Addressables.LoadAssetAsync<AssetsBundle>(AssetsLabel);
+        assetsBundleHandle.Completed += GameAssetsBundleLoadingCallback;
         assetsBundleIsLoading = true;
     }
     private void LoadAssets() {
@@ -390,7 +405,7 @@ public class GameInstance : MonoBehaviour
     private void CreateEntities() {
         Debug.Log("Started Creating Entities!");
 
-        //Memory leak otherwise.
+        //Otherwise Memory leak at the first exception thrown.
         try {
             eventSystem = Instantiate(loadedAssets["EventSystem"].Result);
 
@@ -409,7 +424,6 @@ public class GameInstance : MonoBehaviour
             mainMenu = Instantiate(loadedAssets["MainMenu"].Result);
             mainMenu.SetActive(false);
             mainMenuScript = mainMenu.GetComponent<MainMenu>();
-            mainMenuScript.Initialize();
 
             settingsMenu = Instantiate(loadedAssets["SettingsMenu"].Result);
             settingsMenu.SetActive(false);
@@ -503,8 +517,6 @@ public class GameInstance : MonoBehaviour
         player2Script.SetHUDReference(HUDScript);
     }
 
-
-    //Level Loading-
     public void StartLevel(uint level) {
         if (currentLoadedLevel) {
             Debug.LogError("Attempted to start a level while another level was loaded! \n Unload loaded level first.");
@@ -523,7 +535,7 @@ public class GameInstance : MonoBehaviour
 
         currentLoadedLevelScript.ReleaseResources();
         Destroy(currentLoadedLevel);
-        if (currentLoadedLevelHandle.IsValid()) //???? wot
+        if (currentLoadedLevelHandle.IsValid())
             Addressables.Release(currentLoadedLevelHandle);
 
         currentLoadedLevel = null;
@@ -543,16 +555,11 @@ public class GameInstance : MonoBehaviour
         currentLoadingScreenProcess = LoadingScreenProcess.NONE;
         loadingScreen.SetActive(false);
     }
-    //
 
-
-    //Networking-
     public void StartAsHost() {
-        currentConnectionState = ConnectionState.HOST;
         networkManagerScript.StartHost();
     }
     public void StartAsClient() {
-        currentConnectionState = ConnectionState.CLIENT;
         networkManagerScript.StartClient();
     }
     private void StopNetworking() {
@@ -561,7 +568,6 @@ public class GameInstance : MonoBehaviour
 
         clientID = -1;
         connectedClients = 0;
-        currentConnectionState = ConnectionState.NONE;
 
         player1 = null;
         player2 = null;
@@ -592,7 +598,6 @@ public class GameInstance : MonoBehaviour
             //Adds RpcManager as well
             rpcManager = Instantiate(loadedAssets["RpcManager"].Result);
             rpcManagerScript = rpcManager.GetComponent<RpcManager>();
-            rpcManagerScript.Initialize();
             rpcManager.GetComponent<NetworkObject>().Spawn();
         } 
         else if (networkManagerScript.ConnectedClients.Count == 1) {
@@ -614,20 +619,10 @@ public class GameInstance : MonoBehaviour
         return (ulong)clientID;
     }
 
-
     private void ClientDisconnectedCallback(ulong id) {
-        Debug.Log("Client has disconnected! Returning to main menu");
-
-        //This whole thing will happen at GameEnd(); so double level unloading!
-        //here unfinished
-        QuitMatch();
-        if (!matchDirectorScript.HasMatchStarted()) {
-            Debug.Log("GAME QUIT! - through Client Disconnection!");
-            
-
-            //StopNetworking();
-            //UnloadCurrentLevel(); //Here - 
-            //SetGameState(GameState.MAIN_MENU);
+        if (matchDirectorScript.HasMatchStarted()) {
+            Debug.Log("Client has disconnected! Returning to main menu");
+            QuitMatch();
         }
     }
     private void ClientApprovalCallback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response) {
@@ -668,11 +663,9 @@ public class GameInstance : MonoBehaviour
         return networkManagerScript.IsClient;
     }
 
-
     public void SetReceivedRpcManagerRef(NetworkObjectReference reference) {
         rpcManager = reference;
         rpcManagerScript = rpcManager.GetComponent<RpcManager>();
-        rpcManagerScript.Initialize();
     }
     public void SetReceivedPlayerRefRpc(NetworkObjectReference reference, Player.PlayerType type) {
         if (type == Player.PlayerType.NONE) {
@@ -704,9 +697,6 @@ public class GameInstance : MonoBehaviour
     public void SetReceivedPlayerSpawnPointRpc(Vector3 position) {
         player1Script.SetSpawnPoint(position);
     }
-    //
-
-
 
     public void SetGameModeSelection(GameMode mode) {
         if (mode == GameMode.NONE)
@@ -750,9 +740,6 @@ public class GameInstance : MonoBehaviour
             }
         }
     }
-
-
-
     public void SetGameState(GameState state) {
         switch (state) {
             case GameState.MAIN_MENU: {
@@ -790,6 +777,7 @@ public class GameInstance : MonoBehaviour
                 break;
         }
     }
+
     private void SetupMainMenuState() {
         HideAllMenus();
         EnableMouseCursor();
@@ -849,9 +837,6 @@ public class GameInstance : MonoBehaviour
         currentGameState = GameState.RESULTS_MENU;
     }
 
-
-
-
     public void PauseGame() {
         if (countdownMenuScript.IsAnimationPlaying() || currentGameState != GameState.PLAYING)
             return;
@@ -876,8 +861,6 @@ public class GameInstance : MonoBehaviour
         isPaused = true;
     }
     public void UnpauseGame() {
-        //Many bugs - BUG: Host can control both players!
-
         DisableMouseCursor();
         HUD.gameObject.SetActive(true);
         pauseMenu.SetActive(false);
@@ -899,17 +882,6 @@ public class GameInstance : MonoBehaviour
         currentGameState = GameState.PLAYING;
     }
 
-
-
-    //Called by match director to dictate the state of the game
-    //StartMatch is the very start of a match
-    //Something for round? 
-    //EndMatch is when match is finished and we going to results
-    //QuitMatch is when the match is interrupted by disconnection or quiting through pause menu
-
-
-
-    //This is the start - GameInstance stars match in director, director finishes match and calls EndMatch. (GameInstance calls QuitMatch on director in other cases!)
     private void SetupPlayState() {
         HideAllMenus();
         DisableMouseCursor();
@@ -929,10 +901,7 @@ public class GameInstance : MonoBehaviour
             else if (networkManagerScript.IsClient) {
                 player1Script.SetActiveControlScheme(Player.PlayerType.PLAYER_2);
                 player2Script.SetActiveControlScheme(Player.PlayerType.PLAYER_1);
-                return;
             }
-
-            rpcManagerScript.ProccedToMatchStartClientRpc(GetClientID()); //This might be the problem with the counter not playing..
         }
 
         matchDirector.SetActive(true);
@@ -940,16 +909,6 @@ public class GameInstance : MonoBehaviour
         countdownMenuScript.StartAnimation(StartMatch);
         currentGameState = GameState.PLAYING;
     }
-
-    //Not sure. Could be the cause of some bugs - Comment out return and callsite to test it without
-    public void ProccedToMatchStartRpc() {
-        matchDirector.SetActive(true);
-        SetupRoundStartState();
-        countdownMenuScript.StartAnimation(StartMatch);
-        currentGameState = GameState.PLAYING;
-    }
-
-
     private void SetupRoundStartState() {
         if (currentGameMode == GameMode.COOP) {
             player1.SetActive(false);
@@ -958,6 +917,10 @@ public class GameInstance : MonoBehaviour
         else if (currentGameMode == GameMode.LAN) {
             player1Script.DeactivateNetworkedEntity();
             player2Script.DeactivateNetworkedEntity();
+            if (IsHost()) {
+                player1.transform.position = player1Script.GetSpawnPoint();
+                player2.transform.position = player2Script.GetSpawnPoint();
+            }
         }
 
         player1Script.DisableInput();
@@ -978,7 +941,6 @@ public class GameInstance : MonoBehaviour
     public void StartRound() {
         if (IsHost())
             currentLoadedLevelScript.RefreshAllPickupSpawns();
-
 
         if (currentGameMode == GameMode.COOP) {
             player1.SetActive(true);
@@ -1001,66 +963,55 @@ public class GameInstance : MonoBehaviour
         HUD.SetActive(true);
     }
 
-    //StartMatch is called by countdown callback. It calls director startmatch
-    //EndMatch is called by director when match has concluded
-    //QuitMatch is called by game instance when disconnected or quit through pause menu. It calls director to quit game too.
+
+    //StartMatch() is called by countdown callback. It calls MatchDirector StartMatch().
+    //EndMatch() is called by MatchDirector when match has concluded.
+    //QuitMatch() is called by GameInstance when disconnected or quit through pause menu. It calls MatchDirector QuitMatch() too.
     private void StartMatch() {
         matchDirectorScript.StartMatch();
         StartRound();
     }
     public void EndMatch() {
+        if (isPaused)
+            UnpauseGame();
+
         if (currentGameMode == GameMode.COOP) {
             player1.SetActive(false);
             player2.SetActive(false);
+            player1Script.DisableInput();
+            player2Script.DisableInput();
         }
         else if (currentGameMode == GameMode.LAN) {
             player1Script.DeactivateNetworkedEntity();
             player2Script.DeactivateNetworkedEntity();
+            if (IsHost())
+                player1Script.DisableInput();
+            else if (IsClient())
+                player2Script.DisableInput();
         }
 
         matchDirector.SetActive(false);
         HUD.SetActive(false);
         
-        //In online, its fine to disable both, but can only turn on player 1 for host and player 2 for client! best way to put it!
-        player1Script.DisableInput();
-        player2Script.DisableInput(); //In online, disable input of other player!
-
         UnloadCurrentLevel();
         SetGameState(GameState.RESULTS_MENU);
     }
     public void QuitMatch() {
-
-        //Called by on client disconnect in case of a client disconnection and game is running!
-        //GameInstance calls this and calls the one in the MatchDirector!
-
-        matchDirectorScript.QuitMatch(); //Mandatory
-        matchDirector.SetActive(false); // I THINK?
-        HUD.SetActive(false);
-
-        //If coop? this whole thing is called again on disconnection!
-        UnloadCurrentLevel(); //See if i can do this after transtion since i can see the world dispawn as the transition is going!
-
-        //More gracefull appraoch would be nicer! two modes for pausing and unpasuing. Also Pausing in online doesnt work, it actually pauses the game!
         if (isPaused)
             UnpauseGame();
 
+        matchDirectorScript.QuitMatch();
+        matchDirector.SetActive(false);
+        HUD.SetActive(false);
+
+        UnloadCurrentLevel(); 
         RestartGameState();
-        Debug.Log("GAME QUIT!");
-
-        //CRASH: Input assertion fail, test it on quit! it crashed!
     }
-
-    /// <summary>
-    /// Restarts the game to its initial state on startup
-    /// </summary>
     public void RestartGameState() {
-
-        //GameMode specific
         if (currentGameMode == GameMode.COOP) {
             Destroy(player1);
             Destroy(player2);
 
-            //Stop networking does this
             player1 = null;
             player2 = null;
             player1Script = null;
@@ -1071,44 +1022,13 @@ public class GameInstance : MonoBehaviour
         else if (currentGameMode == GameMode.LAN)
             StopNetworking();
 
-
-        Debug.Log("FULL GAME RESET!");
-        //StopNetworking(); //Should disable networking, clean up networked gameobjects and reset connection status!
-
-        //Not necessarily needed since every menu state gets reset on SetupStartingState() call but it would be cleaner to reset them all on game full reset!
         connectionMenuScript.SetConnectionMenuMode(ConnectionMenu.ConnectionMenuMode.NORMAL);
         customizationMenuScript.SetCustomizationMenuMode(CustomizationMenu.CustomizationMenuMode.NORMAL);
         levelSelectMenuScript.SetLevelSelectMenuMode(LevelSelectMenu.LevelSelectMenuMode.NORMAL);
 
-        //Something for projctiles spawning modes or something! and at the other place if any!
-
         currentGameMode = GameMode.NONE;
         SetGameState(GameState.MAIN_MENU);
     }
-
-
-    //Stuff breaks on quit disconnection and i can open pause menu in main menu then then a bunch of crashes related to tick function here!
-
-    //GameEnding User Cases
-
-    //Quit game during match through pause menu.
-    //Coop - Unload Level, Delete Players, Reset Gamemode, Go back to main menu
-    //Online
-    //Client - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
-    //Host - Unload Level, Stop Networking, Reset Gamemode, Go back to main menu
-
-    //Match finished after reaching results screen. (Unload level at that point!)
-    //Coop - Delete players, Reset Gamemode, Go back to main menu
-    //Online
-        //Client - Stop Networking, Reset gamemode, Go back to main menu.
-        //Host - Stop Networking, Reset gamemode, Go back to main menu.
-
-    //One player disconnected
-        //Online
-            //Client - Unload Level, Stop Networking, Reset gamemode, Go back to main menu.
-            //Host - Unload Level, Stop Networking, Reset gamemode, Go back to main menu.
-
-
 
     public void RegisterPlayerDeath(Player.PlayerType type) {
         if (type == Player.PlayerType.NONE)
@@ -1118,7 +1038,6 @@ public class GameInstance : MonoBehaviour
             matchDirectorScript.ScorePoint(Player.PlayerType.PLAYER_2);
         if (type == Player.PlayerType.PLAYER_2)
             matchDirectorScript.ScorePoint(Player.PlayerType.PLAYER_1);
-        //IMPORTANT NOTE: Its possible to trigger multiple death registries somehow! this could end the match immediately! FIX THIS!
     }
     private void RandomizePlayerSpawnPoints() {
         int rand = UnityEngine.Random.Range(0, 2);
@@ -1127,10 +1046,6 @@ public class GameInstance : MonoBehaviour
 
         Vector3 player1SpawnPoint = currentLoadedLevelScript.GetPlayer1SpawnPoint();
         Vector3 player2SpawnPoint = currentLoadedLevelScript.GetPlayer2SpawnPoint();
-
-        //NOTE: Does the rpc matter then? its the server that puts it wherever it wants regardless. But i guess the snapping into place?
-        //I could send both positions then! or only disable sprite and collision? then let it snap into place? weird... The network object comp is not disabled
-        //anyway so why isnt it snapping?
 
         if (rand == 0) {
             player1Script.SetSpawnPoint(player1SpawnPoint);
@@ -1155,7 +1070,7 @@ public class GameInstance : MonoBehaviour
         }
     }
     private void HideAllMenus() {
-        //Add all menus here!
+
         mainMenu.SetActive(false);
         customizationMenu.SetActive(false);
         levelSelectMenu.SetActive(false);
@@ -1206,15 +1121,12 @@ public class GameInstance : MonoBehaviour
     public Level GetCurrentLevelScript() {
         return currentLoadedLevelScript;
     }
-    
-
     public PlayerCharactersBundle GetPlayerCharactersBundle() {
         return playerCharactersBundle;
     }
     public LevelsBundle GetLevelsBundle() {
         return levelsBundle;
     }
-
 
     private void LevelLoadedCallback(AsyncOperationHandle<GameObject> handle) {
         if (handle.Status == AsyncOperationStatus.Succeeded) {

@@ -1,13 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using static GameInstance;
 
-public class PickupIceBomb : Pickup
-{
+public class PickupIceBomb : Pickup {
     [SerializeField] private Sprite HUDIcon;
     [SerializeField] private Projectile.ProjectileType associatedProjectileType;
-
 
 
     public override void Initialize() {
@@ -16,8 +12,11 @@ public class PickupIceBomb : Pickup
     }
     public override bool Activate(Player user) {
         if (levelScript.SpawnProjectile(user, associatedProjectileType)) {
-            if (GetGameInstance().GetCurrentGameMode() == GameMode.LAN)
-                GetGameInstance().GetRpcManagerScript().UpdateProjectileSpawnRequestServerRpc(GetGameInstance().GetClientID(), user.GetPlayerType(), associatedProjectileType);
+            if (GetGameInstance().GetCurrentGameMode() == GameMode.LAN) {
+                var instance = GetGameInstance();
+                var rpcManager = instance.GetRpcManagerScript();
+                rpcManager.UpdateProjectileSpawnRequestServerRpc(instance.GetClientID(), user.GetPlayerType(), associatedProjectileType);
+            }
             return true;
         }
         return false;

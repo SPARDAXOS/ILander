@@ -1,12 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using ILanderUtility;
 
-public class ConnectionMenu : MonoBehaviour
-{
-    public enum ConnectionMenuMode
-    {
+public class ConnectionMenu : MonoBehaviour {
+    public enum ConnectionMenuMode {
         NONE = 0,
         NORMAL,
         HOST,
@@ -17,25 +13,20 @@ public class ConnectionMenu : MonoBehaviour
 
     private bool initialized = false;
 
-
     private GameObject normalMode;
     private GameObject hostMode;
     private GameObject clientMode;
-
 
     public void Initialize() {
         if (initialized)
             return;
 
 
-
         SetupReferences();
         SetConnectionMenuMode(ConnectionMenuMode.NORMAL);
         initialized = true;
     }
-
     private void SetupReferences() {
-
 
         normalMode = transform.Find("NormalMode").gameObject;
         hostMode   = transform.Find("HostMode").gameObject;
@@ -45,7 +36,6 @@ public class ConnectionMenu : MonoBehaviour
         Utility.Validate(hostMode, "Failed to find reference for HostMode - ConnectionMenu", Utility.ValidationLevel.ERROR, true);
         Utility.Validate(clientMode, "Failed to find reference for ClientMode - ConnectionMenu", Utility.ValidationLevel.ERROR, true);
     }
-
 
     public void SetConnectionMenuMode(ConnectionMenuMode mode) {
         if (mode == currentConnectionMenuMode)
@@ -70,11 +60,9 @@ public class ConnectionMenu : MonoBehaviour
     public void HostButton() {
         GameInstance.GetGameInstance().StartAsHost();
         SetConnectionMenuMode(ConnectionMenuMode.HOST);
-        //Transition? or rework menu mode
     }
     public void JoinButton() {
         GameInstance.GetGameInstance().StartAsClient();
         SetConnectionMenuMode(ConnectionMenuMode.CLIENT);
-        //Transition? or rework menu mode
     }
 }

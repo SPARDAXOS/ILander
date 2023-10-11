@@ -1,22 +1,15 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
-public class ProjectilesPool<T> where T : Projectile
-{
+public class ProjectilesPool<T> where T : Projectile {
     private bool initialized = false;
     private List<T> pool;
     private Projectile.ProjectileType typeKey;
 
 
-
     public void Initialize(T firstElement, int size = 1) {
         if (initialized)
             return;
-
-
 
         pool = new List<T>(size);
         pool.Add(firstElement);
@@ -29,7 +22,6 @@ public class ProjectilesPool<T> where T : Projectile
             return;
         }
 
-
         UpdateActiveElements();
     }
     public void UpdateActiveElements() {
@@ -39,8 +31,10 @@ public class ProjectilesPool<T> where T : Projectile
         }
     }
     public void ReleaseResources() {
-        foreach(var entry in pool)
-            GameObject.Destroy(entry.gameObject);
+        foreach(var entry in pool) {
+            if (entry)
+                GameObject.Destroy(entry.gameObject);
+        }
     }
 
 
@@ -50,7 +44,6 @@ public class ProjectilesPool<T> where T : Projectile
             return false;
         }
 
-        //Stuff? does the projectile needs to know about the pool?
         pool.Add(element);
         return true;
     }
@@ -63,9 +56,6 @@ public class ProjectilesPool<T> where T : Projectile
 
         return projectile.Shoot(owner); ;
     }
-
-
-
 
 
     private T GetUnactiveProjectile() {

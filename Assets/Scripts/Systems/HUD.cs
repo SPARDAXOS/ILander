@@ -3,8 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-public class HUD : MonoBehaviour
-{
+public class HUD : MonoBehaviour {
     private bool initialized = false;
 
     private Image player1Portrait;

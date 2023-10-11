@@ -1,10 +1,6 @@
-using Initialization;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class GameModeMenu : MonoBehaviour
-{
+public class GameModeMenu : MonoBehaviour {
     public void CoopModeButton() {
         var instance = GameInstance.GetGameInstance();
         instance.SetGameModeSelection(GameInstance.GameMode.COOP);

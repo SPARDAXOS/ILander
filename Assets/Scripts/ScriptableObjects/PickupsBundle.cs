@@ -15,10 +15,8 @@ public struct PickupEntry {
 
 
 [CreateAssetMenu(fileName = "PickupsBundle", menuName = "Data/PickupsBundle", order = 7)]
-public class PickupsBundle : ScriptableObject
-{
+public class PickupsBundle : ScriptableObject {
     public PickupEntry[] entries;
-
 
 
 }

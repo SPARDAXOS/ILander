@@ -4,25 +4,19 @@ using static GameInstance;
 using TMPro;
 using UnityEngine.UI;
 
-public class ResultsMenu : MonoBehaviour
-{
-    private bool initialized = false;
+public class ResultsMenu : MonoBehaviour {
     [SerializeField] private float returnTimerDuration = 12.0f;
 
+    private bool initialized = false;
+
+    private Canvas mainCanvas                   = null;
+    private Image player1PortraitSprite         = null;
+    private Image player2PortraitSprite         = null;
+    private TextMeshProUGUI player1ResultsText  = null;
+    private TextMeshProUGUI player2ResultsText  = null;
+    private TextMeshProUGUI notificationText    = null;
+
     private float returnTimer = 0.0f;
-
-
-    private Image player1PortraitSprite = null;
-    private Image player2PortraitSprite = null;
-
-    private TextMeshProUGUI player1ResultsText = null;
-    private TextMeshProUGUI player2ResultsText = null;
-
-    private TextMeshProUGUI notificationText = null;
-
-    private Canvas mainCanvas = null;
-
-    //I could do an animation where the text is massive and it closes in to land on characters! then gets their color!
 
 
     public void Initialize() {

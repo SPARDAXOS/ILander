@@ -3,8 +3,7 @@ using TMPro;
 using UnityEngine;
 using static GameInstance;
 
-public class MatchDirector : MonoBehaviour
-{
+public class MatchDirector : MonoBehaviour {
     public enum MatchResults {
         NONE,
         DRAW,
@@ -17,24 +16,26 @@ public class MatchDirector : MonoBehaviour
 
     [Tooltip("Round time limit in seconds")]
     [Range(1, 1000)]
-    [SerializeField] uint roundTimeLimit = 2;
+    [SerializeField] uint roundTimeLimit = 60;
 
-    private bool initialized = false;
+
     private GameMode currentGameMode = GameMode.NONE;
-    public bool matchStarted = false;
+    private bool initialized = false;
+    private bool matchStarted = false;
     private bool isRoundTimerRunning = false;
 
-    public uint player1Score = 0;
-    public uint player2Score = 0;
-    public MatchResults matchResults = MatchResults.NONE;
+    private uint player1Score = 0;
+    private uint player2Score = 0;
+    private MatchResults matchResults = MatchResults.NONE;
 
-    public float roundTimer = 0.0f;
+    private float roundTimer = 0.0f;
 
-    private TextMeshProUGUI roundTimerText = null;
+    private TextMeshProUGUI roundTimerText   = null;
     private TextMeshProUGUI player1ScoreText = null;
     private TextMeshProUGUI player2ScoreText = null;
 
     private Animation animationComp = null;
+
 
     public void Initialize() {
         if (initialized)
@@ -91,22 +92,6 @@ public class MatchDirector : MonoBehaviour
         Utility.Validate(player2ScoreText, "Failed to get component TextMeshProUGUI in player2ScoreText - MatchDirector", Utility.ValidationLevel.ERROR, true);
     }
 
-
-    //Either it also checks or i send flag to procced and set points? 
-    public void ReceiveRoundTimerRpc(float value) {
-        roundTimer = value;
-        UpdateRoundTimerText();
-        //For now, it checks too.
-        if (roundTimer < 0.0f) {
-            roundTimer = 0.0f;
-            Timeout();
-        }
-    }
-
-
-    //NOTE: Consider registering death at the start of the anim since timer could run out during the running of the anim before it registers death!
-
-    //Turning it off is managed by this class while turning it on is managed by GameInstance cause of countdown and setup by GameInstance
     public void SetRoundTimerState(bool state) {
         isRoundTimerRunning = state;
     }
@@ -132,6 +117,9 @@ public class MatchDirector : MonoBehaviour
         else
             Timeout();
     }
+    private void UpdateRoundTimerText() {
+        roundTimerText.text = ((int)roundTimer).ToString();
+    }
     private void Timeout() {
         var player1 = GetGameInstance().GetPlayer1Script();
         var player2 = GetGameInstance().GetPlayer2Script();
@@ -146,15 +134,55 @@ public class MatchDirector : MonoBehaviour
         GetGameInstance().GetPlayer1Script().SetInvincible(true);
         GetGameInstance().GetPlayer2Script().SetInvincible(true);
     }
-    private void UpdateRoundTimerText() {
-        roundTimerText.text = ((int)roundTimer).ToString();
+    public void ReceiveRoundTimerRpc(float value) {
+        roundTimer = value;
+        UpdateRoundTimerText();
+        if (roundTimer < 0.0f) {
+            roundTimer = 0.0f;
+            Timeout();
+        }
     }
 
+    private void ScoreDrawPoints() {
+        if (animationComp.isPlaying)
+            return;
 
+        player1Score++;
+        player2Score++;
 
+        if (player1Score == pointsToWin && player2Score == pointsToWin)
+            matchResults = MatchResults.DRAW;
+        else if (player1Score == pointsToWin)
+            matchResults = MatchResults.PLAYER_1_WINS;
+        else if (player2Score == pointsToWin)
+            matchResults = MatchResults.PLAYER_2_WINS;
 
+        SetRoundTimerState(false);
+        SetRoundTimerVisibility(false);
+        StartScoreUpdate(); //Triggers score update at each score point!
+    }
+    public void ScorePoint(Player.PlayerType type) {
+        if (animationComp.isPlaying)
+            return;
 
-    //Score Text anim
+        if (type == Player.PlayerType.NONE || matchResults != MatchResults.NONE)
+            return;
+
+        if (type == Player.PlayerType.PLAYER_1) {
+            player1Score++;
+            if (player1Score == pointsToWin)
+                matchResults = MatchResults.PLAYER_1_WINS;
+        }
+        else if (type == Player.PlayerType.PLAYER_2) {
+            player2Score++;
+            if (player2Score == pointsToWin)
+                matchResults = MatchResults.PLAYER_2_WINS;
+        }
+
+        SetRoundTimerState(false);
+        SetRoundTimerVisibility(false);
+        StartScoreUpdate(); //Triggers score update at each score point!
+    }
     public void StartScoreUpdate() {
         if (animationComp.isPlaying)
             return;
@@ -172,12 +200,13 @@ public class MatchDirector : MonoBehaviour
             StartNewRound();
     }
 
-
-
-    //StartMatch is to be called by game instance after countdown
-    //EndMatch will be called by director when match is over and it will call the game instance to end match
-    //QutMatch is to be called by game instance in case of disconnection or quitting.
-
+    private void ResetMatchData() {
+        player1Score = 0;
+        player2Score = 0;
+        ScoreUpdateRefresh(); //Per match reset - will update to 0 - 0
+        matchResults = MatchResults.NONE;
+        roundTimer = 0.0f;
+    }
     private void StartNewRound() {
         GetGameInstance().StartNewRound();
         ResetRoundTimer();
@@ -199,52 +228,6 @@ public class MatchDirector : MonoBehaviour
         SetRoundTimerVisibility(false);
     }
 
-
-
-
-    private void ResetMatchData() {
-        player1Score = 0;
-        player2Score = 0;
-        ScoreUpdateRefresh(); //Per match reset - will update to 0 - 0
-        matchResults = MatchResults.NONE;
-        roundTimer = 0.0f;
-    }
-
-
-    private void ScoreDrawPoints() {
-        player1Score++;
-        player2Score++;
-
-        if (player1Score == pointsToWin && player2Score == pointsToWin)
-            matchResults = MatchResults.DRAW;
-        else if (player1Score == pointsToWin)
-            matchResults = MatchResults.PLAYER_1_WINS;
-        else if (player2Score == pointsToWin)
-            matchResults = MatchResults.PLAYER_2_WINS;
-
-        SetRoundTimerState(false);
-        SetRoundTimerVisibility(false);
-        StartScoreUpdate(); //Triggers score update at each score point!
-    }
-    public void ScorePoint(Player.PlayerType type) {
-        if (type == Player.PlayerType.NONE || matchResults != MatchResults.NONE)
-            return;
-
-        if (type == Player.PlayerType.PLAYER_1) {
-            player1Score++;
-            if (player1Score == pointsToWin)
-                matchResults = MatchResults.PLAYER_1_WINS;
-        }
-        else if (type == Player.PlayerType.PLAYER_2) {
-            player2Score++;
-            if (player2Score == pointsToWin)
-                matchResults = MatchResults.PLAYER_2_WINS;
-        }
-
-        SetRoundTimerState(false);
-        SetRoundTimerVisibility(false);
-        StartScoreUpdate(); //Triggers score update at each score point!
-    }
     private bool IsWinnerDecided() {
         if (matchResults != MatchResults.NONE)
             return true;

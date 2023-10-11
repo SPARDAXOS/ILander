@@ -11,10 +11,8 @@ public struct AssetEntry {
 
 
 [CreateAssetMenu(fileName = "AssetsBundle", menuName = "Data/AssetsBundle", order = 2)]
-public class AssetsBundle : ScriptableObject
-{
+public class AssetsBundle : ScriptableObject {
     public AssetEntry[] assets;
-
 
 
 

@@ -4,17 +4,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using static GameInstance;
 
-public class LevelSelectMenu : MonoBehaviour
-{
+public class LevelSelectMenu : MonoBehaviour {
     public enum LevelSelectMenuMode
     {
         NORMAL,
         ONLINE
     }
-
-
-
-
     private LevelSelectMenuMode currentMenuMode = LevelSelectMenuMode.NORMAL;
 
     private bool initialized = false;
@@ -29,6 +24,7 @@ public class LevelSelectMenu : MonoBehaviour
     private Image levelPreview;
     private TextMeshProUGUI levelName;
 
+
     public void Initialize() {
         if (initialized)
             return;
@@ -40,7 +36,6 @@ public class LevelSelectMenu : MonoBehaviour
         ApplyCurrentMenuMode();
         initialized = true;
     }
-
     private void SetupReferences() {
 
         Transform previewWindowTransform = transform.Find("PreviewWindow");
@@ -65,8 +60,6 @@ public class LevelSelectMenu : MonoBehaviour
         hostChoiceGameObject = transform.Find("HostChoice").gameObject;
         Utility.Validate(hostChoiceGameObject, "Failed to find reference to HostChoice - LevelSelectMenu", Utility.ValidationLevel.ERROR, true);
     }
-
-
     public void SetupStartState() {
         currentLevelIndex = 0;
         UpdateLevelPreview();
@@ -75,7 +68,6 @@ public class LevelSelectMenu : MonoBehaviour
         currentMenuMode = mode;
         ApplyCurrentMenuMode();
     }
-
 
     public void ActivateStartButton() {
         startButtonGameObject.SetActive(true);
@@ -94,7 +86,6 @@ public class LevelSelectMenu : MonoBehaviour
             hostChoiceGameObject.SetActive(true);
         }
     }
-
 
     public void ReceiveLevelSelectionRpc(int index) {
         GetGameInstance().StartLevel((uint)index);

@@ -1,9 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PickupHealth : Pickup
-{
+public class PickupHealth : Pickup {
+
+    [SerializeField] private float Potency = 0.0f;
+
     public override void Initialize() {
         type = PickupType.HEALTH;
         initialized = true;
@@ -16,6 +16,6 @@ public class PickupHealth : Pickup
         Activate(script);
         SetActive(false);
         gameObject.SetActive(false);
-        levelScript.RegisterPickupDispawn(spawnPointIndex); //GOT INDEX OUT OF BOUNDS HERE IN ONLINE TESTING!
+        levelScript.RegisterPickupDispawn(spawnPointIndex);
     }
 }

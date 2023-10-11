@@ -1,8 +1,6 @@
 using UnityEngine;
-using static GameInstance;
 
-public class ProjectileRocket : Projectile
-{
+public class ProjectileRocket : Projectile {
     private Animator animatorComp;
 
 
@@ -17,8 +15,6 @@ public class ProjectileRocket : Projectile
         moving = false;
         boxCollider2DComp.enabled = false;
     }
-
-
 
     public override void Initialize() {
         base.Initialize();

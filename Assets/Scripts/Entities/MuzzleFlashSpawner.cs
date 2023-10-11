@@ -1,12 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 using ILanderUtility;
 
-public class MuzzleFlashSpawner : MonoBehaviour
-{
+public class MuzzleFlashSpawner : MonoBehaviour {
     private bool initialized = false;
     private Action muzzleFlashEventCallback;
 

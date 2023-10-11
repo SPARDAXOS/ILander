@@ -1,10 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using static GameInstance;
 
-public class ProjectileIceBomb : Projectile
-{
+public class ProjectileIceBomb : Projectile {
     [SerializeField] private float freezeDuration = 1.0f;
     private Animator animatorComp;
     

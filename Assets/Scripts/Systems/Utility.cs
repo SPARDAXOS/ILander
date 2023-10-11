@@ -1,17 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 
 namespace ILanderUtility {
-    public class Utility
-    {
+    public class Utility {
         public enum ValidationLevel {
             DEBUG,
             WARNING,
             ERROR
         }
-
 
         public static void Clamp(ref float target, float min, float max) {
             if (target > max)
@@ -34,6 +30,5 @@ namespace ILanderUtility {
             }
             return true;
         }
-
     }
 }

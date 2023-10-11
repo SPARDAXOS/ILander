@@ -10,20 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 330eaeb70666cdb4e96b4f618dce7f10, type: 3}
-  m_Name: PlayerData
+  m_Name: PlayerStats_Ryder
   m_EditorClassIdentifier: 
-  thrusterStrengthLimit: 839.7
-  thrusterAccelerationRate: 193
-  thrusterDecelerationRate: 159
-  thrusterBreaksRate: 1
-  healthCap: 1
+  healthCap: 1.5
   fuelCap: 1
   boostCost: 0.2
-  maxVelocity: 100
-  accelerationRate: 343
-  boostStrength: 400
-  turnRate: 100
+  maxVelocity: {x: 100, y: 100}
+  accelerationRate: 286
+  boostStrength: 472
+  turnRate: 304
   gravityScale: 0.2
-  movingDragRate: 1.2
-  stoppedDragRate: 0.8
-  steeringRate: 0.005
+  movingDragRate: 1.45
+  stoppedDragRate: 0.64

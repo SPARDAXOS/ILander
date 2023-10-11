@@ -5,15 +5,13 @@ using ILanderUtility;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-public class Level : MonoBehaviour
-{
+public class Level : MonoBehaviour {
     private enum LevelState {
         NONE = 0,
         LOADING_ASSETS,
         ACTIVE
     }
 
-    //SerializedField Pickups respawn time?
     [SerializeField] private PickupsBundle pickupsBundle;
     [SerializeField] private ProjectilesBundle projectilesBundle;
     [SerializeField] private float pickupRespawnTimer = 1.0f;
@@ -28,12 +26,12 @@ public class Level : MonoBehaviour
     private Vector3 player2SpawnPoint;
 
     private Transform[] pickupsSpawnPoints;
-    public bool[] occupiedPickupsSpawnPoints;
+    private bool[] occupiedPickupsSpawnPoints;
 
     private Dictionary<Pickup.PickupType, AsyncOperationHandle<GameObject>> loadedPickupAssets;
     private Dictionary<Projectile.ProjectileType, AsyncOperationHandle<GameObject>> loadedProjectileAssets;
 
-    public List<GameObject> pickupsPool;
+    private List<GameObject> pickupsPool;
     private Dictionary<Pickup.PickupType, uint> pickupsLog;
 
     private Dictionary<Projectile.ProjectileType, ProjectilesPool<Projectile>> projectilePools;
@@ -97,6 +95,9 @@ public class Level : MonoBehaviour
             return;
 
         uint pickupsSpawnPointsCount = (uint)PickupsSpawnPointsTransform.childCount;
+        if (pickupsSpawnPointsCount == 0)
+            return;
+
         pickupsSpawnPoints = new Transform[pickupsSpawnPointsCount];
         occupiedPickupsSpawnPoints = new bool[pickupsSpawnPointsCount];
         for (uint i = 0; i < PickupsSpawnPointsTransform.childCount; i++)
@@ -113,7 +114,6 @@ public class Level : MonoBehaviour
         foreach(var entry in projectilePools)
             entry.Value.ReleaseResources();
     }
-
 
 
     public void DeactivateAllPickups() {
@@ -217,7 +217,6 @@ public class Level : MonoBehaviour
         else
             pickupsLog.Add(entry.type, 1);
 
-        //Start loading asset if it has no entry - Hasnt been loaded before! Makes sure to load assets once!
         if (!loadedPickupAssets.ContainsKey(entry.type))
             StartPickupAssetLoadProcess(entry);
     }
@@ -229,7 +228,6 @@ public class Level : MonoBehaviour
 
         //Start loading asset if it has no entry
         if (!loadedProjectileAssets.ContainsKey(entry.associatedProjectile)) {
-
             //Looks for assetEntry in bundle
             foreach (var projectileEntry in projectilesBundle.Entries) {
                 if (projectileEntry.type == entry.associatedProjectile) {
@@ -362,7 +360,6 @@ public class Level : MonoBehaviour
     public Vector3 GetPlayer2SpawnPoint() {  
         return player2SpawnPoint;
     }
-
     private Pickup GetPickupByID(int ID) {
         foreach (var entry in pickupsPool) {
             var script = entry.GetComponent<Pickup>();
@@ -399,7 +396,6 @@ public class Level : MonoBehaviour
         int rand = UnityEngine.Random.Range(0, unactiveSpawnPoints.Count);
         return unactiveSpawnPoints[rand];
     }
-
     private bool IsSpawningPossible() {
         bool results = false;
         foreach (var entry in occupiedPickupsSpawnPoints) {
@@ -407,22 +403,6 @@ public class Level : MonoBehaviour
                 results = true;
         }
         return results;
-    }
-
-
-
-    //Left those for information purposes.
-    private void PickupAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
-        if (handle.Status == AsyncOperationStatus.Succeeded)
-            Debug.Log("Successfully loaded " + handle.Result.ToString());
-        else
-            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
-    }
-    private void ProjectileAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
-        if (handle.Status == AsyncOperationStatus.Succeeded)
-            Debug.Log("Successfully loaded " + handle.Result.ToString());
-        else
-            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
     }
 
 
@@ -442,10 +422,6 @@ public class Level : MonoBehaviour
         if (owner == Player.PlayerType.NONE)
             return false;
 
-        //See if you can add the muzzle flash event from rpc call to this!
-
-        //NOTE: Call it from the player instead? is that even possible?
-
         if (owner == Player.PlayerType.PLAYER_1)
             return SpawnProjectile(GetGameInstance().GetPlayer1Script(), type);
         else if (owner == Player.PlayerType.PLAYER_2)
@@ -464,5 +440,20 @@ public class Level : MonoBehaviour
         targetPickup.SetSpawnPointIndex(spawnIndex);
         occupiedPickupsSpawnPoints[spawnIndex] = true;
         targetPickup.transform.position = pickupsSpawnPoints[spawnIndex].position;
+    }
+
+
+    //Left those for information purposes.
+    private void PickupAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded)
+            Debug.Log("Successfully loaded " + handle.Result.ToString());
+        else
+            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
+    }
+    private void ProjectileAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded)
+            Debug.Log("Successfully loaded " + handle.Result.ToString());
+        else
+            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
     }
 }
