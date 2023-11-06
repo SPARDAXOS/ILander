@@ -4,8 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static GameInstance;
 
-public class CustomizationMenu : MonoBehaviour
-{
+public class CustomizationMenu : MonoBehaviour {
     public enum CustomizationMenuMode
     {
         NORMAL,
@@ -16,41 +15,7 @@ public class CustomizationMenu : MonoBehaviour
     private PlayerCharactersBundle playerCharactersBundle;
     private CustomizationMenuMode currentMenuMode = CustomizationMenuMode.NORMAL;
 
-    private Color player1TargetColor = Color.white;
-    private Color player2TargetColor = Color.white;
-
-    private Image player1PortraitSprite = null;
-    private Image player2PortraitSprite = null;
-    private Image player1ShipSprite     = null;
-    private Image player2ShipSprite     = null;
-
-    private TextMeshProUGUI player1SpriteSwitch   = null;
-    private GameObject player1SpriteSwitchLeft = null;
-    private GameObject player1SpriteSwitchRight = null;
-
-    private TextMeshProUGUI player2SpriteSwitch   = null;
-    private GameObject player2SpriteSwitchLeft    = null;
-    private GameObject player2SpriteSwitchRight   = null;
-
-    private Button player1ColorPickerButton = null;
-    private Button player1SpectrumButton    = null;
-    private RectTransform player1SpectrumButtonRectTransform = null;
-
-    private Button player2ColorPickerButton = null;
-    private Button player2SpectrumButton    = null;
-    private RectTransform player2SpectrumButtonRectTransform = null;
-
-    private GameObject startButtonGameObject = null;
-    private GameObject readyButtonGameObject = null;
-    private TextMeshProUGUI readyButtonText = null;
-
-    private GameObject player1ReadyCheckGameObject = null;
-    private GameObject player2ReadyCheckGameObject = null;
-
-    private Texture2D spectrumSprite = null;
-
-
-    private Canvas mainCanvas = null;
+    private bool initialized = false;
 
     private bool spectrumButtonHeld = false;
     private bool spectrumButtonExit = false;
@@ -59,11 +24,44 @@ public class CustomizationMenu : MonoBehaviour
     private int playerCharacterIndex1 = 0;
     private int playerCharacterIndex2 = 0;
 
-
     private bool player1ReadyCheck = false;
     private bool player2ReadyCheck = false;
 
-    private bool initialized = false;
+
+    private Color player1TargetColor = Color.white;
+    private Color player2TargetColor = Color.white;
+
+    private Canvas mainCanvas = null;
+
+    private Image player1PortraitSprite = null;
+    private Image player2PortraitSprite = null;
+    private Image player1ShipSprite     = null;
+    private Image player2ShipSprite     = null;
+
+    private TextMeshProUGUI player1SpriteSwitch   = null;
+    private GameObject player1SpriteSwitchLeft    = null;
+    private GameObject player1SpriteSwitchRight   = null;
+
+    private TextMeshProUGUI player2SpriteSwitch   = null;
+    private GameObject player2SpriteSwitchLeft    = null;
+    private GameObject player2SpriteSwitchRight   = null;
+
+    private Button player1ColorPickerButton                  = null;
+    private Button player1SpectrumButton                     = null;
+    private RectTransform player1SpectrumButtonRectTransform = null;
+
+    private Button player2ColorPickerButton                  = null;
+    private Button player2SpectrumButton                     = null;
+    private RectTransform player2SpectrumButtonRectTransform = null;
+
+    private GameObject startButtonGameObject = null;
+    private GameObject readyButtonGameObject = null;
+    private TextMeshProUGUI readyButtonText  = null;
+
+    private GameObject player1ReadyCheckGameObject = null;
+    private GameObject player2ReadyCheckGameObject = null;
+
+    private Texture2D spectrumSprite = null;
 
 
 
@@ -71,7 +69,7 @@ public class CustomizationMenu : MonoBehaviour
         if (initialized)
             return;
 
-        playerCharactersBundle = GetInstance().GetPlayerCharactersBundle();
+        playerCharactersBundle = GetGameInstance().GetPlayerCharactersBundle();
         SetupReferences();
         SetupStartState();
         ApplyCurrentMenuMode();
@@ -86,88 +84,80 @@ public class CustomizationMenu : MonoBehaviour
         if (spectrumButtonHeld)
             UpdateColorPickerTarget();
     }
-
     private void SetupReferences() {
 
-        //Break this into smaller functions!
-
         mainCanvas = GetComponent<Canvas>();
-        Utility.Validate(mainCanvas, "Failed to get reference to Canvas component - CustomizationMenu", true);
+        Utility.Validate(mainCanvas, "Failed to get reference to Canvas component - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         startButtonGameObject = transform.Find("StartButton").gameObject;
         readyButtonGameObject = transform.Find("ReadyButton").gameObject;
-        Utility.Validate(startButtonGameObject, "Failed to get reference to StartButton - CustomizationMenu", true);
-        Utility.Validate(readyButtonGameObject, "Failed to get reference to ReadyButton - CustomizationMenu", true);
-
+        Utility.Validate(startButtonGameObject, "Failed to get reference to StartButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(readyButtonGameObject, "Failed to get reference to ReadyButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         Transform readyTextTransform = readyButtonGameObject.transform.Find("ReadyText");
-        Utility.Validate(readyTextTransform, "Failed to get reference to ReadyText - CustomizationMenu", true);
+        Utility.Validate(readyTextTransform, "Failed to get reference to ReadyText - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         readyButtonText = readyTextTransform.GetComponent<TextMeshProUGUI>();
-        Utility.Validate(readyButtonText, "Failed to get component TextMeshProUGUI for readyButtonText - CustomizationMenu", true);
+        Utility.Validate(readyButtonText, "Failed to get component TextMeshProUGUI for readyButtonText - CustomizationMenu", Utility.ValidationLevel.ERROR);
 
-        //Rename these to make it less confusing!
         Transform Player1Customizer = transform.Find("Player1Customizer").transform;
         Transform Player2Customizer = transform.Find("Player2Customizer").transform;
 
-        Utility.Validate(Player1Customizer, "Failed to get reference to Player1Customizer - CustomizationMenu", true);
-        Utility.Validate(Player2Customizer, "Failed to get reference to Player2Customizer - CustomizationMenu", true);
+        Utility.Validate(Player1Customizer, "Failed to get reference to Player1Customizer - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(Player2Customizer, "Failed to get reference to Player2Customizer - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         Transform Player1ShipSpriteTransform = Player1Customizer.Find("ShipSprite").transform;
         Transform Player2ShipSpriteTransform = Player2Customizer.Find("ShipSprite").transform;
-        Utility.Validate(Player1ShipSpriteTransform, "Failed to get reference to ShipSprite1 - CustomizationMenu", true);
-        Utility.Validate(Player2ShipSpriteTransform, "Failed to get reference to ShipSprite2 - CustomizationMenu", true);
-
+        Utility.Validate(Player1ShipSpriteTransform, "Failed to get reference to ShipSprite1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(Player2ShipSpriteTransform, "Failed to get reference to ShipSprite2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         //ReadyChecks
         player1ReadyCheckGameObject = Player1Customizer.Find("ReadyCheck").gameObject;
         player2ReadyCheckGameObject = Player2Customizer.Find("ReadyCheck").gameObject;
-        Utility.Validate(player1ReadyCheckGameObject, "Failed to get reference to ReadyCheck1 - CustomizationMenu", true);
-        Utility.Validate(player2ReadyCheckGameObject, "Failed to get reference to ReadyCheck2 - CustomizationMenu", true);
-
-
+        Utility.Validate(player1ReadyCheckGameObject, "Failed to get reference to ReadyCheck1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player2ReadyCheckGameObject, "Failed to get reference to ReadyCheck2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         //Player1 ColorPicker
         Transform Player1ColorButtonTransform = Player1ShipSpriteTransform.Find("ColorPickerButton");
         Transform Player1SpectrumButtonTransform = Player1ShipSpriteTransform.Find("SpectrumButton");
-        Utility.Validate(Player1ColorButtonTransform, "Failed to get reference to ColorPickerButton1 - CustomizationMenu", true);
-        Utility.Validate(Player1SpectrumButtonTransform, "Failed to get reference to SpectrumButton1 - CustomizationMenu", true);
+        Utility.Validate(Player1ColorButtonTransform, "Failed to get reference to ColorPickerButton1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(Player1SpectrumButtonTransform, "Failed to get reference to SpectrumButton1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         player1ReadyCheckGameObject.SetActive(false);
         player2ReadyCheckGameObject.SetActive(false);
 
         player1ColorPickerButton = Player1ColorButtonTransform.GetComponent<Button>();
         player1SpectrumButton = Player1SpectrumButtonTransform.GetComponent<Button>();
-        Utility.Validate(player1ColorPickerButton, "Failed to get component Button for player1ColorButton - CustomizationMenu", true);
-        Utility.Validate(player1SpectrumButton, "Failed to get component Button for player1SpectrumButton - CustomizationMenu", true);
+        Utility.Validate(player1ColorPickerButton, "Failed to get component Button for player1ColorButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player1SpectrumButton, "Failed to get component Button for player1SpectrumButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         //Player2 ColorPicker
         Transform Player2ColorButtonTransform = Player2ShipSpriteTransform.Find("ColorPickerButton");
         Transform Player2SpectrumButtonTransform = Player2ShipSpriteTransform.Find("SpectrumButton");
-        Utility.Validate(Player2ColorButtonTransform, "Failed to get reference to ColorPickerButton2 - CustomizationMenu", true);
-        Utility.Validate(Player2SpectrumButtonTransform, "Failed to get reference to SpectrumButton2 - CustomizationMenu", true);
+        Utility.Validate(Player2ColorButtonTransform, "Failed to get reference to ColorPickerButton2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(Player2SpectrumButtonTransform, "Failed to get reference to SpectrumButton2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         player2ColorPickerButton = Player2ColorButtonTransform.GetComponent<Button>();
         player2SpectrumButton = Player2SpectrumButtonTransform.GetComponent<Button>();
-        Utility.Validate(player2ColorPickerButton, "Failed to get component Button for player2ColorButton - CustomizationMenu", true);
-        Utility.Validate(player2SpectrumButton, "Failed to get component Button for player2SpectrumButton - CustomizationMenu", true);
+        Utility.Validate(player2ColorPickerButton, "Failed to get component Button for player2ColorButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player2SpectrumButton, "Failed to get component Button for player2SpectrumButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         player1SpectrumButtonRectTransform = player1SpectrumButton.GetComponent<RectTransform>();
         player2SpectrumButtonRectTransform = player2SpectrumButton.GetComponent<RectTransform>();
-        Utility.Validate(player1SpectrumButtonRectTransform, "Failed to get component RectTransform for player1SpectrumButton - CustomizationMenu", true);
-        Utility.Validate(player2SpectrumButtonRectTransform, "Failed to get component RectTransform for player2SpectrumButton - CustomizationMenu", true);
+        Utility.Validate(player1SpectrumButtonRectTransform, "Failed to get component RectTransform for player1SpectrumButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player2SpectrumButtonRectTransform, "Failed to get component RectTransform for player2SpectrumButton - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         //SpectrumTexture
         Image player1SpectrumButtonImage = Player1SpectrumButtonTransform.GetComponent<Image>();
-        Utility.Validate(player1SpectrumButtonImage, "Failed to get component Image for player1SpectrumButtonImage - CustomizationMenu", true);
+        Utility.Validate(player1SpectrumButtonImage, "Failed to get component Image for player1SpectrumButtonImage - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
         player1SpectrumButtonImage.alphaHitTestMinimumThreshold = 0.1f; //In case of circular color spectrum. 
 
         //SpectrumSprite
         spectrumSprite = player1SpectrumButtonImage.sprite.texture;
-        Utility.Validate(spectrumSprite, "Failed to get texture for spectrumSprite - CustomizationMenu", true);
+        Utility.Validate(spectrumSprite, "Failed to get texture for spectrumSprite - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         Image player2SpectrumButtonImage = Player2SpectrumButtonTransform.GetComponent<Image>();
-        Utility.Validate(player2SpectrumButtonImage, "Failed to get component Image for player2SpectrumButtonImage - CustomizationMenu", true);
+        Utility.Validate(player2SpectrumButtonImage, "Failed to get component Image for player2SpectrumButtonImage - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
         player2SpectrumButtonImage.alphaHitTestMinimumThreshold = 0.1f; //In case of circular color spectrum. 
 
 
@@ -177,53 +167,48 @@ public class CustomizationMenu : MonoBehaviour
         player1SpectrumButton.gameObject.SetActive(false);
         player2SpectrumButton.gameObject.SetActive(false);
 
-
-
         //Sprites
         player1ShipSprite = Player1ShipSpriteTransform.GetComponent<Image>();
         player2ShipSprite = Player2ShipSpriteTransform.GetComponent<Image>();
-        Utility.Validate(player1ShipSprite, "Failed to get component Image for player1ShipSprite - CustomizationMenu", true);
-        Utility.Validate(player2ShipSprite, "Failed to get component image for player2ShipSprite - CustomizationMenu", true);
+        Utility.Validate(player1ShipSprite, "Failed to get component Image for player1ShipSprite - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player2ShipSprite, "Failed to get component image for player2ShipSprite - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         //Switches
         //Player1
         Transform SpriteSwitch1 = Player1Customizer.Find("SpriteSwitch");
-        Utility.Validate(SpriteSwitch1, "Failed to get reference to SpriteSwitch1 - CustomizationMenu", true);
+        Utility.Validate(SpriteSwitch1, "Failed to get reference to SpriteSwitch1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
 
         player1SpriteSwitch = SpriteSwitch1.GetComponent<TextMeshProUGUI>();
-        Utility.Validate(player1SpriteSwitch, "Failed to get reference to player1SpriteSwitch - CustomizationMenu", true);
+        Utility.Validate(player1SpriteSwitch, "Failed to get reference to player1SpriteSwitch - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         player1SpriteSwitchLeft = SpriteSwitch1.Find("LeftButton").gameObject;
         player1SpriteSwitchRight = SpriteSwitch1.Find("RightButton").gameObject;
-        Utility.Validate(player1SpriteSwitchLeft, "Failed to get reference to LeftButton1 - CustomizationMenu", true);
-        Utility.Validate(player1SpriteSwitchRight, "Failed to get reference to RightButton1 - CustomizationMenu", true);
-
+        Utility.Validate(player1SpriteSwitchLeft, "Failed to get reference to LeftButton1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player1SpriteSwitchRight, "Failed to get reference to RightButton1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         Transform PortaitSprite1 = Player1Customizer.Find("PortraitSprite");
-        Utility.Validate(PortaitSprite1, "Failed to get reference to PortaitSprite1 - CustomizationMenu", true);
+        Utility.Validate(PortaitSprite1, "Failed to get reference to PortaitSprite1 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
         player1PortraitSprite = PortaitSprite1.GetComponent<Image>();
-        Utility.Validate(player1PortraitSprite, "Failed to get reference to player1PortraitSprite - CustomizationMenu", true);
+        Utility.Validate(player1PortraitSprite, "Failed to get reference to player1PortraitSprite - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
 
         //Player2
         Transform SpriteSwitch2 = Player2Customizer.Find("SpriteSwitch");
-        Utility.Validate(SpriteSwitch2, "Failed to get reference to SpriteSwitch2 - CustomizationMenu", true);
-
+        Utility.Validate(SpriteSwitch2, "Failed to get reference to SpriteSwitch2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         player2SpriteSwitch = SpriteSwitch2.GetComponent<TextMeshProUGUI>();
-        Utility.Validate(player2SpriteSwitch, "Failed to get reference to player2SpriteSwitch - CustomizationMenu", true);
+        Utility.Validate(player2SpriteSwitch, "Failed to get reference to player2SpriteSwitch - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         player2SpriteSwitchLeft  = SpriteSwitch2.Find("LeftButton").gameObject;
         player2SpriteSwitchRight = SpriteSwitch2.Find("RightButton").gameObject;
-        Utility.Validate(player2SpriteSwitchLeft, "Failed to get reference to LeftButton2 - CustomizationMenu", true);
-        Utility.Validate(player2SpriteSwitchRight, "Failed to get reference to RightButton2 - CustomizationMenu", true);
-
+        Utility.Validate(player2SpriteSwitchLeft, "Failed to get reference to LeftButton2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
+        Utility.Validate(player2SpriteSwitchRight, "Failed to get reference to RightButton2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
 
         Transform PortaitSprite2 = Player2Customizer.Find("PortraitSprite");
-        Utility.Validate(PortaitSprite2, "Failed to get reference to PortaitSprite2 - CustomizationMenu", true);
+        Utility.Validate(PortaitSprite2, "Failed to get reference to PortaitSprite2 - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
         player2PortraitSprite = PortaitSprite2.GetComponent<Image>();
-        Utility.Validate(player2PortraitSprite, "Failed to get reference to player2PortraitSprite - CustomizationMenu", true);
+        Utility.Validate(player2PortraitSprite, "Failed to get reference to player2PortraitSprite - CustomizationMenu", Utility.ValidationLevel.ERROR, true);
     }
 
 
@@ -236,7 +221,6 @@ public class CustomizationMenu : MonoBehaviour
         player1ReadyCheckGameObject.SetActive(false);
         player2ReadyCheckGameObject.SetActive(false);
 
-        //They get deactivated by the ready check!
         player1SpriteSwitchLeft.SetActive(true);
         player1SpriteSwitchRight.SetActive(true);
         player1ColorPickerButton.gameObject.SetActive(true);
@@ -248,15 +232,9 @@ public class CustomizationMenu : MonoBehaviour
         UpdatePlayer1ShipSprite();
         UpdatePlayer2ShipSprite();
     }
-
-
-
-
     public void SetRenderCameraTarget(Camera target) {
         mainCanvas.worldCamera = target;
     }
-
-
     public void SetCustomizationMenuMode(CustomizationMenuMode mode) {
         currentMenuMode = mode;
         ApplyCurrentMenuMode();
@@ -279,6 +257,7 @@ public class CustomizationMenu : MonoBehaviour
             player2SpriteSwitchRight.gameObject.SetActive(false);
         }
     }
+
     public void ReceivePlayer2CharacterIndexRpc(int index) {
         playerCharacterIndex2 = index;
         UpdatePlayer2ShipSprite();
@@ -294,13 +273,10 @@ public class CustomizationMenu : MonoBehaviour
 
     private void CheckPlayersStatus() {
         if (player1ReadyCheck && player2ReadyCheck) {
-            var instance = GetInstance();
+            var instance = GetGameInstance();
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
             instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
             instance.SetGameState(GameState.LEVEL_SELECT_MENU);
-            
-            
-            //BUG: Do something in case the transtion animation breaks. Like set all their positions to the defaults the moment an anim ends!.
         }
     }
 
@@ -310,8 +286,8 @@ public class CustomizationMenu : MonoBehaviour
         else
             player1ReadyCheckGameObject.SetActive(false);
 
-        var rpcManger = GetInstance().GetRpcManagerScript();
-        rpcManger.UpdatePlayer2ReadyCheckServerRpc((ulong)GetInstance().GetClientID(), player1ReadyCheck);
+        var rpcManger = GetGameInstance().GetRpcManagerScript();
+        rpcManger.UpdatePlayer2ReadyCheckServerRpc((ulong)GetGameInstance().GetClientID(), player1ReadyCheck);
         CheckPlayersStatus();
     }
     private void UpdatePlayer2ReadyCheck() {
@@ -366,8 +342,6 @@ public class CustomizationMenu : MonoBehaviour
             Debug.LogError("Invalid colorPickerTarget - CustomizationMenu : index " + colorPickerTarget);
     }
 
-
-
     public void SwitchSpriteLeft(int playerIndex) {
         if (playerIndex == 1) {
             playerCharacterIndex1--;
@@ -375,8 +349,8 @@ public class CustomizationMenu : MonoBehaviour
                 playerCharacterIndex1 = playerCharactersBundle.playerCharacters.Length - 1;
             UpdatePlayer1ShipSprite();
             if (currentMenuMode == CustomizationMenuMode.ONLINE) {
-                var rpcManger = GetInstance().GetRpcManagerScript();
-                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
+                var rpcManger = GetGameInstance().GetRpcManagerScript();
+                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetGameInstance().GetClientID(), playerCharacterIndex1);
             }
         }
         else if (playerIndex == 2) {
@@ -395,8 +369,8 @@ public class CustomizationMenu : MonoBehaviour
                 playerCharacterIndex1 = 0;
             UpdatePlayer1ShipSprite();
             if (currentMenuMode == CustomizationMenuMode.ONLINE) {
-                var rpcManger = GetInstance().GetRpcManagerScript();
-                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetInstance().GetClientID(), playerCharacterIndex1);
+                var rpcManger = GetGameInstance().GetRpcManagerScript();
+                rpcManger.UpdatePlayer2SelectionServerRpc((ulong)GetGameInstance().GetClientID(), playerCharacterIndex1);
             }
         }
         else if (playerIndex == 2) {
@@ -409,10 +383,8 @@ public class CustomizationMenu : MonoBehaviour
             Debug.LogError("Invalid playerIndex sent to SwitchSpriteRight - CustomizationMenu : index " + playerIndex);
     }
 
-
-
     public void StartButton() {
-        var instance = GetInstance();
+        var instance = GetGameInstance();
         instance.SetCharacterSelection(Player.PlayerType.PLAYER_1, playerCharactersBundle.playerCharacters[playerCharacterIndex1], player1TargetColor);
         instance.SetCharacterSelection(Player.PlayerType.PLAYER_2, playerCharactersBundle.playerCharacters[playerCharacterIndex2], player2TargetColor);
         instance.SetGameState(GameState.LEVEL_SELECT_MENU);
@@ -458,7 +430,7 @@ public class CustomizationMenu : MonoBehaviour
         spectrumButtonExit = false;
 
         if (currentMenuMode == CustomizationMenuMode.ONLINE)
-            GetInstance().GetRpcManagerScript().UpdatePlayer2ColorSelectionServerRpc(GetInstance().GetClientID(), player1TargetColor);
+            GetGameInstance().GetRpcManagerScript().UpdatePlayer2ColorSelectionServerRpc(GetGameInstance().GetClientID(), player1TargetColor);
 
     }
     public void SpectrumButtonExit() {
@@ -481,7 +453,6 @@ public class CustomizationMenu : MonoBehaviour
             readyButtonText.text = "Unready";
         else
             readyButtonText.text = "Ready";
-
 
         UpdatePlayer1ReadyCheck();
     }

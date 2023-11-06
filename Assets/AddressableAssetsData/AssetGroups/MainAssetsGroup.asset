@@ -153,10 +153,6 @@ MonoBehaviour:
     m_Address: Assets/Prefabs/MatchDirector.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
-  - m_GUID: 899cb6c0ec0313248bdf6e665fc0d93f
-    m_Address: Assets/Prefabs/Levels/Level3 1.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 9829fa4468c69564eaba165159674903, type: 2}
   m_SchemaSet:

@@ -1,12 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 using ILanderUtility;
 
-public class MuzzleFlashSpawner : MonoBehaviour
-{
+public class MuzzleFlashSpawner : MonoBehaviour {
     private bool initialized = false;
     private Action muzzleFlashEventCallback;
 
@@ -25,10 +21,10 @@ public class MuzzleFlashSpawner : MonoBehaviour
     }
     private void SetupReferences() {
         animatorComp = GetComponent<Animator>();
-        Utility.Validate(animatorComp, "Failed to get reference to Animator component - MuzzleFlashSpawner", true);
+        Utility.Validate(animatorComp, "Failed to get reference to Animator component - MuzzleFlashSpawner", Utility.ValidationLevel.ERROR, true);
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
-        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - MuzzleFlashSpawner", true);
+        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - MuzzleFlashSpawner", Utility.ValidationLevel.ERROR, true);
     }
 
 

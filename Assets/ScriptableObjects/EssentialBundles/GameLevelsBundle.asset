@@ -34,10 +34,3 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-  - name: Shreks Swamp
-    preview: {fileID: 21300000, guid: 0fd2e2ba73070ce4291d43162332335f, type: 3}
-    asset:
-      m_AssetGUID: 899cb6c0ec0313248bdf6e665fc0d93f
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0

@@ -4,64 +4,47 @@ using static GameInstance;
 using ILanderUtility;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static UnityEngine.EventSystems.EventTrigger;
-using UnityEngine.InputSystem;
-using System;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
-public class Level : MonoBehaviour
-{
+public class Level : MonoBehaviour {
     private enum LevelState {
         NONE = 0,
         LOADING_ASSETS,
         ACTIVE
     }
 
-    //SerializedField Pickups respawn time?
     [SerializeField] private PickupsBundle pickupsBundle;
     [SerializeField] private ProjectilesBundle projectilesBundle;
     [SerializeField] private float pickupRespawnTimer = 1.0f;
     [SerializeField] private float pickupRespawnRetryTimer = 4.0f;
 
     private LevelState currentLevelState = LevelState.NONE;
+    private GameMode currentGameMode = GameMode.NONE;
     private bool initialized = false;
     private bool assetsLoaded = false;
 
     private Vector3 player1SpawnPoint;
     private Vector3 player2SpawnPoint;
 
-    private uint pickupsSpawnPointsCount = 0; //kINDA NOT needed
-
     private Transform[] pickupsSpawnPoints;
-    public bool[] occupiedPickupsSpawnPoints;
+    private bool[] occupiedPickupsSpawnPoints;
 
-    private Dictionary<string, AsyncOperationHandle<GameObject>> loadedPickupAssets;
+    private Dictionary<Pickup.PickupType, AsyncOperationHandle<GameObject>> loadedPickupAssets;
     private Dictionary<Projectile.ProjectileType, AsyncOperationHandle<GameObject>> loadedProjectileAssets;
 
     private List<GameObject> pickupsPool;
+    private Dictionary<Pickup.PickupType, uint> pickupsLog;
+
     private Dictionary<Projectile.ProjectileType, ProjectilesPool<Projectile>> projectilePools;
-    private Dictionary<Projectile.ProjectileType, uint> queuedProjectileElements;
+    private Dictionary<Projectile.ProjectileType, uint> projectilesLog;
 
     private float currentRespawnTimer = 0.0f;
 
 
-    //Plan:
-    //Load all pickups and keep track of which projectile types and how many instances each are requested.
-    //Load all requested ones and in the call back, create a pool and fill it with Requested amount.
-
-    //Plan 2:
-    //Load all pickups and during each, read the projectile type
-    //1. Does pool for type already exist? Just add element.
-    //2. Pool doesnt exist? load asset with same projectile type from bundle. AND create pool for it.
-    //3. On callback, get pool for it and initialize it with first value.
-
-
-    public void Initialize() {
+    public void Initialize(GameMode mode) {
         if (initialized)
             return;
 
-
-
+        currentGameMode = mode;
         SetupReferences();
         if (pickupsBundle)
             LoadAssets();
@@ -80,42 +63,50 @@ public class Level : MonoBehaviour
         if (currentLevelState == LevelState.LOADING_ASSETS)
             CheckAssetsLoadingStatus();
         else if (currentLevelState == LevelState.ACTIVE && assetsLoaded) {
-            if (IsSpawningPossible()) {
-                UpdateRespawnTimer();
-                UpdatePickupsSpawns();
+            if (currentGameMode == GameMode.COOP || GetGameInstance().IsHost()) {
+                if (IsSpawningPossible()) {
+                    UpdateRespawnTimer();
+                    UpdatePickupsSpawns();
+                }
+                else
+                    currentRespawnTimer = pickupRespawnTimer;
             }
-            else {
-                currentRespawnTimer = pickupRespawnTimer; //Otherwise reset it?
-            }
-            foreach (var pool in projectilePools)
-                pool.Value.Tick();
+
+            UpdateProjectiles();
         }
     }
     private void SetupReferences() {
 
         Transform player1SpawnPositionTransform = transform.Find("Player1SpawnPoint");
-        if (!Utility.Validate(player1SpawnPositionTransform, "No Player1SpawnPoint was found in level " + gameObject.name, false))
+        if (!Utility.Validate(player1SpawnPositionTransform, "No Player1SpawnPoint was found in " + gameObject.name, Utility.ValidationLevel.WARNING, false))
             player1SpawnPoint = Vector3.zero;
         else
             player1SpawnPoint = player1SpawnPositionTransform.position;
 
         Transform player2SpawnPositionTransform = transform.Find("Player2SpawnPoint");
-        if (!Utility.Validate(player2SpawnPositionTransform, "No Player2SpawnPoint was found in level " + gameObject.name, false))
+        if (!Utility.Validate(player2SpawnPositionTransform, "No Player2SpawnPoint was found in " + gameObject.name, Utility.ValidationLevel.WARNING, false))
             player2SpawnPoint = Vector3.zero;
         else
             player2SpawnPoint = player2SpawnPositionTransform.position;
 
 
-        //PickupPoints - Use amount to figure out Pickup Instansiations
         Transform PickupsSpawnPointsTransform = transform.Find("PickupSpawnPoints");
-        pickupsSpawnPointsCount = (uint)PickupsSpawnPointsTransform.childCount;
+        if (!Utility.Validate(PickupsSpawnPointsTransform, "No pickups spawn points were found in " + gameObject.name, Utility.ValidationLevel.WARNING, false))
+            return;
+
+        uint pickupsSpawnPointsCount = (uint)PickupsSpawnPointsTransform.childCount;
+        if (pickupsSpawnPointsCount == 0)
+            return;
+
         pickupsSpawnPoints = new Transform[pickupsSpawnPointsCount];
         occupiedPickupsSpawnPoints = new bool[pickupsSpawnPointsCount];
         for (uint i = 0; i < PickupsSpawnPointsTransform.childCount; i++)
             pickupsSpawnPoints[i] = PickupsSpawnPointsTransform.GetChild((int)i).transform;
-
     }
     public void ReleaseResources() {
+        if (!assetsLoaded)
+            return;
+
         foreach (var entry in pickupsPool)
             Destroy(entry.gameObject);
         foreach (var entry in loadedPickupAssets)
@@ -124,92 +115,130 @@ public class Level : MonoBehaviour
             entry.Value.ReleaseResources();
     }
 
+
+    public void DeactivateAllPickups() {
+        foreach (var pickup in pickupsPool) {
+            var script = pickup.GetComponent<Pickup>();
+            script.SetActive(false);
+        }
+    }
+    public void RefreshAllPickupSpawns() {
+        if (pickupsPool.Count == 0)
+            return;
+
+        var instance = GetGameInstance();
+        var rpcManager = instance.GetRpcManagerScript();
+
+        if (instance.IsHost())
+            rpcManager.DeactivatePickupSpawnsServerRpc(instance.GetClientID());
+
+        DeactivateAllPickups();
+
+        for (int i = 0; i < pickupsSpawnPoints.Length; i++) {
+            var pickup = GetRandomUnactivePickup();
+            if (!pickup)
+                break;
+
+            var script = pickup.GetComponent<Pickup>();
+            script.SetActive(true);
+            script.SetSpawnPointIndex(i);
+            occupiedPickupsSpawnPoints[i] = true;
+            pickup.transform.position = pickupsSpawnPoints[i].position;
+
+            if (instance.IsHost())
+                rpcManager.UpdatePickupSpawnsServerRpc(instance.GetClientID(), script.GetPickupID(), script.GetSpawnPointIndex());
+        }
+    }
+    private void UpdateRespawnTimer() {
+        if (currentRespawnTimer > 0.0f) {
+            currentRespawnTimer -= Time.deltaTime;
+            if (currentRespawnTimer <= 0.0f)
+                currentRespawnTimer = 0.0f;
+        }
+    }
+    private void UpdatePickupsSpawns() {
+        if (currentRespawnTimer > 0.0f)
+            return;
+
+        int spawnPointIndex = GetRandomUnoccupiedSpawnPoint();
+        var pickup = GetRandomUnactivePickup();
+        if (spawnPointIndex == -1 || !pickup) { //spawnPoint wont be -1 since IsSpawningPossible is called before this but i kept it for consistency's sake.
+            currentRespawnTimer = pickupRespawnRetryTimer;
+            return;
+        }
+
+        pickup.SetActive(true);
+        pickup.SetSpawnPointIndex(spawnPointIndex);
+        occupiedPickupsSpawnPoints[spawnPointIndex] = true;
+        pickup.transform.position = pickupsSpawnPoints[spawnPointIndex].position;
+
+        var instance = GetGameInstance();
+        var rpcManager = instance.GetRpcManagerScript();
+        if (instance.IsHost())
+            rpcManager.UpdatePickupSpawnsServerRpc(instance.GetClientID(), pickup.GetPickupID(), spawnPointIndex);
+
+        currentRespawnTimer = pickupRespawnTimer;
+    }
+    private void UpdateProjectiles() {
+        foreach (var pool in projectilePools)
+            pool.Value.Tick();
+    }
+    public void RegisterPickupDispawn(int spawnPointIndex) {
+        occupiedPickupsSpawnPoints[spawnPointIndex] = false;
+    }
+
+
     private void LoadAssets() {
-
-        //This needs refactoring and further testing.
-        //Also, i disabled some error messages. Enable them since they help pinpoint what went wrong in case of errors.
-
         currentLevelState = LevelState.LOADING_ASSETS;
-        loadedPickupAssets = new Dictionary<string, AsyncOperationHandle<GameObject>>(pickupsBundle.pickups.Length);
-        loadedProjectileAssets = new Dictionary<Projectile.ProjectileType, AsyncOperationHandle<GameObject>>();
-        queuedProjectileElements = new Dictionary<Projectile.ProjectileType, uint>();
 
-        //Use pool class?
-        pickupsPool = new List<GameObject>(pickupsBundle.pickups.Length);
+        loadedPickupAssets = new Dictionary<Pickup.PickupType, AsyncOperationHandle<GameObject>>(pickupsBundle.entries.Length);
+        loadedProjectileAssets = new Dictionary<Projectile.ProjectileType, AsyncOperationHandle<GameObject>>();
+
+        projectilesLog = new Dictionary<Projectile.ProjectileType, uint>();
+        pickupsLog = new Dictionary<Pickup.PickupType, uint>();
+
+        pickupsPool = new List<GameObject>(pickupsBundle.entries.Length);
         projectilePools = new Dictionary<Projectile.ProjectileType, ProjectilesPool<Projectile>>();
 
-        foreach (var pickupEntry in pickupsBundle.pickups) {
-            if (pickupEntry.name.Length == 0) //Skip empty entries in the bundle.
+        foreach (var pickupEntry in pickupsBundle.entries) {
+            if (pickupEntry.type == Pickup.PickupType.NONE) //Skip invalid entries in the bundle.
                 continue;
 
-            //Load pickup
-            StartPickupAssetLoadProcess(pickupEntry);
+            ProcessPickupData(pickupEntry);
             if (pickupEntry.associatedProjectile == Projectile.ProjectileType.NONE)
                 continue;
 
-            //Update queued entities
-            if (queuedProjectileElements.ContainsKey(pickupEntry.associatedProjectile))
-                queuedProjectileElements[pickupEntry.associatedProjectile] += 2; //One for each player!
-            else
-                queuedProjectileElements.Add(pickupEntry.associatedProjectile, 2);
-
-            //Start loading asset if it has no entry
-            if (!loadedProjectileAssets.ContainsKey(pickupEntry.associatedProjectile)) {
-                foreach (var projectileEntry in projectilesBundle.Entries) {
-                    if (projectileEntry.type == pickupEntry.associatedProjectile) {
-                        StartProjectileAssetLoadProcess(projectileEntry);
-                        break;
-                    }
-                }
-
-                //Debug.LogError("Unable to locate projectile asset associated with type " + pickupEntry.associatedProjectile.ToString());
-            }
-
-
-
-
-                //If pool exist then type is ready and available so just add element
-            /*if (DoesPoolExist(pickupEntry.associatedProjectile)) {
-                var gameObject = Instantiate(loadedProjectileAssets[pickupEntry.associatedProjectile].Result);
-                var script = gameObject.GetComponent<Projectile>();
-                projectilePools[pickupEntry.associatedProjectile].AddNewElement(script);
-                Debug.Log("Pool already exist for element" + pickupEntry.associatedProjectile.ToString() + " so a new element was added!");
-            }
-            else {
-                if (!loadedProjectileAssets.ContainsKey(pickupEntry.associatedProjectile)) {
-
-                    ProjectileEntry targetEntry = new ProjectileEntry();
-                    bool foundEntry = false;
-                    foreach (var projectileEntry in projectilesBundle.Entries) {
-                        if (projectileEntry.type == pickupEntry.associatedProjectile) {
-                            foundEntry = true;
-                            targetEntry = projectileEntry;
-                            break;
-                        }
-                    }
-
-                    if (foundEntry) {
-                        var projectileHandle = Addressables.LoadAssetAsync<GameObject>(targetEntry.asset);
-                        projectileHandle.Completed += ProjectileAssetLoadedCallback;
-                        loadedProjectileAssets.Add(targetEntry.type, projectileHandle);
-                        Debug.Log(gameObject.name + " started loading projectile asset " + targetEntry.type.ToString());
-                        continue;
-                    }
-                    else
-                        Debug.LogError("Unable to locate projectile asset associated with type " + pickupEntry.associatedProjectile.ToString());
-                }
-                else { //Its being loaded so add 1 to stack so it adds one more element to pool once its done!
-
-                    Debug.Log("Pool doesnt exist for element" + pickupEntry.associatedProjectile.ToString() + " but its being loaded. Element was queued!");
-                    if (bufferedProjectileElements.ContainsKey(pickupEntry.associatedProjectile))
-                        bufferedProjectileElements[pickupEntry.associatedProjectile]++;
-                    else
-                        bufferedProjectileElements.Add(pickupEntry.associatedProjectile, 1);
-                }
-
-            }*/
+            ProcessAssociatedProjectileData(pickupEntry);
         }
     }
+    private void ProcessPickupData(PickupEntry entry) {
+        if (pickupsLog.ContainsKey(entry.type))
+            pickupsLog[entry.type]++;
+        else
+            pickupsLog.Add(entry.type, 1);
+
+        if (!loadedPickupAssets.ContainsKey(entry.type))
+            StartPickupAssetLoadProcess(entry);
+    }
+    private void ProcessAssociatedProjectileData(PickupEntry entry) {
+        if (projectilesLog.ContainsKey(entry.associatedProjectile))
+            projectilesLog[entry.associatedProjectile] += 2; //One for each player!
+        else
+            projectilesLog.Add(entry.associatedProjectile, 2); //One for each player!
+
+        //Start loading asset if it has no entry
+        if (!loadedProjectileAssets.ContainsKey(entry.associatedProjectile)) {
+            //Looks for assetEntry in bundle
+            foreach (var projectileEntry in projectilesBundle.Entries) {
+                if (projectileEntry.type == entry.associatedProjectile) {
+                    StartProjectileAssetLoadProcess(projectileEntry);
+                    return; //I changed this for this func here!
+                }
+            }
+            Debug.LogError("Unable to locate projectile asset associated with type " + entry.associatedProjectile.ToString());
+        }
+    }
+
     private void StartPickupAssetLoadProcess(PickupEntry entry) {
         if (entry.assetReference == null) {
             Debug.LogError("Entry " + entry.ToString() + " contains null reference to asset - StartPickupAssetLoadProcess()");
@@ -218,8 +247,8 @@ public class Level : MonoBehaviour
 
         var handle = Addressables.LoadAssetAsync<GameObject>(entry.assetReference);
         handle.Completed += PickupAssetLoadedCallback;
-        loadedPickupAssets.Add(entry.name, handle);
-        Debug.Log(gameObject.name + " started loading pickup asset " + entry.name);
+        loadedPickupAssets.Add(entry.type, handle);
+        Debug.Log(gameObject.name + " started loading pickup asset of type " + entry.type);
     }
     private void StartProjectileAssetLoadProcess(ProjectileEntry entry) {
         if (entry.assetReference == null) {
@@ -232,17 +261,62 @@ public class Level : MonoBehaviour
         loadedProjectileAssets.Add(entry.type, handle);
         Debug.Log(gameObject.name + " started loading projectile asset " + entry.type.ToString());
     }
+    private void CheckAssetsLoadingStatus() {
+        bool checkResults = true;
 
+        foreach (var entry in loadedPickupAssets) {
+            if (entry.Value.Status == AsyncOperationStatus.Failed) {
+                loadedPickupAssets.Remove(entry.Key); //Clears failed to load asset entry.
+                pickupsLog.Remove(entry.Key);
+                continue;
+            }
+            if (entry.Value.Status != AsyncOperationStatus.Succeeded)
+                checkResults = false;
+        }
+        foreach(var entry in loadedProjectileAssets) {
+            if (entry.Value.Status == AsyncOperationStatus.Failed) {
+                loadedProjectileAssets.Remove(entry.Key); //Clears failed to load asset entry.
+                projectilesLog.Remove(entry.Key);
+                continue;
+            }
+            if (entry.Value.Status != AsyncOperationStatus.Succeeded)
+                checkResults = false;
+        }
+
+        if (checkResults) {
+            Debug.Log("Level Finished Loading Assets!");
+            SetupPickupsPool();
+            SetupProjectilePools();
+            currentLevelState = LevelState.ACTIVE;
+            assetsLoaded = true;
+        }
+    }
+
+    private void SetupPickupsPool() {
+        int IDCounter = 0;
+        foreach(var type in pickupsLog) {
+            for (int i = 0; i < type.Value; i++) {
+                var gameObject = Instantiate(GetLoadedPickupAsset(type.Key));
+                Pickup pickup = gameObject.GetComponent<Pickup>();
+                pickup.Initialize();
+                pickup.SetActive(false);
+                pickup.SetLevelScript(this);
+                pickup.SetPickupID(IDCounter);
+                pickupsPool.Add(gameObject);
+                IDCounter++;
+            }
+        }
+    }
     private void SetupProjectilePools() {
-        foreach (var queue in queuedProjectileElements) {
+        foreach (var type in projectilesLog) {
             ProjectilesPool<Projectile> projectilesPool = new ProjectilesPool<Projectile>();
-            projectilePools.Add(queue.Key, projectilesPool);
+            projectilePools.Add(type.Key, projectilesPool);
 
-            for (int i = 0; i < queue.Value; i++) {
-                var gameObject = Instantiate(GetProjectileAsset(queue.Key));
+            for (int i = 0; i < type.Value; i++) {
+                var gameObject = Instantiate(GetLoadedProjectileAsset(type.Key));
                 Projectile projectile = gameObject.GetComponent<Projectile>();
-                projectile.SetActive(false);
                 projectile.Initialize();
+                projectile.SetActive(false);
 
                 if (i == 0)
                     projectilesPool.Initialize(projectile);
@@ -252,7 +326,21 @@ public class Level : MonoBehaviour
         }
     }
 
-    private GameObject GetProjectileAsset(Projectile.ProjectileType type) {
+
+    private GameObject GetLoadedPickupAsset(Pickup.PickupType type) {
+        if (type == Pickup.PickupType.NONE) {
+            Debug.LogWarning("Called GetPickupAsset() with type NONE");
+            return null;
+        }
+        foreach (var asset in loadedPickupAssets) {
+            if (asset.Key == type)
+                return asset.Value.Result;
+        }
+
+        Debug.LogWarning("Falied to find requested pickup asset at GetPickupAsset()");
+        return null;
+    }
+    private GameObject GetLoadedProjectileAsset(Projectile.ProjectileType type) {
         if (type == Projectile.ProjectileType.NONE) {
             Debug.LogWarning("Called GetProjectileAsset() with type NONE");
             return null;
@@ -266,114 +354,57 @@ public class Level : MonoBehaviour
         return null;
     }
 
-    private void CheckAssetsLoadingStatus() {
-        bool checkResults = true;
-        //HERE!
-        //Also clean the dictionary of counts after everything is done
-
-        foreach (var entry in loadedPickupAssets) {
-            if (entry.Value.Status == AsyncOperationStatus.Failed) {
-                loadedPickupAssets.Remove(entry.Key); //Clears failed to load asset entry.
-                continue;
-            }
-            if (entry.Value.Status != AsyncOperationStatus.Succeeded)
-                checkResults = false;
-        }
-
-        foreach(var entry in loadedProjectileAssets) {
-            if (entry.Value.Status == AsyncOperationStatus.Failed) {
-                loadedProjectileAssets.Remove(entry.Key); //Clears failed to load asset entry.
-                continue;
-            }
-            if (entry.Value.Status != AsyncOperationStatus.Succeeded)
-                checkResults = false;
-        }
-
-        if (checkResults) {
-            Debug.Log("Level Finished Loading Assets!");
-            RefreshAllPickupSpawns();
-            SetupProjectilePools();
-            //Clear queued elements dictionary? or it could be used as a book keeper for types and counts!
-            currentLevelState = LevelState.ACTIVE;
-            assetsLoaded = true;
-        }
-    }
-    private void PickupAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
-        if (handle.Status == AsyncOperationStatus.Succeeded) {
-            Debug.Log("Successfully loaded " + handle.Result.ToString());
-
-            var obj = Instantiate(handle.Result);
-            Pickup script = obj.GetComponent<Pickup>();
-            script.SetActive(false);
-            script.SetLevelScript(this);
-            pickupsPool.Add(obj);
-        }
-        else
-            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
-    }
-    private void ProjectileAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
-        if (handle.Status == AsyncOperationStatus.Succeeded) {
-            Debug.Log("Successfully loaded " + handle.Result.ToString());
-
-            ////Create First Element
-            //var gameObject = Instantiate(handle.Result);
-            //Projectile projectile = gameObject.GetComponent<Projectile>();
-            //projectile.SetActive(false);
-            //
-            ////Create Pool
-            //var type = projectile.GetProjectileType();
-            //if (type == Projectile.ProjectileType.NONE) {
-            //    Debug.Log("Projectile " + gameObject.name + " had the projectile type NONE - Make sure to set it to the correct value!");
-            //    return;
-            //}
-            //ProjectilesPool<Projectile> projectilesPool = new ProjectilesPool<Projectile>();
-            //projectilesPool.Initialize(projectile);
-            //projectilePools.Add(type, projectilesPool);
-            //
-            ////Add Queued Elements
-            //if (bufferedProjectileElements.ContainsKey(type)) {
-            //    uint count = bufferedProjectileElements[type];
-            //    if (count == 0)
-            //        return;
-            //
-            //    for (uint i = 0; i < count; i++) {
-            //        var element = Instantiate(handle.Result);
-            //        Projectile script = element.GetComponent<Projectile>();
-            //        script.SetActive(false);
-            //        projectilePools[type].AddNewElement(script);
-            //    }
-            //    bufferedProjectileElements[type] = 0;
-            //}
-        }
-        else
-            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
-
-    }
-
-    private bool DoesPoolExist(Projectile.ProjectileType type) {
-        if (projectilePools.Count == 0)
-            return false;
-
-        if (projectilePools.ContainsKey(type))
-            return true;
-        return false;
-    }
-
-    private void UpdateRespawnTimer() {
-        if (currentRespawnTimer > 0.0f) {
-            currentRespawnTimer -= Time.deltaTime;
-            if (currentRespawnTimer <= 0.0f)
-                currentRespawnTimer = 0.0f;
-        }
-    }
-
     public Vector3 GetPlayer1SpawnPoint() {
         return player1SpawnPoint;
     }
     public Vector3 GetPlayer2SpawnPoint() {  
         return player2SpawnPoint;
     }
-    
+    private Pickup GetPickupByID(int ID) {
+        foreach (var entry in pickupsPool) {
+            var script = entry.GetComponent<Pickup>();
+            if (script.GetPickupID() == ID)
+                return script;
+        }
+
+        return null;
+    }
+    private Pickup GetRandomUnactivePickup() {
+        List<Pickup> unactivePickups = new List<Pickup>();
+        foreach (var entry in pickupsPool) {
+            Pickup script = entry.GetComponent<Pickup>();
+            if (!script.IsActive())
+                unactivePickups.Add(script);
+        }
+
+        if (unactivePickups.Count == 0)
+            return null;
+
+        int rand = UnityEngine.Random.Range(0, unactivePickups.Count);
+        return unactivePickups[rand];
+    }
+    private int GetRandomUnoccupiedSpawnPoint() {
+        List<int> unactiveSpawnPoints = new List<int>();
+        for (int i = 0; i < occupiedPickupsSpawnPoints.Length; i++) {
+            if (!occupiedPickupsSpawnPoints[i])
+                unactiveSpawnPoints.Add(i);
+        }
+
+        if (unactiveSpawnPoints.Count == 0)
+            return -1;
+
+        int rand = UnityEngine.Random.Range(0, unactiveSpawnPoints.Count);
+        return unactiveSpawnPoints[rand];
+    }
+    private bool IsSpawningPossible() {
+        bool results = false;
+        foreach (var entry in occupiedPickupsSpawnPoints) {
+            if (!entry)
+                results = true;
+        }
+        return results;
+    }
+
 
     public bool SpawnProjectile(Player owner, Projectile.ProjectileType type) {
         if (type == Projectile.ProjectileType.NONE) {
@@ -387,89 +418,42 @@ public class Level : MonoBehaviour
 
         return projectilePools[type].SpawnProjectile(owner);
     }
+    public bool ReceiveProjectileSpawnRequest(Player.PlayerType owner, Projectile.ProjectileType type) {
+        if (owner == Player.PlayerType.NONE)
+            return false;
 
-    private void RefreshAllPickupSpawns() {
-        if (pickupsPool.Count == 0)
-            return;
+        if (owner == Player.PlayerType.PLAYER_1)
+            return SpawnProjectile(GetGameInstance().GetPlayer1Script(), type);
+        else if (owner == Player.PlayerType.PLAYER_2)
+            return SpawnProjectile(GetGameInstance().GetPlayer2Script(), type);
 
-        foreach (var pickup in pickupsPool) {
-            var script = pickup.GetComponent<Pickup>();
-            script.SetActive(false);
-        }
-
-
-        for (int i = 0; i < pickupsSpawnPoints.Length; i++) {
-            var pickup = GetRandomUnactivePickup();
-            if (!pickup)
-                break;
-
-            var script = pickup.GetComponent<Pickup>();
-            script.SetActive(true);
-            script.SetSpawnPointIndex(i);
-            occupiedPickupsSpawnPoints[i] = true;
-            pickup.transform.position = pickupsSpawnPoints[i].position;
-        }
+        return false;
     }
-    private void UpdatePickupsSpawns() {
-        if (currentRespawnTimer > 0.0f)
-            return;
-
-        int spawnPointIndex = -1;
-        for (int i = 0; i < occupiedPickupsSpawnPoints.Length; i++) {
-            if (!occupiedPickupsSpawnPoints[i]) {
-                spawnPointIndex = i;
-                break;
-            }
-        }
-        if (spawnPointIndex == -1) {
-            currentRespawnTimer = pickupRespawnRetryTimer;
+    public void ReceivePickupSpawnRequestRpc(int ID, int spawnIndex) {
+        var targetPickup = GetPickupByID(ID);
+        if (!targetPickup) {
+            Debug.LogError("Failed to find pickup with ID " + ID);
             return;
         }
 
-        var pickup = GetRandomUnactivePickup();
-        if (!pickup) {
-            currentRespawnTimer = pickupRespawnRetryTimer;
-            return;
-        }
-
-        pickup.SetActive(true);
-        pickup.transform.position = pickupsSpawnPoints[spawnPointIndex].position;
-        occupiedPickupsSpawnPoints[spawnPointIndex] = true;
-        currentRespawnTimer = pickupRespawnTimer;
-    }
-    private Pickup GetUnactivePickup() {
-        foreach (var entry in pickupsPool) {
-            var script = entry.GetComponent<Pickup>();
-            if (!script.IsActive())
-                return script;
-        }
-
-        return null;
-    }
-    private Pickup GetRandomUnactivePickup() {
-        List<Pickup> unactivePickups = new List<Pickup>();
-        foreach(var entry in pickupsPool) {
-            Pickup script = entry.GetComponent<Pickup>();
-            if (!script.IsActive())
-                unactivePickups.Add(script);
-        }
-
-        if (unactivePickups.Count == 0)
-            return null;
-
-        int rand = UnityEngine.Random.Range(0, unactivePickups.Count);
-        return unactivePickups[rand];
-    }
-    private bool IsSpawningPossible() {
-        bool results = false;
-        foreach (var entry in occupiedPickupsSpawnPoints) {
-            if (!entry)
-                results = true;
-        }
-        return results;
+        targetPickup.SetActive(true);
+        targetPickup.SetSpawnPointIndex(spawnIndex);
+        occupiedPickupsSpawnPoints[spawnIndex] = true;
+        targetPickup.transform.position = pickupsSpawnPoints[spawnIndex].position;
     }
 
-    public void RegisterPickupDispawn(int spawnPointIndex) {
-        occupiedPickupsSpawnPoints[spawnPointIndex] = false;
+
+    //Left those for information purposes.
+    private void PickupAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded)
+            Debug.Log("Successfully loaded " + handle.Result.ToString());
+        else
+            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
+    }
+    private void ProjectileAssetLoadedCallback(AsyncOperationHandle<GameObject> handle) {
+        if (handle.Status == AsyncOperationStatus.Succeeded)
+            Debug.Log("Successfully loaded " + handle.Result.ToString());
+        else
+            Debug.LogWarning("Asset " + handle.ToString() + " failed to load!");
     }
 }

@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 5432787026842891958}
   - component: {fileID: 5432787026842891956}
   - component: {fileID: -6651780665008138962}
-  - component: {fileID: -8294627821623418946}
   - component: {fileID: 2331920296015067265}
+  - component: {fileID: -8294627821623418946}
+  - component: {fileID: -8956381367016061933}
   m_Layer: 0
   m_Name: ProjectileIceBomb
   m_TagString: Untagged
@@ -100,7 +101,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.04, y: -0.04}
+  m_Offset: {x: 0.04, y: 0.04}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -111,24 +112,8 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.28, y: 0.06}
+  m_Size: {x: 0.06, y: 0.28}
   m_EdgeRadius: 0
---- !u!114 &-8294627821623418946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5432787026842891959}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c7429067139ffb4b931bfa46f930b0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  damage: 0.26
-  speed: 12
-  spawnOffset: {x: 0.5, y: 0.5}
-  freezeDuration: 4
 --- !u!95 &2331920296015067265
 Animator:
   serializedVersion: 4
@@ -149,3 +134,39 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &-8294627821623418946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5432787026842891959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c7429067139ffb4b931bfa46f930b0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 0.26
+  speed: 26
+  spawnOffset: {x: 0.5, y: 0.5}
+  freezeDuration: 4
+--- !u!114 &-8956381367016061933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5432787026842891959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 951099334
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1

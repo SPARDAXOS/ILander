@@ -1,34 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class MainMenu : MonoBehaviour
-{
-
-    //NOTE: Probably need to overarching menu manager or just use the game instance to set everything up
-
-    private bool initialized = false;
-
-    //Probably just delete this! or keep it for API consistency
-    public void Initialize() {
-        if (initialized)
-            return;
-
-
-        initialized = true;
-    }
-
-
-
-
-
+public class MainMenu : MonoBehaviour {
 
     public void StartButton() {
-        GameInstance.GetInstance().SetGameState(GameInstance.GameState.GAMEMODE_MENU);
+        GameInstance.GetGameInstance().SetGameState(GameInstance.GameState.GAMEMODE_MENU);
     }
     public void SettingsButton() {
-        GameInstance.GetInstance().SetGameState(GameInstance.GameState.SETTINGS_MENU);
+        GameInstance.GetGameInstance().SetGameState(GameInstance.GameState.SETTINGS_MENU);
     }
     public void QuitButton() {
 #if UNITY_EDITOR

@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 3019540231359438631}
   - component: {fileID: 2958964285935988380}
   - component: {fileID: 5866001434548097350}
-  - component: {fileID: 675224628989331164}
   - component: {fileID: 8509040902289315419}
+  - component: {fileID: 675224628989331164}
   m_Layer: 0
   m_Name: PickupIceBomb
   m_TagString: Pickup
@@ -113,21 +113,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.4, y: 0.4}
   m_EdgeRadius: 0
---- !u!114 &675224628989331164
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3019540231359438630}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22bd9224cbbe37049960164376284397, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Potency: 0.6
-  HUDIcon: {fileID: 21300000, guid: 91995768ddde09f4ca5afa1e1674e824, type: 3}
-  associatedProjectileType: 2
 --- !u!95 &8509040902289315419
 Animator:
   serializedVersion: 4
@@ -148,3 +133,17 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &675224628989331164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3019540231359438630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22bd9224cbbe37049960164376284397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HUDIcon: {fileID: 21300000, guid: 91995768ddde09f4ca5afa1e1674e824, type: 3}
+  associatedProjectileType: 2

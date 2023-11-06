@@ -145,4 +145,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ac0e3facf6cac547bbc137b0d4692ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Potency: 0.1
+  Potency: 0.4

@@ -1,19 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using static GameInstance;
 
-public class PickupIceBomb : Pickup
-{
+public class PickupIceBomb : Pickup {
     [SerializeField] private Sprite HUDIcon;
     [SerializeField] private Projectile.ProjectileType associatedProjectileType;
 
 
-
-
+    public override void Initialize() {
+        type = PickupType.ICE_BOMB;
+        initialized = true;
+    }
     public override bool Activate(Player user) {
         if (levelScript.SpawnProjectile(user, associatedProjectileType)) {
-            //SetActive(false); //wot
-            //levelScript.RegisterPickupDispawn(spawnPointIndex); //nonsense
+            if (GetGameInstance().GetCurrentGameMode() == GameMode.LAN) {
+                var instance = GetGameInstance();
+                var rpcManager = instance.GetRpcManagerScript();
+                rpcManager.UpdateProjectileSpawnRequestServerRpc(instance.GetClientID(), user.GetPlayerType(), associatedProjectileType);
+            }
             return true;
         }
         return false;

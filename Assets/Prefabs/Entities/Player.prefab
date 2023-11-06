@@ -391,11 +391,7 @@ MonoBehaviour:
   player2ControlScheme: {fileID: 11400000, guid: e5f33f5b6f6f4364083b8b89357a278e, type: 2}
   frozenColor: {r: 0, g: 1, b: 1, a: 1}
   hitEffectColor: {r: 1, g: 0, b: 0, a: 1}
-  hitEffectDuration: 1
-  initialized: 0
-  currentHealth: 0
-  currentFuel: 0
-  equippedPickup: {fileID: 0}
+  hitEffectDuration: 0.5
 --- !u!114 &-1610154317646222393
 MonoBehaviour:
   m_ObjectHideFlags: 0

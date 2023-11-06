@@ -46,13 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ca6de4af7999d040855e51247b4a818, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointsToWin: 2
+  pointsToWin: 3
   roundTimeLimit: 60
-  matchStarted: 0
-  player1Score: 0
-  player2Score: 0
-  winner: 0
-  roundTimer: 0
 --- !u!111 &7574699161746243769
 Animation:
   m_ObjectHideFlags: 0

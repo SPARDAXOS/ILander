@@ -1,16 +1,12 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class CountdownMenu : MonoBehaviour
-{
+public class CountdownMenu : MonoBehaviour {
+
     public delegate void AnimationFinished();
     AnimationFinished callback;
 
     private bool initialized = false;
     private bool animationPlaying = false;
-
 
     private Animation animationComponent;
 
@@ -22,7 +18,6 @@ public class CountdownMenu : MonoBehaviour
         animationComponent = GetComponent<Animation>();
         initialized = true;
     }
-
     public void Tick() {
         if (!initialized) {
             Debug.LogError("Attempted to tick uninitialized entity - CountdownMenu");
@@ -37,14 +32,6 @@ public class CountdownMenu : MonoBehaviour
             animationPlaying = false;
             gameObject.SetActive(false);
         }
-    }
-
-    //Sounds?
-
-    public void PlayCountdownSound(int index) {
-
-        Debug.Log("SOUND - " + index);
-
     }
 
     public bool IsAnimationPlaying() {

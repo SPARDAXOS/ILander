@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class ProjectileIceBomb : Projectile
-{
+public class ProjectileIceBomb : Projectile {
     [SerializeField] private float freezeDuration = 1.0f;
     private Animator animatorComp;
     
@@ -36,9 +33,6 @@ public class ProjectileIceBomb : Projectile
     }
 
     protected override void OnCollision(Collider2D collision) {
-
-        //Add got damaged effect for players!
-
         var tag = collision.tag;
         if (tag == "Pickup")
             return;
@@ -52,7 +46,5 @@ public class ProjectileIceBomb : Projectile
         }
         else
             DefaultHitReaction();
-
-
     }
 }

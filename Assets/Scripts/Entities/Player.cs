@@ -1,17 +1,10 @@
-using Initialization;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 using ILanderUtility;
 using Unity.Netcode;
-using Unity.Multiplayer;
 using static GameInstance;
 using System;
-using UnityEngine.InputSystem;
 
-public class Player : NetworkBehaviour
-{
+public class Player : NetworkBehaviour {
     public enum PlayerType
     {
         NONE,
@@ -26,29 +19,31 @@ public class Player : NetworkBehaviour
     [SerializeField] private Color hitEffectColor = Color.red;
     [SerializeField] private float hitEffectDuration = 1.0f;
 
-    public bool initialized = false;
-    private PlayerCharacterData playerCharacterData; //Add Check to validate if player has data before doing any updates!
-    public PlayerType currentPlayerType = PlayerType.NONE;
+    private bool initialized = false;
+    private PlayerCharacterData playerCharacterData;
+    private PlayerType currentPlayerType = PlayerType.NONE;
+    private GameMode currentGameMode = GameMode.NONE;
     private Color defaultColor = Color.white;
     private Vector3 spawnPoint = Vector3.zero;
 
 
-    public float currentHealth = 0.0f;
-    public float currentFuel = 0.0f;
+    private float currentHealth = 0.0f;
+    private float currentFuel   = 0.0f;
 
     private bool isMoving       = false;
     private bool isRotating     = false;
     private bool isFrozen       = false;
     private bool isDead         = false;
+    private bool isInvincible   = false;
 
     private bool hitEffectOn = false;
 
-    private float freezeTimer = 0.0f;
+    private float freezeTimer   = 0.0f;
     private float hitEffectTimer = 0.0f;
 
-    public Pickup equippedPickup                            = null;
+    private Pickup equippedPickup                           = null;
     private HUD HUDScript                                   = null;
-    public PlayerControlScheme activeControlScheme         = null;
+    private PlayerControlScheme activeControlScheme         = null;
     private MuzzleFlashSpawner muzzleFlashSpawnerScript     = null;
     private ExplosionSpawner explosionSpawnerScript         = null;
     private SpriteRenderer spriteRendererComp               = null;
@@ -61,7 +56,7 @@ public class Player : NetworkBehaviour
         if (initialized)
             return;
 
-        //Disable networking by defualt?
+
         SetupReferences();
         muzzleFlashSpawnerScript.Initialize();
         explosionSpawnerScript.Initialize();
@@ -77,6 +72,7 @@ public class Player : NetworkBehaviour
             return;
         }
 
+        currentGameMode = GetGameInstance().GetCurrentGameMode();
         if (isDead)
             return;
 
@@ -97,70 +93,87 @@ public class Player : NetworkBehaviour
         if (isDead)
             return;
 
-
         UpdateGravity();
         UpdateDrag();
-        //Move online check to function!
+        
         if (isMoving) {
-            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
+            if (networkObjectComp.IsOwner && currentGameMode == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
                 UpdateNetworkedMovement();
             else
                 UpdateMovement();
         }
         if (isRotating) {
-            if (networkObjectComp.isActiveAndEnabled && networkObjectComp.IsOwner && GetInstance().GetCurrentGameMode() == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
-                UpdateRotationMovement();
+            if (networkObjectComp.IsOwner && currentGameMode == GameMode.LAN && currentPlayerType == PlayerType.PLAYER_2)
+                UpdateNetworkedRotation();
             else
-                UpdateRotation(); //idk if should be in fixed input!
+                UpdateRotation();
         }
     }
     private void SetupReferences() {
 
         Transform explosionSpawnerTransform = transform.Find("ExplosionSpawner");
-        Utility.Validate(explosionSpawnerTransform, "Failed to get reference to ExplosionSpawner gameobject - Player", true);
+        Utility.Validate(explosionSpawnerTransform, "Failed to get reference to ExplosionSpawner gameobject - Player", Utility.ValidationLevel.ERROR, true);
 
         explosionSpawnerScript = explosionSpawnerTransform.GetComponent<ExplosionSpawner>();
-        Utility.Validate(explosionSpawnerScript, "Failed to get reference to DeathExplosionSpawner component - Player", true);
+        Utility.Validate(explosionSpawnerScript, "Failed to get reference to DeathExplosionSpawner component - Player", Utility.ValidationLevel.ERROR, true);
 
         spriteRendererComp = GetComponent<SpriteRenderer>();
-        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", true);
+        Utility.Validate(spriteRendererComp, "Failed to get reference to SpriteRenderer component - Player", Utility.ValidationLevel.ERROR, true);
 
         rigidbodyComp = GetComponent<Rigidbody2D>();
-        Utility.Validate(rigidbodyComp, "Failed to get reference to Rigidbody2D component - Player", true);
+        Utility.Validate(rigidbodyComp, "Failed to get reference to Rigidbody2D component - Player", Utility.ValidationLevel.ERROR, true);
 
         boxCollider2DComp = GetComponent<BoxCollider2D>();
-        Utility.Validate(boxCollider2DComp, "Failed to get reference to BoxCollider2D component - Player", true);
+        Utility.Validate(boxCollider2DComp, "Failed to get reference to BoxCollider2D component - Player", Utility.ValidationLevel.ERROR, true);
 
         networkObjectComp = GetComponent<NetworkObject>();
-        Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", true);
+        Utility.Validate(networkObjectComp, "Failed to get reference to NetworkObject component - Player", Utility.ValidationLevel.ERROR, true);
 
         Transform muzzleFlashSpawnerTransformn = transform.Find("MuzzleFlashSpawner");
-        Utility.Validate(muzzleFlashSpawnerTransformn, "Failed to get reference to MuzzleFlashSpawner - Player", true);
+        Utility.Validate(muzzleFlashSpawnerTransformn, "Failed to get reference to MuzzleFlashSpawner - Player", Utility.ValidationLevel.ERROR, true);
 
         muzzleFlashSpawnerScript = muzzleFlashSpawnerTransformn.GetComponent<MuzzleFlashSpawner>();
-        Utility.Validate(muzzleFlashSpawnerScript, "Failed to get reference to MuzzleFlashSpawner component - Player", true);
+        Utility.Validate(muzzleFlashSpawnerScript, "Failed to get reference to MuzzleFlashSpawner component - Player", Utility.ValidationLevel.ERROR, true);
     }
     public void SetupStartState() {
         currentHealth = playerCharacterData.statsData.healthCap;
         currentFuel = playerCharacterData.statsData.fuelCap;
         equippedPickup = null;
 
-        //Function also enables input which is undesired!
         freezeTimer = 0.0f;
         isFrozen = false;
         spriteRendererComp.color = defaultColor;
 
+        SetInvincible(false);
         RemoveHitEffect();
-        UpdateAllHUDData();
+        ResetAllHUDData();
 
         transform.position = spawnPoint;
 
-        //Timers and color effects
         boxCollider2DComp.enabled = true;
         isDead = false;
-        SetSpriteVisibility(true); //Questionable whether gameinstance does this or this - I DONT THINK THIS IS NEEDED ANYMORE AFTER THE NETWORK DEACTIVATION STUFF!
+        SetSpriteVisibility(true);
+    }
+    public override void OnDestroy() {
+        base.OnDestroy();
+
+        activeControlScheme.usePickupInput.started -= UsePickupInputCallback;
+        activeControlScheme.boostInput.started -= BoostInputCallback;
+        activeControlScheme.pauseInput.started -= PauseInputCallback;
+        DisableInput();
     }
 
+    public void SetPlayerData(PlayerCharacterData data) {
+        playerCharacterData = data;
+        spriteRendererComp.sprite = data.shipSprite;
+    }
+    public void SetPlayerColor(Color color) {
+        spriteRendererComp.color = color;
+        defaultColor = color;
+    }
+    public void SetSpriteVisibility(bool state) {
+        spriteRendererComp.enabled = state;
+    }
     public void SetSpawnPoint(Vector3 position) {
         spawnPoint = position;
     }
@@ -180,39 +193,38 @@ public class Player : NetworkBehaviour
         activeControlScheme.boostInput.started += BoostInputCallback;
         activeControlScheme.pauseInput.started += PauseInputCallback;
     }
+    public void SetInvincible(bool state) {
+        isInvincible = state;
+    }
 
-    //Maybe overkill to get all data..
     public PlayerCharacterData GetPlayerData() {
         return playerCharacterData;
+    }
+    public PlayerType GetPlayerType() {
+        return currentPlayerType;
     }
     public float GetCurrentHealth() {
         return currentHealth;
     }
-
-
-    public void SetPlayerData(PlayerCharacterData data) {
-        playerCharacterData = data;
-        spriteRendererComp.sprite = data.shipSprite;
+    public float GetCurrentFuel() {
+        return currentFuel;
     }
-    public void SetPlayerColor(Color color) {
-        spriteRendererComp.color = color;
-        defaultColor = color;
+    public Vector2 GetVelocity() {
+        return rigidbodyComp.velocity;
     }
-
-    private void UpdateAllHUDData() {
-        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
-        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
-        HUDScript.SetPickupIcon(currentPlayerType, null);
-        HUDScript.SetCharacterPortrait(currentPlayerType, playerCharacterData.portraitSprite);
+    public Vector3 GetSpawnPoint() {
+        return spawnPoint;
     }
 
     private void CheckInput() {
+        if (!activeControlScheme)
+            return;
+
         isMoving = activeControlScheme.movementInput.IsPressed();
         isRotating = activeControlScheme.rotationInput.IsPressed();
     }
-
     private void PauseInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
-        GetInstance().PauseGame();
+        GetGameInstance().PauseGame();
     }
     private void BoostInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
         Boost();
@@ -220,7 +232,37 @@ public class Player : NetworkBehaviour
     private void UsePickupInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
         UseEquippedPickup();
     }
+    public void EnableInput() {
+        if (!activeControlScheme)
+            return;
 
+        activeControlScheme.movementInput.Enable();
+        activeControlScheme.rotationInput.Enable();
+        activeControlScheme.boostInput.Enable();
+        activeControlScheme.pauseInput.Enable();
+        activeControlScheme.usePickupInput.Enable();
+    }
+    public void DisableInput() {
+        if (!activeControlScheme)
+            return;
+
+        activeControlScheme.movementInput.Disable();
+        activeControlScheme.rotationInput.Disable();
+        activeControlScheme.boostInput.Disable();
+        activeControlScheme.pauseInput.Disable();
+        activeControlScheme.usePickupInput.Disable();
+    }
+    public void ActivateNetworkedEntity() {
+        spriteRendererComp.enabled = true;
+        boxCollider2DComp.enabled = true;
+        rigidbodyComp.isKinematic = false;
+    }
+    public void DeactivateNetworkedEntity() {
+        spriteRendererComp.enabled = false;
+        boxCollider2DComp.enabled = false;
+        rigidbodyComp.isKinematic = true;
+        rigidbodyComp.velocity = Vector3.zero;
+    }
 
     private void UpdateFreezeTimer() {
         if (freezeTimer > 0.0f) {
@@ -247,7 +289,6 @@ public class Player : NetworkBehaviour
         DisableInput();
     }
 
-
     private void UpdateHitEffectTimer() {
         if (hitEffectTimer > 0.0f) {
             hitEffectTimer -= Time.deltaTime;
@@ -268,8 +309,19 @@ public class Player : NetworkBehaviour
         //Any camera shake or hit stop here!
         hitEffectTimer = hitEffectDuration;
     }
+    public void ApplyImpulse(Vector2 direction, float force) {
+        if (isDead)
+            return;
 
+        rigidbodyComp.AddForce(Time.deltaTime * direction * force, ForceMode2D.Impulse);
+    }
 
+    private void ResetAllHUDData() {
+        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+        HUDScript.SetPickupIcon(currentPlayerType, null);
+        HUDScript.SetCharacterPortrait(currentPlayerType, playerCharacterData.portraitSprite);
+    }
     private void UpdateDrag() {
         if (isMoving)
             rigidbodyComp.drag = playerCharacterData.statsData.movingDragRate;
@@ -283,97 +335,64 @@ public class Player : NetworkBehaviour
             rigidbodyComp.gravityScale = 0.0f;
     }
 
+    private Vector2 CalculateVelocity(float input) {
+        Vector2 velocity = Vector2.zero;
+        Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
 
-
-    //Refactor those into being more reusable!
-    private void UpdateRotation() {
-        float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
-        float Speed = playerCharacterData.statsData.turnRate; //Delta
-        if (inputValue < 0.0f)
-            Speed *= -1;
-
-        transform.Rotate(new Vector3(0.0f, 0.0f, Speed * Time.fixedDeltaTime));
-    }
-    private void UpdateRotationMovement() {
-        Debug.Log("Network Rotation!");
-        float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
-        if (inputValue == 0.0f)
-            return;
-
-        float Speed = playerCharacterData.statsData.turnRate; //Delta
-        if (inputValue < 0.0f)
-            Speed *= -1;
-
-        GetInstance().GetRpcManagerScript().UpdatePlayer2RotationServerRpc(Speed * Time.fixedDeltaTime); //You are always player 2 to the host
-    }
-    private void UpdateMovement() {
-
-        //NOTE IMPORTANT: WTF IS THIS LITERALS!½
-        float inputValue = activeControlScheme.movementInput.ReadValue<float>();
-        //Break doesnt work its weird and abusable
-        if (inputValue < 0.0f) {
-            if (rigidbodyComp.velocity.y > 0.0f)
-                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x, rigidbodyComp.velocity.y - 0.01f);
-            if (rigidbodyComp.velocity.x > 0.0f)
-                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x - 0.01f, rigidbodyComp.velocity.y);
-        } 
-        else if (inputValue > 0.0f) {
-            Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
-            Vector2 velocity = rigidbodyComp.velocity + force;
-            if (velocity.x > playerCharacterData.statsData.maxVelocity)
-                velocity.x = playerCharacterData.statsData.maxVelocity;
-            if (velocity.y > playerCharacterData.statsData.maxVelocity)
-                velocity.y = playerCharacterData.statsData.maxVelocity;
-
-            rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
-        }
-    }
-    private void UpdateNetworkedMovement() {
-        Debug.Log("Network movement!");
-        float inputValue = activeControlScheme.movementInput.ReadValue<float>();
-        if (inputValue > 0.0f | inputValue < 0.0f)
-            GetInstance().GetRpcManagerScript().UpdatePlayer2PositionServerRpc(inputValue); //You are always player 2 to the host
-    }
-    //Called by game instance or rpc manager
-    public void ProccessReceivedMovementRpc(float input) {
-        //If in network mode?
-        //SAME AS UPDATE MOVEMENT BASICALLY!
         if (input < 0.0f) {
-            if (rigidbodyComp.velocity.y > 0.0f)
-                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x, rigidbodyComp.velocity.y - 0.01f);
-            if (rigidbodyComp.velocity.x > 0.0f)
-                rigidbodyComp.velocity = new Vector2(rigidbodyComp.velocity.x - 0.01f, rigidbodyComp.velocity.y);
+            force *= -1;
+
+            velocity = rigidbodyComp.velocity + force;
+            if (velocity.x < -playerCharacterData.statsData.maxVelocity.x)
+                velocity.x = -playerCharacterData.statsData.maxVelocity.x;
+            if (velocity.y > -playerCharacterData.statsData.maxVelocity.y)
+                velocity.y = -playerCharacterData.statsData.maxVelocity.y;
         }
         else if (input > 0.0f) {
 
-            Vector2 force = Time.fixedDeltaTime * new Vector2(transform.up.x, transform.up.y) * playerCharacterData.statsData.accelerationRate;
-            Vector2 velocity = rigidbodyComp.velocity + force;
-            if (velocity.x > playerCharacterData.statsData.maxVelocity)
-                velocity.x = playerCharacterData.statsData.maxVelocity;
-            if (velocity.y > playerCharacterData.statsData.maxVelocity)
-                velocity.y = playerCharacterData.statsData.maxVelocity;
-
-            rigidbodyComp.AddForce(velocity, ForceMode2D.Force);
+            velocity = rigidbodyComp.velocity + force;
+            if (velocity.x > playerCharacterData.statsData.maxVelocity.x)
+                velocity.x = playerCharacterData.statsData.maxVelocity.x;
+            if (velocity.y > playerCharacterData.statsData.maxVelocity.y)
+                velocity.y = playerCharacterData.statsData.maxVelocity.y;
         }
+
+        return velocity;
+    }
+    private float CalculateRotation(float input) {
+        float rotation = playerCharacterData.statsData.turnRate;
+        if (input < 0.0f)
+            rotation *= -1;
+
+        return rotation * Time.fixedDeltaTime;
+    }
+
+    private void UpdateMovement() {
+        float inputValue = activeControlScheme.movementInput.ReadValue<float>();
+        rigidbodyComp.AddForce(CalculateVelocity(inputValue), ForceMode2D.Force);
+    }
+    private void UpdateRotation() {
+        float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
+        transform.Rotate(new Vector3(0.0f, 0.0f, CalculateRotation(inputValue)));
+    }
+
+    private void UpdateNetworkedMovement() {
+        float inputValue = activeControlScheme.movementInput.ReadValue<float>();
+        if (inputValue > 0.0f | inputValue < 0.0f)
+            GetGameInstance().GetRpcManagerScript().CalculatePlayer2PositionServerRpc(inputValue);
+    }
+    private void UpdateNetworkedRotation() {
+        float inputValue = activeControlScheme.rotationInput.ReadValue<float>();
+        if (inputValue > 0.0f || inputValue < 0.0f)
+            GetGameInstance().GetRpcManagerScript().CalculatePlayer2RotationServerRpc(inputValue);
+    }
+
+    public void ProccessReceivedMovementRpc(float input) {
+        rigidbodyComp.AddForce(CalculateVelocity(input), ForceMode2D.Force);
     }
     public void ProccessReceivedRotationRpc(float input) {
-        //If in network mode?
-        //SAME AS ROTATION MOVEMENT BASICALLY!
-        transform.Rotate(new Vector3(0.0f, 0.0f, input)); //FIXED TIME OR JUST TIME REALLY!
+        transform.Rotate(new Vector3(0.0f, 0.0f, CalculateRotation(input)));
     }
-
-
-
-    private void Boost() {
-        if (isDead)
-            return;
-
-        if (currentFuel >= playerCharacterData.statsData.boostCost) {
-            UseFuel(playerCharacterData.statsData.boostCost);
-            rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
-        }
-    }
-
 
     public void RegisterPickup(Pickup script, Sprite icon = null) {
         equippedPickup = script;
@@ -384,11 +403,33 @@ public class Player : NetworkBehaviour
             return;
 
         if (equippedPickup.Activate(this)) {
-            equippedPickup = null; //? is this good enough? no resets of any kind?
+            equippedPickup = null;
             HUDScript.SetPickupIcon(currentPlayerType, null);
         }
     }
+    private void Boost() {
+        if (isDead)
+            return;
 
+        if (currentFuel >= playerCharacterData.statsData.boostCost) {
+            UseFuel(playerCharacterData.statsData.boostCost);
+            rigidbodyComp.AddForce(playerCharacterData.statsData.boostStrength * Time.fixedDeltaTime * transform.up, ForceMode2D.Impulse);
+        }
+    }
+    private void Kill() {
+        isDead = true;
+        DisableInput();
+        rigidbodyComp.velocity = Vector3.zero;
+        rigidbodyComp.gravityScale = 0.0f;
+        boxCollider2DComp.enabled = false;
+        SetSpriteVisibility(false);
+        explosionSpawnerScript.PlayAnimation("PlayerDead", null);
+        GetGameInstance().RegisterPlayerDeath(currentPlayerType);
+    }
+    public void ReceivePickupUsageConfirmationRpc() {
+        equippedPickup = null;
+        HUDScript.SetPickupIcon(currentPlayerType, null);
+    }
 
     public void AddHealth(float amount) {
         if (isDead)
@@ -397,39 +438,37 @@ public class Player : NetworkBehaviour
         if (amount < 0.0f)
             amount *= -1;
 
-        currentHealth += amount;
-        if (currentHealth > playerCharacterData.statsData.healthCap)
-            currentHealth = playerCharacterData.statsData.healthCap;
+        if (currentGameMode == GameMode.COOP) {
+            currentHealth += amount;
+            if (currentHealth > playerCharacterData.statsData.healthCap)
+                currentHealth = playerCharacterData.statsData.healthCap;
 
-        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+            HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
+        }
+        else if (currentGameMode == GameMode.LAN && IsOwner)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerHealthProcessServerRpc(RpcManager.PlayerHealthProcess.ADDITION, currentPlayerType, amount);
     }
     public void TakeDamage(float amount) {
-        if (isDead)
+        if (isDead || isInvincible)
             return;
 
         if (amount < 0.0f)
             amount *= -1;
 
-        currentHealth -= amount;
-        if (currentHealth <= 0.0f) {
-            currentHealth = 0.0f;
-            Dead();
+        if (currentGameMode == GameMode.COOP) {
+            currentHealth -= amount;
+            if (currentHealth <= 0.0f) {
+                currentHealth = 0.0f;
+                Kill();
+            }
+
+            HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
         }
+        else if (currentGameMode == GameMode.LAN && IsOwner)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerHealthProcessServerRpc(RpcManager.PlayerHealthProcess.SUBTRACTION, currentPlayerType, amount);
 
         ApplyHitEffect();
-        HUDScript.UpdateHealth(currentPlayerType, currentHealth / playerCharacterData.statsData.healthCap);
     }
-    private void Dead() {
-        isDead = true;
-        DisableInput();
-        rigidbodyComp.velocity = Vector3.zero;
-        rigidbodyComp.gravityScale = 0.0f;
-        boxCollider2DComp.enabled = false;
-        SetSpriteVisibility(false);
-        explosionSpawnerScript.PlayAnimation("PlayerDead", null);
-        GetInstance().RegisterPlayerDeath(currentPlayerType);
-    }
-
     public void AddFuel(float amount) {
         if (isDead)
             return;
@@ -437,11 +476,15 @@ public class Player : NetworkBehaviour
         if (amount < 0.0f)
             amount *= -1;
 
-        currentFuel += amount;
-        if (currentFuel > playerCharacterData.statsData.fuelCap)
-            currentFuel = playerCharacterData.statsData.fuelCap;
+        if (currentGameMode == GameMode.COOP && IsOwner) {
+            currentFuel += amount;
+            if (currentFuel > playerCharacterData.statsData.fuelCap)
+                currentFuel = playerCharacterData.statsData.fuelCap;
 
-        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+            HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+        }
+        else if (currentGameMode == GameMode.LAN)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerFuelProcessServerRpc(RpcManager.PlayerFuelProcess.ADDITION, currentPlayerType, amount);
     }
     public void UseFuel(float amount) {
         if (isDead)
@@ -450,14 +493,43 @@ public class Player : NetworkBehaviour
         if (amount < 0.0f)
             amount *= -1;
 
-        currentFuel -= amount;
-        if (currentFuel <= 0.0f) {
-            currentFuel = 0.0f;
-            //Out of fuel?
+        if (currentGameMode == GameMode.COOP && IsOwner) {
+            currentFuel -= amount;
+            if (currentFuel <= 0.0f)
+                currentFuel = 0.0f;
+
+            HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
         }
-        HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
+        else if (currentGameMode == GameMode.LAN)
+            GetGameInstance().GetRpcManagerScript().ExecutePlayerFuelProcessServerRpc(RpcManager.PlayerFuelProcess.SUBTRACTION, currentPlayerType, amount);
     }
 
+    public void ReceivePlayerHealthProcessRpc(PlayerType player, float health, float percentage) {
+        if (player == PlayerType.NONE)
+            return;
+
+        if (player == currentPlayerType) {
+            currentHealth = health;
+            if (currentHealth == 0.0f)
+                Kill();
+
+            HUDScript.UpdateHealth(currentPlayerType, percentage);
+        }
+        else
+            HUDScript.UpdateHealth(player, percentage);
+    }
+    public void ReceivePlayerFuelProcessRpc(PlayerType player, float fuel, float percentage) {
+        if (player == PlayerType.NONE)
+            return;
+
+        if (player == currentPlayerType) {
+            currentFuel = fuel;
+            HUDScript.UpdateFuel(currentPlayerType, percentage);
+        }
+        else
+            HUDScript.UpdateFuel(player, percentage);
+    }
+    
     public bool PlayMuzzleFlashAnim(string name, Action callback, Vector3 customSize) {
         return muzzleFlashSpawnerScript.PlayAnimation(name, callback, customSize);
     }
@@ -465,55 +537,6 @@ public class Player : NetworkBehaviour
         return muzzleFlashSpawnerScript.transform.position;
     }
 
-
-    public void SetSpriteVisibility(bool state) {
-        spriteRendererComp.enabled = state;
-    }
-
-
-
-    /// <summary>
-    /// Meant for enabling networked entities.
-    /// </summary>
-    public void ActivateNetworkedEntity() {
-        spriteRendererComp.enabled = true;
-        boxCollider2DComp.enabled = true;
-        rigidbodyComp.isKinematic = false;
-    }
-    /// <summary>
-    /// Meant for disabling networked entities.
-    /// </summary>
-    public void DeactivateNetworkedEntity() {
-        spriteRendererComp.enabled = false;
-        boxCollider2DComp.enabled = false;
-        rigidbodyComp.isKinematic = true;
-    }
-
-    public void EnableInput() {
-        activeControlScheme.movementInput.Enable();
-        activeControlScheme.rotationInput.Enable();
-        activeControlScheme.boostInput.Enable();
-        activeControlScheme.pauseInput.Enable();
-        activeControlScheme.usePickupInput.Enable();
-    }
-    public void DisableInput() {
-        activeControlScheme.movementInput.Disable();
-        activeControlScheme.rotationInput.Disable();
-        activeControlScheme.boostInput.Disable();
-        activeControlScheme.pauseInput.Disable();
-        activeControlScheme.usePickupInput.Disable();
-    }
-
-
-    public Vector2 GetVelocity() {
-        return rigidbodyComp.velocity;
-    }
-    public void ApplyImpulse(Vector2 direction, float force) {
-        if (isDead)
-            return;
-
-        rigidbodyComp.AddForce(Time.fixedDeltaTime * transform.up * playerCharacterData.statsData.boostStrength, ForceMode2D.Impulse);
-    }
     private void OnCollisionEnter2D(Collision2D collision) {
         if (isDead)
             return;
@@ -524,19 +547,10 @@ public class Player : NetworkBehaviour
             float otherPlayerForce = otherPlayerVelocity.magnitude;
             float ownForce = rigidbodyComp.velocity.magnitude;
 
-            //Add = to make both fly away?
-            if (ownForce > otherPlayerForce) {
-                Debug.Log("I triggered it " + gameObject.name);
-                script.ApplyImpulse(transform.up, 500.0f);
-            }
-            else
-                Debug.Log("I couldnt " + gameObject.name);
-
-            //NOTE: Doesnt work! both can not trigger and even trigger it! do same thing or similar for touching geometry but make damage propotional to speed
+            if (ownForce > otherPlayerForce)
+                script.ApplyImpulse(transform.up, playerCharacterData.statsData.impulseStrength);
+            else if (ownForce == otherPlayerForce)
+                script.ApplyImpulse(transform.up, playerCharacterData.statsData.impulseStrength / 2);
         }
-
-
-
     }
-
 }

@@ -1,9 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PickupFuel : Pickup
-{
+public class PickupFuel : Pickup {
+    [SerializeField] private float Potency = 0.0f;
+
+    public override void Initialize() {
+        type = PickupType.FUEL;
+        initialized = true;
+    }
     public override bool Activate(Player user) {
         user.AddFuel(Potency);
         return true;

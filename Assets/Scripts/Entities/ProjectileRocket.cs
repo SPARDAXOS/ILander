@@ -1,10 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
-public class ProjectileRocket : Projectile
-{
+public class ProjectileRocket : Projectile {
     private Animator animatorComp;
 
 
@@ -19,7 +15,6 @@ public class ProjectileRocket : Projectile
         moving = false;
         boxCollider2DComp.enabled = false;
     }
-
 
     public override void Initialize() {
         base.Initialize();
@@ -50,5 +45,4 @@ public class ProjectileRocket : Projectile
         else
             DefaultHitReaction();
     }
-
 }

@@ -1,16 +1,11 @@
-using Initialization;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using ILanderUtility;
 
-public class ExplosionSpawner : MonoBehaviour
-{
+public class ExplosionSpawner : MonoBehaviour {
     private bool initialized = false;
     private Action ExplosionCallback;
     private Animator animatorComp;
-
 
 
     public void Initialize() {
@@ -23,7 +18,7 @@ public class ExplosionSpawner : MonoBehaviour
     }
     private void SetupReferences() {
         animatorComp = GetComponent<Animator>();
-        Utility.Validate(animatorComp, "Failed to get reference to Animator component - ExplosionSpawner", true);
+        Utility.Validate(animatorComp, "Failed to get reference to Animator component - ExplosionSpawner", Utility.ValidationLevel.ERROR, true);
 
 
     }
