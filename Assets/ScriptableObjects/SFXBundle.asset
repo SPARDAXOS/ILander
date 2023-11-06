@@ -12,4 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2806318cbcf7134290fa4bbacba63e9, type: 3}
   m_Name: SFXBundle
   m_EditorClassIdentifier: 
-  entries: []
+  entries:
+  - name: 
+    clip: {fileID: 0}
+    volume: 0
+    minPitch: 0
+    maxPitch: 0
