@@ -121,3 +121,9 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - name: SoundManager
+    reference:
+      m_AssetGUID: 85f84806d9d8e2a4ea9f58a0c1e795ec
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0

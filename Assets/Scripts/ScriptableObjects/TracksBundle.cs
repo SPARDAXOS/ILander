@@ -4,7 +4,7 @@ using UnityEngine;
 
 [Serializable]
 public struct TrackEntry {
-    public string name;
+    public string key;
     public AudioClip clip;
     [Range(0.0f, 1.0f)] public float volume;
 }

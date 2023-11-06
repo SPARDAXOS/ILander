@@ -100,6 +100,7 @@ public class GameInstance : MonoBehaviour {
     private GameObject pauseMenu;
     private GameObject resultsMenu;
     private GameObject matchDirector;
+    private GameObject soundManager;
 
     private Player player1Script;
     private Player player2Script;
@@ -120,6 +121,7 @@ public class GameInstance : MonoBehaviour {
     private PauseMenu pauseMenuScript;
     private ResultsMenu resultsMenuScript;
     private MatchDirector matchDirectorScript;
+    private SoundManager soundManagerScript;
 
     private Camera mainCameraComponent;
 
@@ -154,6 +156,7 @@ public class GameInstance : MonoBehaviour {
         ValidateAndDestroy(pauseMenu);
         ValidateAndDestroy(resultsMenu);
         ValidateAndDestroy(matchDirector);
+        ValidateAndDestroy(soundManager);
 
         foreach (var entry in loadedAssets)
             Addressables.Release(entry.Value);
@@ -413,6 +416,10 @@ public class GameInstance : MonoBehaviour {
             networkManagerScript.ConnectionApprovalCallback += ClientApprovalCallback;
             networkManagerScript.OnClientDisconnectCallback += ClientDisconnectedCallback;
             networkManager.SetActive(false);
+
+            soundManager = Instantiate(loadedAssets["SoundManager"].Result);
+            soundManagerScript = soundManager.GetComponent<SoundManager>();
+            soundManagerScript.Initialize();
 
             mainCamera = Instantiate(loadedAssets["MainCamera"].Result);
             mainCameraComponent = mainCamera.GetComponent<Camera>();
