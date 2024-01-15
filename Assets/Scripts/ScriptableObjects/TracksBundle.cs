@@ -1,11 +1,12 @@
 using System;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 
 [Serializable]
 public struct TrackEntry {
     public string key;
-    public AudioClip clip;
+    public AssetReferenceT<AudioClip> clip;
     [Range(0.0f, 1.0f)] public float volume;
 }
 

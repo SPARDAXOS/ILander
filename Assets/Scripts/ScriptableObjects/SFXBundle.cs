@@ -3,15 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 
 [Serializable]
 public struct SFXEntry {
     public string key;
-    public AudioClip clip;
+    public AssetReferenceT<AudioClip> clip;
     [Range(0.0f, 1.0f)] public float volume;
-    [Range(0.0f, 1.0f)] public float minPitch;
-    [Range(0.0f, 1.0f)] public float maxPitch;
+    [Range(0.0f, 2.0f)] public float minPitch;
+    [Range(0.0f, 2.0f)] public float maxPitch;
 }
 
 

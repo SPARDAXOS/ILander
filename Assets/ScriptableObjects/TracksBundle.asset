@@ -14,11 +14,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entries:
   - key: MainMenu
-    clip: {fileID: 8300000, guid: 19254a738d2a9b748b8df486ef5132dd, type: 3}
+    clip:
+      m_AssetGUID: 36cad022508972341b6f50734e211fbd
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
     volume: 1
   - key: CustomizationMenu
-    clip: {fileID: 8300000, guid: 875ad7138ed0a3b4c9e2b02058756780, type: 3}
+    clip:
+      m_AssetGUID: 875ad7138ed0a3b4c9e2b02058756780
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
     volume: 1
   - key: Gameplay
-    clip: {fileID: 8300000, guid: 875ad7138ed0a3b4c9e2b02058756780, type: 3}
+    clip:
+      m_AssetGUID: 19254a738d2a9b748b8df486ef5132dd
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
     volume: 1

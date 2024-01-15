@@ -13,8 +13,12 @@ MonoBehaviour:
   m_Name: SFXBundle
   m_EditorClassIdentifier: 
   entries:
-  - name: 
-    clip: {fileID: 0}
-    volume: 0
-    minPitch: 0
-    maxPitch: 0
+  - key: Test
+    clip:
+      m_AssetGUID: 875ad7138ed0a3b4c9e2b02058756780
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    volume: 1
+    minPitch: 1
+    maxPitch: 1

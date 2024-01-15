@@ -227,6 +227,7 @@ public class Player : NetworkBehaviour {
         GetGameInstance().PauseGame();
     }
     private void BoostInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
+        GetGameInstance().GetSoundManagerScript().PlaySFX("Test");
         Boost();
     }
     private void UsePickupInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {

@@ -168,6 +168,8 @@ public class GameInstance : MonoBehaviour {
         Addressables.Release(gameSettingsHandle);
         Addressables.Release(playerCharactersBundleHandle);
         Addressables.Release(assetsBundle);
+
+        Debug.Log("Game successfully unloaded all resources!");
     }
     void Update() {
         switch (currentApplicationStatus) {
@@ -234,7 +236,7 @@ public class GameInstance : MonoBehaviour {
             LoadAssets();
 
         if (assetsLoaded) {
-            CreateEntities();
+            CreateEntities(); //Sound manager will keep on loading assets while this is marked as finished!
             SetGameState(GameState.MAIN_MENU);
             gameInitialized = true;
             currentApplicationStatus = ApplicationState.RUNNING;
@@ -243,6 +245,10 @@ public class GameInstance : MonoBehaviour {
     }
     private void UpdateApplicationRunningState() {
         //If any entitis need to be ticked during any of the game states, they should be added here!
+
+        //Required so it loads its required assets and to play sound during any state of the game.
+        soundManagerScript.Tick();
+
         switch (currentGameState) {
             case GameState.LOADING_SCREEN:
                 UpdateLoadingState();
@@ -1102,6 +1108,9 @@ public class GameInstance : MonoBehaviour {
     }
     public RpcManager GetRpcManagerScript() {
         return rpcManagerScript;
+    }
+    public SoundManager GetSoundManagerScript() {
+        return soundManagerScript;
     }
     public MatchDirector GetMatchDirector() {
         return matchDirectorScript;
