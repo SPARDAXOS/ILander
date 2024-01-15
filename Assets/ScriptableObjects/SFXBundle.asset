@@ -13,12 +13,39 @@ MonoBehaviour:
   m_Name: SFXBundle
   m_EditorClassIdentifier: 
   entries:
-  - key: Test
+  - key: Boost
     clip:
-      m_AssetGUID: 875ad7138ed0a3b4c9e2b02058756780
+      m_AssetGUID: 00d153572ef140b44926902be857ef92
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
     volume: 1
-    minPitch: 1
-    maxPitch: 1
+    minPitch: 0.63
+    maxPitch: 1.19
+  - key: Shoot
+    clip:
+      m_AssetGUID: 8823e0d49c0e84449ad31ab5f01c3a25
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    volume: 1
+    minPitch: 0.78
+    maxPitch: 1.01
+  - key: Effect
+    clip:
+      m_AssetGUID: 39ea710d5c833d846a9ffe7a97d39307
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    volume: 1
+    minPitch: 0.59
+    maxPitch: 0.87
+  - key: Death
+    clip:
+      m_AssetGUID: ab28ba0a017f3d7458acb6e9b560b4b2
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    volume: 1
+    minPitch: 0.54
+    maxPitch: 1.06

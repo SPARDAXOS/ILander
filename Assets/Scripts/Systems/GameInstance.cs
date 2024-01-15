@@ -790,6 +790,7 @@ public class GameInstance : MonoBehaviour {
     private void SetupMainMenuState() {
         HideAllMenus();
         EnableMouseCursor();
+        soundManagerScript.PlayTrack("MainMenu", false);
         mainMenu.SetActive(true);
         currentGameState = GameState.MAIN_MENU;
     }
@@ -815,6 +816,7 @@ public class GameInstance : MonoBehaviour {
     private void SetupCustomizationMenuState() {
         HideAllMenus();
         EnableMouseCursor();
+        soundManagerScript.PlayTrack("CustomizationMenu", false);
         customizationMenuScript.SetupStartState();
         customizationMenu.SetActive(true);
         currentGameState = GameState.CUSTOMIZATION_MENU;
@@ -837,6 +839,7 @@ public class GameInstance : MonoBehaviour {
     private void SetupResultsMenuState() {
         HideAllMenus();
         EnableMouseCursor();
+        soundManagerScript.PlayTrack("ResultsMenu", true);
         resultsMenuScript.StartReturnTimer();
         resultsMenuScript.SetWinner(matchDirectorScript.GetWinner());
         resultsMenuScript.SetPlayerPortrait(Player.PlayerType.PLAYER_1, player1Script.GetPlayerData().portraitSprite);
@@ -894,6 +897,7 @@ public class GameInstance : MonoBehaviour {
     private void SetupPlayState() {
         HideAllMenus();
         DisableMouseCursor();
+        soundManagerScript.PlayTrack("Gameplay", false);
 
         if (currentGameMode == GameMode.COOP) {
             player1Script.SetActiveControlScheme(Player.PlayerType.PLAYER_1);

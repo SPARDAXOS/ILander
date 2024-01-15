@@ -49,7 +49,10 @@ public class SoundManager : MonoBehaviour {
     private bool fadingIn = false;
     private bool fadingOut = false;
     private TrackEntry? fadeTargetTrack = null;
+    private string currentPlayingTrackKey = null;
 
+    private float currentTrackVolume = 0.0f;
+    private float currentTrackEntryVolume = 0.0f;
 
     private AudioSource trackAudioSource = null;
 
@@ -230,7 +233,7 @@ public class SoundManager : MonoBehaviour {
             return false;
         }
 
-        AudioClip targetAudioClip = FindAudioClip(key);
+        AudioClip targetAudioClip = FindSFXAudioClip(key);
         if (targetAudioClip == null) {
             Debug.Log("Unable to find audio clip associated with key " + key);
             return false;
@@ -253,20 +256,48 @@ public class SoundManager : MonoBehaviour {
 
         return true;
     }
-    public bool PlayTrack() {
+    public bool PlayTrack(string key, bool fade = false) {
         if (!canPlayTracks) {
             Debug.LogWarning("SoundManager can not play tracks! - PlayTrack will always fail!");
             return false;
         }
-
         if (loadingTracksAssets) {
             Debug.LogWarning("PlayTrack request rejected due to tracks assets being in the loading process!");
             return false;
         }
 
+        if (currentPlayingTrackKey == key)
+            return true;
 
+        TrackEntry? targetTrackEntry = FindTrackEntry(key);
+        if (targetTrackEntry == null) {
+            Debug.Log("Unable to find track entry " + key + " to play");
+            return false;
+        }
 
+        if (!fade)
+            return ApplyTrack((TrackEntry)targetTrackEntry);
 
+        //Very confusing and could be done better.
+        if (canInterruptFade) {
+            if (fadingIn || fadingOut) {
+                fadingIn = false;
+                fadingOut = false;
+                fadeTargetTrack = null;
+                return ApplyTrack((TrackEntry)targetTrackEntry);
+            }
+        }
+
+        if (fadingIn) //For book-keeping consistency.
+            fadingIn = false;
+
+        fadeTargetTrack = targetTrackEntry;
+        if (!trackAudioSource.isPlaying) {
+            currentTrackVolume = 0.0f;
+            StartFadeIn((TrackEntry)targetTrackEntry);
+        }
+        else
+            StartFadeOut();
 
         return true;
     }
@@ -274,11 +305,12 @@ public class SoundManager : MonoBehaviour {
         if (!trackAudioSource.isPlaying)
             return;
 
-
-        if (fadingIn)
+        //Confusing and could be done better.
+        if (fadingIn) {
             fadingIn = false;
+            fadeTargetTrack = null;
+        }
 
-        //??? The fading out part is weird otherwise, setting the fade target to null might be fine.
         if (fadingOut) { 
             fadingOut = false;
             fadeTargetTrack = null;
@@ -313,22 +345,61 @@ public class SoundManager : MonoBehaviour {
 
 
     private void UpdateTrackFadeIn() {
+        if (currentTrackVolume >= currentTrackEntryVolume)
+            return;
 
+        currentTrackVolume += fadeInSpeed * Time.deltaTime;
+        trackAudioSource.volume = currentTrackVolume * masterVolume * musicVolume;
+        if (currentTrackVolume >= currentTrackEntryVolume) {
+            currentTrackVolume = currentTrackEntryVolume;
+            trackAudioSource.volume = currentTrackVolume * masterVolume * musicVolume;
+            fadingIn = false;
+        }
     }
     private void UpdateTrackFadeOut() {
+        if (currentTrackEntryVolume <= 0.0f)
+            return;
 
+        currentTrackVolume -= fadeOutSpeed * Time.deltaTime;
+        trackAudioSource.volume = currentTrackVolume * masterVolume * musicVolume;
+        if (currentTrackVolume <= 0.0f) {
+            currentTrackVolume = 0.0f;
+            trackAudioSource.Stop();
+            fadingOut = false;
+            if (fadeTargetTrack != null)
+                StartFadeIn((TrackEntry)fadeTargetTrack);
+        }
     }
     private void UpdateTrackVolume() {
+        if (!trackAudioSource.isPlaying)
+            return;
 
+        trackAudioSource.volume = masterVolume * musicVolume * currentTrackEntryVolume;
     }
 
 
+    private bool ApplyTrack(TrackEntry track) {
+        AudioClip targetAudioClip = FindTrackAudioClip(track.key);
+        if (!targetAudioClip)
+            return false;
+
+        trackAudioSource.clip = targetAudioClip;
+        currentPlayingTrackKey = track.key;
+        currentTrackEntryVolume = track.volume;
+        trackAudioSource.volume = masterVolume * musicVolume * currentTrackEntryVolume;
+        trackAudioSource.pitch = track.pitch;
+        trackAudioSource.Play();
+
+        return true;
+    }
     private void StartFadeOut() {
-
-
-        
-
+        fadingOut = true;
     }
+    private void StartFadeIn(TrackEntry track) {
+        ApplyTrack(track);
+        fadingIn = true;
+    }
+
 
 
     private float GetRandomizedPitch(float min, float max) {
@@ -375,7 +446,9 @@ public class SoundManager : MonoBehaviour {
 
         return AddSoundUnit();
     }
-    private AudioClip FindAudioClip(string key) {
+
+
+    private AudioClip FindSFXAudioClip(string key) {
         if (key == null)
             return null;
 
@@ -386,6 +459,25 @@ public class SoundManager : MonoBehaviour {
             if (entry.Key == key) {
                 if (entry.Value.Status == AsyncOperationStatus.Failed) {
                     Debug.LogError("Unable to find SFX clip '" + key + "' due to it being unsuccessfully loaded!");
+                    return null;
+                }
+                return entry.Value.Result;
+            }
+        }
+
+        return null;
+    }
+    private AudioClip FindTrackAudioClip(string key) {
+        if (key == null)
+            return null;
+
+        if (loadedTracksClips.Count == 0)
+            return null;
+
+        foreach (var entry in loadedTracksClips) {
+            if (entry.Key == key) {
+                if (entry.Value.Status == AsyncOperationStatus.Failed) {
+                    Debug.LogError("Unable to find Track clip '" + key + "' due to it being unsuccessfully loaded!");
                     return null;
                 }
                 return entry.Value.Result;
@@ -409,14 +501,6 @@ public class SoundManager : MonoBehaviour {
 
         return null;
     }
-    private Nullable<SFXRequest> FindSFXRequest(GameObject owner, string key) {
-        foreach(var entry in SFXRequests) {
-            if (entry.key == key && entry.owner == owner)
-                return entry;
-        }
-
-        return null;
-    }
     private TrackEntry? FindTrackEntry(string key) {
         if (key == null)
             return null;
@@ -426,6 +510,14 @@ public class SoundManager : MonoBehaviour {
 
         foreach (var entry in tracksBundle.entries) {
             if (entry.key == key)
+                return entry;
+        }
+
+        return null;
+    }
+    private SFXRequest? FindSFXRequest(GameObject owner, string key) {
+        foreach(var entry in SFXRequests) {
+            if (entry.key == key && entry.owner == owner)
                 return entry;
         }
 

@@ -17,6 +17,7 @@ public class PickupIceBomb : Pickup {
                 var rpcManager = instance.GetRpcManagerScript();
                 rpcManager.UpdateProjectileSpawnRequestServerRpc(instance.GetClientID(), user.GetPlayerType(), associatedProjectileType);
             }
+            GetGameInstance().GetSoundManagerScript().PlaySFX("Shoot", true, gameObject);
             return true;
         }
         return false;

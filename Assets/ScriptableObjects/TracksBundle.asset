@@ -20,17 +20,28 @@ MonoBehaviour:
       m_SubObjectType: 
       m_EditorAssetChanged: 0
     volume: 1
+    pitch: 1
   - key: CustomizationMenu
     clip:
-      m_AssetGUID: 875ad7138ed0a3b4c9e2b02058756780
+      m_AssetGUID: 491345803fb462f4388ef98efab3cfbd
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
     volume: 1
+    pitch: 1.2
   - key: Gameplay
     clip:
-      m_AssetGUID: 19254a738d2a9b748b8df486ef5132dd
+      m_AssetGUID: 0f1a7391eb497a941b3bb8842f36b2a4
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
     volume: 1
+    pitch: 1
+  - key: ResultsMenu
+    clip:
+      m_AssetGUID: d6a2f5c369afe4e4dbeb9afd07df140d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    volume: 1
+    pitch: 1

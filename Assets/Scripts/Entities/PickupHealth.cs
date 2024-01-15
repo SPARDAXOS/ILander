@@ -10,6 +10,7 @@ public class PickupHealth : Pickup {
     }
     public override bool Activate(Player user) {
         user.AddHealth(Potency);
+        GameInstance.GetGameInstance().GetSoundManagerScript().PlaySFX("Effect", true, gameObject);
         return true;
     }
     protected override void OnPickup(Player script) {

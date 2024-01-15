@@ -161,20 +161,40 @@ MonoBehaviour:
     m_Address: Assets/Sound/Tracks/02. Neon Trip.mp3
     m_ReadOnly: 0
     m_SerializedLabels: []
-  - m_GUID: 875ad7138ed0a3b4c9e2b02058756780
-    m_Address: Assets/Sound/Tracks/04. Hacker Duels.mp3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-  - m_GUID: 19254a738d2a9b748b8df486ef5132dd
-    m_Address: Assets/Sound/Tracks/03. Cry No More.mp3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
   - m_GUID: ebf21a881f899c642b53da0c9fa3e450
     m_Address: Assets/ScriptableObjects/TracksBundle.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
   - m_GUID: f701440a0662bf747a167cc2de73157e
     m_Address: Assets/ScriptableObjects/SFXBundle.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 00d153572ef140b44926902be857ef92
+    m_Address: Assets/Sound/SFX/Boost.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8823e0d49c0e84449ad31ab5f01c3a25
+    m_Address: Assets/Sound/SFX/Shoot.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ab28ba0a017f3d7458acb6e9b560b4b2
+    m_Address: Assets/Sound/SFX/Death.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 39ea710d5c833d846a9ffe7a97d39307
+    m_Address: Assets/Sound/SFX/Effect.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0f1a7391eb497a941b3bb8842f36b2a4
+    m_Address: Assets/Sound/Tracks/Gameplay2.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 491345803fb462f4388ef98efab3cfbd
+    m_Address: Assets/Sound/Tracks/CustomizationScreen2.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d6a2f5c369afe4e4dbeb9afd07df140d
+    m_Address: Assets/Sound/Tracks/Results2.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
   m_ReadOnly: 0

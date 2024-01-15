@@ -8,6 +8,7 @@ public struct TrackEntry {
     public string key;
     public AssetReferenceT<AudioClip> clip;
     [Range(0.0f, 1.0f)] public float volume;
+    [Range(0.0f, 2.0f)] public float pitch;
 }
 
 [CreateAssetMenu(fileName = "TracksBundle", menuName = "Data/TracksBundle", order = 10)]

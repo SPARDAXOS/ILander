@@ -9,6 +9,7 @@ public class PickupFuel : Pickup {
     }
     public override bool Activate(Player user) {
         user.AddFuel(Potency);
+        GameInstance.GetGameInstance().GetSoundManagerScript().PlaySFX("Effect", true, gameObject);
         return true;
     }
     protected override void OnPickup(Player script) {

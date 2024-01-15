@@ -227,7 +227,6 @@ public class Player : NetworkBehaviour {
         GetGameInstance().PauseGame();
     }
     private void BoostInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
-        //GetGameInstance().GetSoundManagerScript().PlaySFX("Test");
         Boost();
     }
     private void UsePickupInputCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
@@ -414,6 +413,7 @@ public class Player : NetworkBehaviour {
 
         if (currentFuel >= playerCharacterData.statsData.boostCost) {
             UseFuel(playerCharacterData.statsData.boostCost);
+            GetGameInstance().GetSoundManagerScript().PlaySFX("Boost", true, gameObject);
             rigidbodyComp.AddForce(playerCharacterData.statsData.boostStrength * Time.fixedDeltaTime * transform.up, ForceMode2D.Impulse);
         }
     }
@@ -424,6 +424,7 @@ public class Player : NetworkBehaviour {
         rigidbodyComp.gravityScale = 0.0f;
         boxCollider2DComp.enabled = false;
         SetSpriteVisibility(false);
+        GetGameInstance().GetSoundManagerScript().PlaySFX("Death", true, gameObject);
         explosionSpawnerScript.PlayAnimation("PlayerDead", null);
         GetGameInstance().RegisterPlayerDeath(currentPlayerType);
     }
@@ -477,14 +478,14 @@ public class Player : NetworkBehaviour {
         if (amount < 0.0f)
             amount *= -1;
 
-        if (currentGameMode == GameMode.COOP && IsOwner) {
+        if (currentGameMode == GameMode.COOP) {
             currentFuel += amount;
             if (currentFuel > playerCharacterData.statsData.fuelCap)
                 currentFuel = playerCharacterData.statsData.fuelCap;
 
             HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
         }
-        else if (currentGameMode == GameMode.LAN)
+        else if (currentGameMode == GameMode.LAN && IsOwner)
             GetGameInstance().GetRpcManagerScript().ExecutePlayerFuelProcessServerRpc(RpcManager.PlayerFuelProcess.ADDITION, currentPlayerType, amount);
     }
     public void UseFuel(float amount) {
@@ -494,14 +495,14 @@ public class Player : NetworkBehaviour {
         if (amount < 0.0f)
             amount *= -1;
 
-        if (currentGameMode == GameMode.COOP && IsOwner) {
+        if (currentGameMode == GameMode.COOP) {
             currentFuel -= amount;
             if (currentFuel <= 0.0f)
                 currentFuel = 0.0f;
 
             HUDScript.UpdateFuel(currentPlayerType, currentFuel / playerCharacterData.statsData.fuelCap);
         }
-        else if (currentGameMode == GameMode.LAN)
+        else if (currentGameMode == GameMode.LAN && IsOwner)
             GetGameInstance().GetRpcManagerScript().ExecutePlayerFuelProcessServerRpc(RpcManager.PlayerFuelProcess.SUBTRACTION, currentPlayerType, amount);
     }
 
